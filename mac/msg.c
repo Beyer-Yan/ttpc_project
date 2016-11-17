@@ -292,12 +292,12 @@ static uint32_t __assemble_ttp_frame(void)
 }
 
 /**
- * This function assembles a 802.3 frame.
- * @param  client_size the client dara size/length
+ * This function assembles a 802.3 frame. The global __G_ttp_frame_length 
+ * variable is regard as the length of client data.
  * @return             the total size of the 802.3 frame excluding
  *                     the 7-bytes PLS and 1-byte SFD.
  */
-static uint32_t __assemble_eth_frame(uint16_t client_size)
+static uint32_t __assemble_eth_frame(void)
 {
     int _index = 0;
     __byte_copy_to_frame_buf(_index,dst,6);
@@ -375,7 +375,7 @@ MAC_err_t MAC_PushFrame(void)
     uint32_t res;
 
     res = __assemble_ttp_frame();
-
+    //add something
 }
 
 
