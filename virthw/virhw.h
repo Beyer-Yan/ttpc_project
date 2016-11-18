@@ -257,15 +257,15 @@ typedef struct
 
 
 /**
- * operation macro definitions
+ * status macro definitions
  */
-
-#define DRV_ES                  (uint32_t)0x00000001
-#define TX_COL                  (uint32_t)0x00000002
-#define RX_COL                  (uint32_t)0x00000004
-#define CRC_ERR                 (uint32_t)0x00000008
-#define PHY_ERR                 (uint32_t)0x00000010
-#define LENGTH_ERR              (uint32_t)0x00000020
+#define DRV_OK          (uint32_t)0x00000000
+#define DRV_ES          (uint32_t)0x00000001  /**< error summary */
+#define TXD_COL         (uint32_t)0x00000002
+#define RXD_COL         (uint32_t)0x00000004
+#define CRC_ERR         (uint32_t)0x00000008
+#define PHY_ERR         (uint32_t)0x00000010
+#define LTH_ERR         (uint32_t)0x00000020
 /**
  * /@todo The other errors to be expanded
  */
@@ -282,8 +282,9 @@ void DRV_StopTransmission(void);
 void DRV_StartReception(void);
 void DRV_StopReception(void);
 
-void DRV_PrepareToTransmit(int8_t* BufferAddr, uint16_t length);
-
+void DRV_PrepareToTransmitOfCH0(int8_t* BufferAddr, uint16_t length);
+void DRV_PrepareToTransmitOfCH1(int8_t* BufferAddr, uint16_t length);
+uint32_t DRV_CheckTransmitted(void);
 
 uint32_t DRV_CheckReceived(void); 
 DataStreamTypeDef DRV_GetReceived(void);

@@ -38,6 +38,11 @@ typedef enum{
 	MAC_ESIZE_OVER,			/**< The size of the message oversizes */
 	MAC_ERS,				/**< The message is not be confirmed by the host */
 	MAC_EMODE, 				/**< detect a mode vialation */
+	MAC_ETCOL,				/**< colision deteted during transmiting */
+	MAC_ERCOL,				/**< colision detected during recieving */
+	MAC_ECRC,				/**< frame crc check failed */
+	MAC_EPHY,				/**< physical hardware fault */
+	MAC_ELTH,				/**< length erre frame detected */
 	MAC_EOTHER				/**< Other unknown errors */
 }MAC_err_t;
 
@@ -185,8 +190,9 @@ void        MAC_CSClearMemberBit(int PositionNumber);
 #define MAC_CSGetCurDMC()			(C_STATE_CP&0xc000)
 
 /**
- * The macro fill the cs variable. DO NOT PASS A PONTER FOR THE MACRO. LEGALITY WILL
- * NOT BE CHECKED.
+ * The macro fills the cs variable. PARAMETER LEGALITY WILL
+ * NOT BE CHECKED. BE SURE THAT THE CS IS A POINTER, OR 
+ * COMPILE ERROR WILL OCCUR.
  * @param  cs a c_state_t type variable.
  * @return    non
  */

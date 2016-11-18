@@ -93,6 +93,7 @@ other module
 /** DOWNLOAD -> FREEZE */
 #define TRANSITION_NUM_16 		15
 
+/**@}*/// end of group StateMachine_Transition_Num
 
 /**
  * 
@@ -147,6 +148,9 @@ other module
 #define CA_CLR
 #define BIST_CLR
 
+/**@}*/// end of group StateMachine_Events
+
+
 typedef struct FSM_State 
 {
 	/**
@@ -180,12 +184,33 @@ void FSM_sendEvent(uint32_t Event);
 
 uint32_t FSM_getCurState(void);
 
+/**
+ * @defgroup Protocol_Processor
+ */
+/**@{*/
+/** toState */
+extern void FSM_toFreeze(void);
+extern void FSM_toInit(void);
+extern void FSM_toListen(void);
+extern void FSM_toColdStart(void);
+extern void FSM_toActive(void);
+extern void FSM_toPassive(void);
+extern void FSM_toAwait(void);
+extern void FSM_toTest(void);
+extern void FSM_toDownload(void);
 
-/**@}*/// end of group StateMachine_Events
+/** doState */
+extern void FSM_doFreeze(void);
+extern void FSM_doInit(void);
+extern void FSM_doListen(void);
+extern void FSM_doColdStart(void);
+extern void FSM_doActive(void);
+extern void FSM_doPassive(void);
+extern void FSM_doAwait(void);
+extern void FSM_doTest(void);
+extern void FSM_doDownload(void);
 
-
-/**@}*/// end of group StateMachine_Transition_Num
-
+/**@}*/// end of group Protocol_Processor
 
 /**@}*/// end of group Protocol_Layer
 	

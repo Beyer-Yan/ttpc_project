@@ -27,7 +27,7 @@ static uint8_t send_byte_stream[2][256] = {0};
 #define CH1                         1
 
 /**
- * The mac_addr_t should be platform-dependent. We implements the TTPC protocol
+ * The mac_addr_t should be platform-dependent. We implement the TTPC protocol
  * based on 802.3 mac specification. So the MAC address is set in 6-bytes size.
  */
 typedef uint8_t hwaddr[6];
@@ -370,13 +370,31 @@ MAC_err_t MAC_PrepareSCFrame(void)
     return MAC_EOK;
 }
 
+/**
+ * For safety critical transmition process, the contents of both CH0
+ * and CH1 are definitly same. We choose not to implement the feature
+ * that different channels can send different frames. Maybe that will
+ * be taken consideration for the next version.
+ * @return  MAC_err_t
+ */
 MAC_err_t MAC_PushFrame(void)
 {
     uint32_t res;
 
     res = __assemble_ttp_frame();
-    //add something
+    /**prepare to transmit */
+    if(res==MAC_EOK)
+    {
+        DRV_PrepareToTransmitOfCH0(send_byte_stream[CH0],
+                               __G_ttp_frame_length+TTP_FRAME_HEADER_OFFSET);
+        DRV_PrepareToTransmitOfCH1(send_byte_stream[CH1],
+                               __G_ttp_frame_length+TTP_FRAME_HEADER_OFFSET);
+    }
+   
+    return res;
 }
+
+
 
 
 ////////////////////////////////////////////////////////////////////////////////
