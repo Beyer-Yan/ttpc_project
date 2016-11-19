@@ -10,13 +10,31 @@
   * @attention
   *
   * @desc
-  * This file aims to provide the basic operation interface for byte processing. 
+  * This file aims to provide the basic operation interface for byte processing
+  * and the ttpc protocol services.
+  * The TTPC protocol provides three groups services to the higher layers,
+  * COMMUNICATION SERVICES, SAFETY SERVICES, HIGHER LEVEL SERVICES.
+  *
+  * COMMUNICATION SERVICES are responsible for data exchange, cluster startup and 
+  * integration, noise tolerance, acknowledgment scheme and the fault-tolerent clock
+  * synchronization.
+  *
+  * SAFETY SERVICES establish the node membership, the clique avoidance algorithmm, 
+  * the independent bus guardian and the host/controller lifesign algorithm.
+  *
+  * HIGHER LEVEL SERVICES are requsted by the host and are used for switching 
+  * between transmission schedules at run time, syncronizing the cluster with 
+  * an external clock or other TTPC cluster or for a role-change of a node.
+  *
+  * Both the communication and the safety services provide a failed-operational 
+  * behavior of a running TTPC cluster.
+  *   
   * 
   ******************************************************************************
   */
  #ifndef __TTPSERVICE_H__
  #define __TTPSERVICE_H__
-
+#include "ttpdef.h"
 /**
  * @defgroup TTPSERVICE
  */
@@ -66,6 +84,50 @@ void ttp_freeze(void);
 /**
  * @todo more utillties should be added here.
  */
+
+/**
+ * @defgroup Service_Group
+ */
+/**@{*/
+
+/**
+ * @defgroup Comm_Services
+ */
+/**@{*/
+
+
+uint32_t cluser_startup(void*param);
+
+uint32_t integration(void*param);
+
+uint32_t sync_cheme(void*param);
+
+uint32_t noise_tolerence(void*param);
+
+uint32_t acknowledgment(void*param);
+
+uint32_t slot_acquirement(void*param);
+
+/**
+ * @defgroup Safety_Services
+ */
+/**@{*/
+
+uint32_t clique_detect(void*param);
+
+uint32_t check_host_life_sign(void);
+uint32_t update_controller_life_sign(void);
+
+
+/**@}*/// end of group Safety_Services
+
+
+/**@}*/// end of group Comm_Services
+
+
+/**@}*/// end of group Service_Group
+
+
 
 /*@}*/
 

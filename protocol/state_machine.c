@@ -2,7 +2,7 @@
   ******************************************************************************
   * @file    	state_machine.c
   * @author  	Beyer
-  * @email   	sinfare@foxmail.com
+  * @email   	sinfare@hotmail.com
   * @version 	v1.0.0
   * @date    	2016.10
   * @brief   	The state machine of the TTPC
@@ -20,15 +20,15 @@
 #define MAX_STATE_NUM 			10
 
 /**
- * This variable is used to record the events happend, mapping out the transition number
+ * This variable is used to record the events happened, mapping out the transition number
  * to be activated.
  */
 static valotile uint32_t __G_event_bit_pattern = 0;
 
 /**
  * This variable is used to record the permanent events, such as POWER_ON, AWAIT_CLR
- * TEST_CLR and so on. The permanent events happended will not be cleared if the 
- * corresbonding transition number is activated according to some events snapshot.  
+ * TEST_CLR and so on. The permanent events happened will not be cleared if the 
+ * corresponding transition number is activated according to some events snapshot.  
  */
 static valotile uint32_t __G_permanent_events = 0; 
 
@@ -60,16 +60,16 @@ static valotile char __G_start_flag = FSM_STOPPED;
  */
 static const FSM_State __G_state[MAX_STATE_NUM] = 
 {
-	/* FREEZE  */ {.state_num = 0, .toState = , .doState = },
-	/* INIT    */ {.state_num = 1, .toState = , .doState = },
-	/* LISTEN  */ {.state_num = 2, .toState = , .doState = },
-	/* COL_ST  */ {.state_num = 3, .toState = , .doState = },
-	/* ACTIVE  */ {.state_num = 4, .toState = , .doState = },
-	/* PASSIVE */ {.state_num = 5, .toState = , .doState = },
-	/* AWAIT   */ {.state_num = 6, .toState = , .doState = },
-	/* TEST    */ {.state_num = 7, .toState = , .doState = },
-	/* DOWNL   */ {.state_num = 8, .toState = , .doState = },
-	/* ERROR   */ {.state_num = 9, .toState = NULL, .doState = NULL}
+	/* FREEZE  */ {.state_num = 0, .toState = FSM_toFreeze,     .doState = FSM_doFreeze     },
+	/* INIT    */ {.state_num = 1, .toState = FSM_toInit,       .doState = FSM_doInit       },
+	/* LISTEN  */ {.state_num = 2, .toState = FSM_toListen,     .doState = FSM_doListen     },
+	/* COL_ST  */ {.state_num = 3, .toState = FSM_toColdStart,  .doState = FSM_doColdStart  },
+	/* ACTIVE  */ {.state_num = 4, .toState = FSM_toActive,     .doState = FSM_doActive     },
+	/* PASSIVE */ {.state_num = 5, .toState = FSM_toPassive,    .doState = FSM_doPassive    },
+	/* AWAIT   */ {.state_num = 6, .toState = FSM_toAwait,      .doState = FSM_doAwait      },
+	/* TEST    */ {.state_num = 7, .toState = FSM_toTest,       .doState = FSM_doTest       },
+	/* DOWNL   */ {.state_num = 8, .toState = FSM_toDownload,   .doState = FSM_doDownload   },
+	/* ERROR   */ {.state_num = 9, .toState = NULL,             .doState = NULL             }
 };
 
 /**
@@ -208,9 +208,9 @@ static int __calc_transition_num(void)
 	int transition_num = -1;
 
 	/**
-	 * claculation process here. If no corresbonding transition number is activated,
+	 * calculation process here. If no corresponding transition number is activated,
 	 * the variable transition_num will set to -1. And if valid transition number
-	 * is activated, the corresbonding bits of the transition number occupying in
+	 * is activated, the corresponding bits of the transition number occupying in
 	 * the events bits pattern shall be cleared.
 	 */
 	
@@ -233,11 +233,11 @@ static void __protocol(void)
 {
 
 	int _x; 	/**< state number */
-	int _y; 	/**< stransition number */
+	int _y; 	/**< transition number */
 
 	/**
 	 * record the state number of the current state for programing conciseness. It's
-	 * not neccesary to record the variable because of the memory wasting.
+	 * not necessary to record the variable because of the memory wasting.
 	 */
 	_x = __G_cur_state->state_num;
 

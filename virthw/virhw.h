@@ -2,7 +2,7 @@
   ******************************************************************************
   * @file    	virhw.h
   * @author  	Beyer
-  * @email   	sinfare@foxmail.com
+  * @email   	sinfare@hotmail.com
   * @version 	v1.0.0
   * @date    	2016.09
   * @brief   	This file connects the low-level hardware and the high-level protocol
@@ -15,6 +15,7 @@
   * action coming from the upper level to the real hardware operations. Different platforms
   * have different hardware implementations, so the program generosity should be guaranteed
   * within  shielding the real hardware differences.
+  * 
   * The clock is a very important notion of TTA, which determines the timing correctness of 
   * the protocol  services. The local  clock and  the the global clock are specified in the 
   * clock module. The DMA module is inessential, but it will reduce the memory access delay 
@@ -286,6 +287,10 @@ void DRV_PrepareToTransmitOfCH0(int8_t* BufferAddr, uint16_t length);
 void DRV_PrepareToTransmitOfCH1(int8_t* BufferAddr, uint16_t length);
 uint32_t DRV_CheckTransmitted(void);
 
+/**
+ * This function polls for a frame reception
+ * @return 1:received farmes, 0:received nothing.
+ */
 uint32_t DRV_CheckReceived(void); 
 DataStreamTypeDef DRV_GetReceived(void);
 
