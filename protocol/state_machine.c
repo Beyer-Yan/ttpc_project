@@ -23,20 +23,20 @@
  * This variable is used to record the events happened, mapping out the transition number
  * to be activated.
  */
-static valotile uint32_t __G_event_bit_pattern = 0;
+static volatile uint32_t __G_event_bit_pattern = 0;
 
 /**
  * This variable is used to record the permanent events, such as POWER_ON, AWAIT_CLR
  * TEST_CLR and so on. The permanent events happened will not be cleared if the 
  * corresponding transition number is activated according to some events snapshot.  
  */
-static valotile uint32_t __G_permanent_events = 0; 
+static volatile uint32_t __G_permanent_events = 0; 
 
 /**
  * This variable is used to record the current state where the controller situates at
  * present.
  */
-static const  FSM_State* valotile __G_cur_state = NULL;
+static const  FSM_State* volatile __G_cur_state = NULL;
 
 /**
  * hook functions specified by users will be called when state transition is activated
@@ -53,7 +53,7 @@ static void (*__Gf_hook)(uint32_t ps) = NULL;
  * @arg FSM_RUNNING
  * @arg FSM_STOPPED
  */
-static valotile char __G_start_flag = FSM_STOPPED;
+static volatile char __G_start_flag = FSM_STOPPED;
 
 /**
  * schedule table filling

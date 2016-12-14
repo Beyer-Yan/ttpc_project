@@ -2,7 +2,7 @@
   ******************************************************************************
   * @file    	ttpc_mac.h
   * @author  	Beyer
-  * @email   	sinfare@foxmail.com
+  * @email   	sinfare@hotmail.com
   * @version 	v1.0.0
   * @date    	2016.09
   * @brief   	This file provides the MAC related operation interfaces
@@ -23,13 +23,39 @@
 ////////////////////////////////////////////////////////////////////////////////
 #include <ttpdef.h>
 
+
+#define MAX_FRAME_LENGTH		240
+
 /**
- * TTPC messages are asigned to specified slots statically. The particular 
- * message received will be put in the slot-relative message area according
- * to its slot.
- * The maximum value of a TTPC message in unit of byte. see AS6003, page 53
+ * the status of frame-ready indicating. When the host ensures that the frame to 
+ * be sent is ok, it shall write the particular bit pattern "0xEA" to the first
+ * byte offset of the CNIAddressOffset of the corresponding slot configuration 
+ * parameters, which means that the position of the application data starts from
+ * the second byte. 
+ * The host shall confirm the frame by writing the particular bit-pattern to the 
+ * corresponding position before the controller sends the frame. if not, the
+ * controller will raise the NR(Frame Not Ready) interruption and stop running.
+ * The contoller will clear the bit-pattern to zero after reading it out.
  */
-#define MAX_FRAME_LENGTH				240
+#define STATUS_BIT_PATTERN     ((uint8_t)0xEA)
+
+/** frame type macro definitions */
+#define FRAME_N             	0
+#define FRAME_I             	1
+#define FRAME_X             	2
+
+/** for frame status field: the least significant 8-bits valid*/
+#define FRAME_CORRECT 			(uint32_t)0x00000001
+#define FRAME_TANTATIVE			(uint32_t)0x00000002
+#define FRAME_MODE_VIOLATION	(uint32_t)0x00000003
+#define FRAME_INCORRECT 		(uint32_t)0x00000004
+#define FRAME_NULL				(uint32_t)0x00000005
+#define FRAME_INVALID			(uint32_t)0x00000006
+
+/** define the channel number */
+#define CH0                      0
+#define CH1                      1
+
 
 typedef enum{
 	MAC_EOK=0,				/**< No errors happend */
@@ -38,11 +64,17 @@ typedef enum{
 	MAC_ESIZE_OVER,			/**< The size of the message oversizes */
 	MAC_ERS,				/**< The message is not be confirmed by the host */
 	MAC_EMODE, 				/**< detect a mode vialation */
-	MAC_ETCOL,				/**< colision deteted during transmiting */
-	MAC_ERCOL,				/**< colision detected during recieving */
-	MAC_ECRC,				/**< frame crc check failed */
+
+	MAC_ETX_COL,			/**< colision deteted during transmiting */
+	MAC_ETX_INV,			/**< invalid trasmission time */
+
+	MAC_ERX_NON,			/**< nothing has been received */
+	MAC_ERX_COL,			/**< colision detected during recieving */
+	MAC_ERX_INV,			/**< invalid frames has been received */
+	MAC_ERX_ECRC,           /**< received a frame with crc falied */
+	MAC_ERX_LTH,            /**< reveived a frame with length error */
+
 	MAC_EPHY,				/**< physical hardware fault */
-	MAC_ELTH,				/**< length erre frame detected */
 	MAC_EOTHER				/**< Other unknown errors */
 }MAC_err_t;
 
@@ -51,6 +83,11 @@ typedef uint32_t crc32_t;
 typedef crc32_t  crc_t;
 
 /**
+ * TTPC messages are asigned to specified slots statically. The particular 
+ * message received will be put in the slot-relative message area according
+ * to its slot.
+ * The maximum value of a TTPC message in unit of byte. see AS6003, page 53
+ * 
  * We set the size of message area forcely and fixedly for every round slot. The
  * message to be received on CH0 and CH1 will be pulled in a dual-cell receiving 
  * buffer respectively. And the message to be transimitted redundantly on CH0
@@ -67,22 +104,19 @@ typedef crc32_t  crc_t;
  *                                                                             
  /                          /                        /                   / 
  |-------slot 0-------------|------- slot 1--------- |----- slot 3-------| 
- |                          |                        \                   \ 
- \                          \                        \                   | 
- /-/----------/-/-----------/-/--------/-/-----------/-/-----------------\ 
+ |                          |                        |                   | 
+ |                          |                        |                   | 
+ /-/----------/-/-----------/-/--------/-/-----------/-/-----------------| 
  |*|          |*|           |*|        |*|           |*|                 | 
  |*|          |*|           |*|        |*|           |*|                 | 
  |*|          |*|           |*|        |*|           |*|                 | 
  |*|          |*|           |*|        |*|           |*|                 | 
- \-\----------\-\-----------\-\--------\-\-----------\-\-----------------\ 
+ \-\----------\-\-----------\-\--------\-\-----------\-\-----------------|
  /    entry for two frames  /                        /entry for one frame/ 
  |   to be received on CH0  |                        |to be transmitted  | 
  |   and CH1                |                        |redundantly        | 
  ------------------------------------------------------------------------- 
 //  */
-
-#define STATUS_BIT_PATTERN     ((uint8_t)0xEA)
-
 // typedef union msg_cell
 // {
 // 	struct
@@ -196,12 +230,12 @@ void        MAC_CSClearMemberBit(int PositionNumber);
  * @param  cs a c_state_t type variable.
  * @return    non
  */
-#define MAC_CSGetCState(cs)			do{(cs)->GlobalTime     = C_STATE_GT&0xffff;\
-                                       (cs)->ClusterPosition= C_STATE_CP&0xffff;\
-                                       (cs)->Membership[0]  = C_STATE_MV0&0xffff;\
-                                       (cs)->Membership[1]  = C_STATE_MV1&0xffff;\
-                                       (cs)->Membership[2]  = C_STATE_MV2&0xffff;\
-                                   	   (cs)->Membership[3]  = C_STATE_MV3&0xffff;\
+#define MAC_CSGetCState(pcs)		do{(pcs)->GlobalTime     = C_STATE_GT&0xffff;\
+                                       (pcs)->ClusterPosition= C_STATE_CP&0xffff;\
+                                       (pcs)->Membership[0]  = C_STATE_MV0&0xffff;\
+                                       (pcs)->Membership[1]  = C_STATE_MV1&0xffff;\
+                                       (pcs)->Membership[2]  = C_STATE_MV2&0xffff;\
+                                   	   (pcs)->Membership[3]  = C_STATE_MV3&0xffff;\
                                    	}while(0)
 
 #define MAC_CSGetCurGTF()			(C_STATE_GT)
@@ -216,12 +250,12 @@ void        MAC_CSClearMemberBit(int PositionNumber);
 
 
 /** Be sure the cs is a pointer. Legality will not be checked. */
-#define MAC_CSSetCState(cs) 		do{C_STATE_GT =(cs)->GlobalTime&0xffff;\
-									   C_STATE_CP =(cs)->ClusterPosition&0xffff;\
-									   C_STATE_MV0=(cs)->Membership[0]&0xffff;\
-									   C_STATE_MV1=(cs)->Membership[1]&0xffff;\
-									   C_STATE_MV2=(cs)->Membership[2]&0xffff;\
-									   C_STATE_MV3=(cs)->Membership[3]&0xffff;\
+#define MAC_CSSetCState(pcs) 		do{C_STATE_GT =(pcs)->GlobalTime&0xffff;\
+									   C_STATE_CP =(pcs)->ClusterPosition&0xffff;\
+									   C_STATE_MV0=(pcs)->Membership[0]&0xffff;\
+									   C_STATE_MV1=(pcs)->Membership[1]&0xffff;\
+									   C_STATE_MV2=(pcs)->Membership[2]&0xffff;\
+									   C_STATE_MV3=(pcs)->Membership[3]&0xffff;\
 									}while(0)
 
 #define MAC_CSSetMemberBit(pos)		((*(C_STATE_BASE+((pos)/16)+2))|=1<<((pos)%16))
@@ -236,8 +270,20 @@ void        MAC_CSClearMemberBit(int PositionNumber);
 
 #define MAC_CSClearMemberBit(pos)	((*(C_STATE_BASE+((pos)/16)+2))&=~(1<<((pos)%16)))
 
+/**
+ * judge whether the c-state cs is the same as local c-state. Be sure that the cs is 
+ * a pointer to the c-state structure.
+ * @return 1 cs is the same as local c-state
+ *         0 cs is not the same as local c-state
+ */
+#define MAC_CSIsSame(pcs)          (((pcs)->GlobalTime     ==(C_STATE_GT&0xffff))  && \
+									((pcs)->ClusterPosition==(C_STATE_CP&0xffff))  && \
+									((pcs)->Membership[0]  ==(C_STATE_MV0&0xffff)) && \
+									((pcs)->Membership[1]  ==(C_STATE_MV1&0xffff)) && \
+									((pcs)->Membership[2]  ==(C_STATE_MV2&0xffff)) && \
+									((pcs)->Membership[3]  ==(C_STATE_MV3&0xffff)))
 
-/** 
+/** p
  *                                                                                
          |            |                                  |             | 
          |  HEADER    |          V-PAYLOAD               |     FOOTER  | 
@@ -262,12 +308,20 @@ X-FRAME  |            |          |            |          |             |
 typedef struct ttpc_frame
 {
 	ttpc_header_t  header;
-	uint8_t        appDataLength;
+	/** the totol length, including the header and crc part */
+	uint8_t        frame_length;
+
+
+	uint8_t        frame_type;
+
+	/** the timestamp of the received frame in uint of microtick */
+	uint32_t       rcv_timestamp;
+
 	union
 	{
 		struct
 		{
-			void* pAppData;
+			uint8_t* pAppData;
 		}N_frame;
 
 		struct
@@ -278,22 +332,12 @@ typedef struct ttpc_frame
 		struct
 		{
 			c_state_t  c_state;
-			crc_t      crc;
-			void*      pAppData;
+			crc_t      crc1;
+			uint8_t*   pAppData;
 		}X_frame;
-	}frame_body_t;
-
-	crc_t    pFooter;
+	};
+	crc_t    crc;
 }ttpc_frame_desc_t;
-
-/** for frame status field: the least significant 8-bits valid*/
-
-#define FRAME_CORRECT 					(uint32_t)0x00000001
-#define FRAME_TANTATIVE					(uint32_t)0x00000002
-#define FRAME_MODE_VIOLATION			(uint32_t)0x00000003
-#define FRAME_INCORRECT 				(uint32_t)0x00000004
-#define FRAME_NULL						(uint32_t)0x00000005
-#define FRAME_INVALID					(uint32_t)0x00000006
 
 /**                                                               
                31-09              8-6       5-3        2-0       
@@ -310,7 +354,6 @@ typedef struct ttpc_frame
  * MODE OF THE CONTROLLER. The MAC_PushFrame function only assembles the frame I,X and
  * N.
  */
-
 MAC_err_t MAC_PushFrame(void);
 MAC_err_t MAC_PrepareCSFrame(void);
 
@@ -318,16 +361,62 @@ void      MAC_StartTransmit(void);
 
 uint32_t  MAC_GetTransmittedFlags(void);
 
-/** check whether the mac has received frame and perform the frame status algorithm */
-uint32_t  MAC_CheckReceived(void); 
- 
-/**
- * Be sure that the function MAC_CheckReceived has been called before calling the 
- * function below. If nothing or wrong frame has been received, the contents of 
- * the desc[2] will be set NULL. Attention that the contents of the desc[2] will
- * also be set null if the MAC_CheckReceived function is not be called.
+/** check whether the mac has received frame with returning 0 for receiving nothing, 
+ *  returning 1 for receiving frames.
+ *  receiving nothing.
  */
-void      MAC_PullFrames(ttpc_frame_desc_t *desc[2]);
+uint32_t  MAC_CheckReceived(void);
+
+/**
+ * This function returns the flags of frames received.	
+ * @return  the flags of frames received, values below:
+ *           @arg MAC_ERX_NON    nothing has been received
+ *           @arg MAC_ERX_INV	 invalid frames has been received
+ *           @arg MAC_ERX_COL 	 collision detected when receiving
+ *           @arg MAC_ERX_ECRC 	 received a frame with crc failed
+ *           @arg MAC_ERX_ELT    received a frame with length error
+ *           @arg MAC_EOK        reveived a good frame.
+ */
+uint32_t  MAC_GetReceivedFlag(void);
+
+/**
+ * Get the timestamps of the received frame
+ * @param  channel the channel, CH0 or CH1
+ * @return         the corresponding timestamps
+ */
+uint32_t  MAC_GetFrameTimestamp(uint32_t channel);
+
+/**
+ * At the start of PRP phase, the acknowledgment algorithm will be performed. 
+ * If the ack process instantiated by hardware, the ack will be perform as
+ * soon as the mac receives a frame. But for software implement, the time 
+ * cost for performing acknowledgment algorithm shall be taken consideration.
+ * This function shall be called after the ack is performed.
+ * @param   channel    the channel, CH0 or CH1	 
+ * @return  the frame status
+ */
+uint32_t  MAC_GetFrameStatus(uint32_t channel);
+
+uint32_t  MAC_GetSlotStatus(void);
+
+/**
+ * Push the data of the frame received to the corresponding CNI address. The frame
+ * shall be a data frame.
+ * @param  channel the channel, CH0 or CH1
+ * @return         non
+ */
+void      MAC_PushAppData(uint32_t channel);
+
+/**
+ * This function fills the description of the frame received. If the frame 
+ * received is incorrect or null or invalid, the function will return 0.
+ * @param desc[2]   the array pointer of the frame descriptions
+ * @return   0  for invalid or incorrect or null frame,
+ *           1  for the other frame.
+ * @attention if the frame received is not ok, the desc pointer will be set\
+ * NULL. 
+ */
+uint32_t  MAC_GetFrameDesc(ttpc_frame_desc_t* desc[2]);
 
 ////////////////////////////////////////////////////////////////////////////////
 ///slots service definitions                                                  //

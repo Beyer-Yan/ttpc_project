@@ -267,6 +267,7 @@ typedef struct
 #define CRC_ERR         (uint32_t)0x00000008
 #define PHY_ERR         (uint32_t)0x00000010
 #define LTH_ERR         (uint32_t)0x00000020
+#define DRV_INV         (uint32_t)0xa0000000 /**< invalid tx/rx time */
 /**
  * /@todo The other errors to be expanded
  */

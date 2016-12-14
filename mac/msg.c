@@ -2,10 +2,10 @@
   ******************************************************************************
   * @file    	msg.c
   * @author  	Beyer
-  * @email   	sinfare@foxmail.com
+  * @email   	sinfare@hotmail.com
   * @version 	v1.0.0
   * @date    	2016.11
-  * @brief   	the implemetation of the message interface
+  * @brief   	the implementation of the message interface
   ******************************************************************************
   * @attention
   *
@@ -23,8 +23,6 @@ static uint8_t recv_byte_stream[2][256] = {0};
 static uint8_t send_byte_stream[2][256] = {0};
 
 #define TTP_FRAME_HEADER_OFFSET     14
-#define CH0                         0
-#define CH1                         1
 
 /**
  * The mac_addr_t should be platform-dependent. We implement the TTPC protocol
@@ -45,10 +43,6 @@ static hwaddr dst = {
  */
 static short __G_ttp_frame_length = 0;
 
-/** frame type macro definitons */
-#define FRAME_N             0
-#define FRAME_I             1
-#define FRAME_X             2
 
 ////////////////////////////////////////////////////////////////////////////////
 ///send frame operation                                                       //
@@ -78,7 +72,7 @@ static void __byte_copy_to_frame_buf(int index,uint8_t *src,int size)
  * @attention     4-bytes-alignment is required for the low level hardware.
  *                But the address of the buf is, maybe, not 4-byte-alignment,
  *                mostly. A 4-byte temporary variable is introduced in case
- *                it, despite the poor performace.
+ *                it, despite the poor performance.
  */
 static uint32_t __ttp_frame_crc32_calc(uint8_t* buf,int length)
 {
@@ -215,7 +209,7 @@ static uint32_t __assemble_ttp_frame(void)
     }
 
     /**
-     * @brief If no mode change was requsted the mode change field 
+     * @brief If no mode change was requested the mode change field 
      * shall be set to the value of "MCR_MODE_CLR" according to 
      * AS6003 8.6.1, page 38/56
      */ 
@@ -242,6 +236,7 @@ static uint32_t __assemble_ttp_frame(void)
 
         //padding the crc region
         __ttp_frame_crc32_reset();
+        crc32 = __ttp_frame_crc32_calc(MEDL_GetSchedID());
         crc32 = __ttp_frame_crc32_calc(send_byte_stream[CH0]+TTP_FRAME_HEADER_OFFSET,
                                        _index-TTP_FRAME_HEADER_OFFSET);
         crc32 =__ttp_frame_crc32_calc(&c_state,sizeof(c_state_t));
@@ -260,6 +255,7 @@ static uint32_t __assemble_ttp_frame(void)
        _index += sizeof(c_state_t);
 
        __ttp_frame_crc32_reset();
+       crc32 = __ttp_frame_crc32_calc(MEDL_GetSchedID());
        crc32 =  __ttp_frame_crc32_calc(send_byte_stream[CH0]+TTP_FRAME_HEADER_OFFSET,
                                        _index-TTP_FRAME_HEADER_OFFSET);
        /**
@@ -281,6 +277,7 @@ static uint32_t __assemble_ttp_frame(void)
             _index += pSlot->appDataLength;
 
             __ttp_frame_crc32_reset();
+            crc32 = __ttp_frame_crc32_calc(MEDL_GetSchedID());
             crc32 = __ttp_frame_crc32_calc(send_byte_stream[CH0]+TTP_FRAME_HEADER_OFFSET,
                                            _index-TTP_FRAME_HEADER_OFFSET);
             __byte_copy_to_frame_buf(_index,&crc32,4);
@@ -359,6 +356,7 @@ MAC_err_t MAC_PrepareSCFrame(void)
     _index += sizeof(c_state);
 
     __ttp_frame_crc32_reset();
+    crc32 = __ttp_frame_crc32_calc(MEDL_GetSchedID());
     crc32 = __ttp_frame_crc32_calc(send_byte_stream[CH0]+TTP_FRAME_HEADER_OFFSET,
                                    _index-TTP_FRAME_HEADER_OFFSET);
     __byte_copy_to_frame_buf(_index,&crc32,4);
@@ -371,8 +369,8 @@ MAC_err_t MAC_PrepareSCFrame(void)
 }
 
 /**
- * For safety critical transmition process, the contents of both CH0
- * and CH1 are definitly same. We choose not to implement the feature
+ * For safety critical transmission process, the contents of both CH0
+ * and CH1 are definitely same. We choose not to implement the feature
  * that different channels can send different frames. Maybe that will
  * be taken consideration for the next version.
  * @return  MAC_err_t
@@ -394,10 +392,70 @@ MAC_err_t MAC_PushFrame(void)
     return res;
 }
 
+/**
+ * This function eliminates the error code mismatch between hardware
+ * level and mac level.
+ * @return  the error code of mac level
+ */
+uint32_t MAC_GetTransmittedFlags(void)
+{
+    uint32_t res = DRV_CheckTransmitted();
 
-
+    switch(res)
+    {
+        case DRV_OK : res = MAC_EOK;      break;
+        case TXD_COL: res = MAC_ETX_COL;  break;
+        case PHY_ERR: res = MAC_EPHY;     break;
+        case default: res = MAC_EOTHER;   break;
+    }
+    return res;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
-///recieve frame operation                                                    //
+///receive frame operation                                                    //
 ////////////////////////////////////////////////////////////////////////////////
+/** check whether the mac has received frame with returning 0 for receiving nothing, 
+ *  returning 1 for receiving frames.
+ *  receiving nothing.
+ */
+uint32_t  MAC_CheckReceived(void)
+{
+    return DRV_CheckReceived();
+}
+
+/**
+ * This function returns the flags of frames received.  
+ * @return  the flags of frames received, values below:
+ *           @arg MAC_ERX_NON    nothing has been received
+ *           @arg MAC_ERX_INV    invalid frames has been received
+ *           @arg MAC_ERX_COL    collision detected when receiving
+ *           @arg MAC_ERX_ECRC   received a frame with crc falied
+ *           @arg MAC_ERX_ELT    reveived a frame with length error
+ *           @arg MAC_EOK        reveived a good frame.
+ */
+uint32_t  MAC_GetReceivedFlag(void)
+{
+    DataStreamTypeDef stream;
+    uint32_t res;
+
+    res = DRV_CheckReceived();
+    stream = DRV_GetReceived();
+
+    if(!res)
+    {
+        return MAC_ERX_NON;
+    }
+
+    switch(stream.status)
+    {
+        case DRV_OK  : res = MAC_EOK;       break;
+        case RXD_COL : res = MAC_ERX_COL;   break;
+        case CRC_ERR : res = MAC_ERX_ECRC;  break;
+        case PHY_ERR : res = MAC_EPHY;      break;
+        case LTH_ERR : res = MAC_ERX_LTH;   break;
+        case DRV_INV : res = MAC_ERX_INV;   break;
+        case default : res = MAC_EOTHER;    break;
+    }
+    return res;
+}
 

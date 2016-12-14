@@ -100,7 +100,7 @@ uint32_t cluser_startup(void*param);
 
 uint32_t integration(void*param);
 
-uint32_t sync_cheme(void*param);
+uint32_t sync_schema(void*param);
 
 uint32_t noise_tolerence(void*param);
 
