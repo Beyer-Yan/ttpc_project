@@ -2,7 +2,7 @@
   ******************************************************************************
   * @file    	ttpcomponent.h
   * @author  	Beyer
-  * @email   	sinfare@foxmail.com
+  * @email   	sinfare@hotmail.com
   * @version 	v1.0.0
   * @date    	2016.8
   * @brief   	brief description about this file

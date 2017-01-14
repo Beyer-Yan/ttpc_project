@@ -14,14 +14,14 @@
   * 
   ******************************************************************************
   */
-#include "ttpdef.h"
-
+#ifndef __PROTOCOL_DATA_H__
+	#define __PROTOCOL_DATA_H__
 /*******************************************************************************/
 /**
  * the namespace "PV_" means "Protocol variables". 
  */
 /** ensure the 4-bytes alignment for the PV_data */
-
+#include "ttpdef.h"
 extern uint8_t PV_data[20];
 /** counters */
 #define PV_csc  	(PV_data[0])	/**< cold start counter */
@@ -68,14 +68,45 @@ extern uint8_t PV_data[20];
  */
 #define PV_IncCounter(counter)			(PV_data[counter]++)
 #define PV_DecCounter(counter) 			(PV_data[counter]--)
-#define PV_clrCounter(counter) 			(PV_data[counter]=0)
+#define PV_ClrCounter(counter) 			(PV_data[counter]=0)
 #define PV_GetCounter(counter)			(PV_data[counter])
 
-/** ack state definitions */
+/** ack relatived state and operation definitions */
+#define ACK_INIT 						0
 #define WAIT_FIRST_SUCCESSOR 			1
 #define WAIT_SECOND_SUCCESSOR 			2
 #define ACK_FINISHED 					3
-
+/** ack operations definitions */
 #define PV_GetAckState() 				(PV_as) 
 #define PV_SetAckState(state) 			(PV_as = state)
 #define PV_ClrAckState() 				(PV_as = 0)
+#define PV_SetFSAddr(addr) 				(PV_fsaddr = addr)
+#define PV_GetFSAddr() 					(PV_fsaddr)
+#define PV_SetFirstSuccessorMemPos(pos) (PV_fsmp = pos)
+#define PV_GetFirstSuccessorMemPos() 	(PV_fsmp)
+
+/** necessary flags relatived */
+#define BIG_BANG_ENABLE 				0
+#define BIG_BANG_DISABLE 				1
+#define FREE_SHOT_ENABLE  				0
+#define FREE_SHOT_DIsABLE				1
+
+#define PV_GetBigBangFlag()				(PV_bbf)
+#define PV_EnableBigBang()		 		(PV_bbf = BIG_BANG_ENABLE)
+#define PV_DisableBigBang() 			(PV_bbf = BIG_BANG_DISABLE)
+
+#define PV_GetFreeShotFlag() 			(PV_fsf)
+#define PV_EnableFreeShot() 			(PV_fsf = FREE_SHOT_DISABLE)	
+#define PV_DisableFreeShot() 			(PV_fsf = FREE_SHOT_ENABLE)	
+
+/** observed channel  */
+#define CH0                      		0
+#define CH1                      		1
+
+#define PV_GetObservedChannel() 		(PV_oc)
+#define PV_SetObservedChannel(ch) 		(PV_oc = ch)	
+
+
+
+#endif
+

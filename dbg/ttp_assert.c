@@ -2,7 +2,7 @@
   ******************************************************************************
   * @file    	ttp_sssert.c
   * @author  	Beyer
-  * @email   	sinfare@foxmail.com
+  * @email   	sinfare@hotmail.com
   * @version 	v1.0.0
   * @date    	2016.11.15
   * @brief   	the implementation of the TTP_ASSERT interface

@@ -2,7 +2,7 @@
   ******************************************************************************
   * @file    	medl.c
   * @author  	Beyer
-  * @email   	sinfare@foxmail.com
+  * @email   	sinfare@hotmail.com
   * @version 	v1.0.0
   * @date    	2016.11.6
   * @brief   	This file implemets the basic interface of the MEDL
@@ -93,8 +93,8 @@ static void __medl_role_extract(void)
 						 __G_medl_header.role_region_addr);
 
 	TTP_ASSERT(res!=0);
-	__G_role.LogicalNameSlotPosition       = (buf[0]&(0xff<<8))>>8;
-	__G_role.LogicalNameMulplexedID    	   = (buf[0]&0xff);
+	__G_role.LogicalNameSlotPosition       = (buf[0]&(0xffff<<16))>>16;
+	__G_role.LogicalNameMulplexedID    	   = (buf[0]&0xffff);
 	__G_role.PassiveFlag               	   = (buf[1]&(1<<0))>>0;				
 	__G_role.MultiplexedMembershipFlag 	   = (buf[1]&(1<<1))>>1;
 	__G_role.FlagPosition              	   = (buf[1]&(0xff<<8))>>8;				
@@ -130,19 +130,19 @@ static void __medl_slot_extract(uint32_t mode, uint32_t round_slot)
 						 offset);
 						 
 	TTP_ASSERT(res!=0);
-	__G_slot.LogicalSenderSlot        = (buf[0]&(0xff<<8))>>8;
-	__G_slot.LogicalSenderMultiplexID = (buf[0]&0xff);
+	__G_slot.LogicalSenderSlot        = (buf[0]&(0xffff<<16))>>16;
+	__G_slot.LogicalSenderMultiplexID = (buf[0]&0xffff);
 	__G_slot.SlotDuration             = buf[1];	
 	__G_slot.TransmissionDuration     = buf[2];
 	__G_slot.DelayCorrectionTerms     = buf[3];	
 	__G_slot.CNIAddressOffset         = buf[4];	
 	__G_slot.AppDataLength            = (buf[5]&0xff);
 	__G_slot.FlagPosition             = (buf[5]&(0xff<<8))>>8;	
-	__G_slot.FrameType                = (buf[5]&(1<<9))>>9;
-	__G_slot.ModeChangePermission     = (buf[5]&(1<<10))>>10;
-	__G_slot.ReintegrationAllow       = (buf[5]&(1<<11))>>11;
-	__G_slot.ClockSychronization      = (buf[5]&(1<<12))>>12;
-	__G_slot.SynchronizationFrame     = (buf[5]&(1<<13))>>13;
+	__G_slot.FrameType                = (buf[5]&(1<<16))>>16;
+	__G_slot.ModeChangePermission     = (buf[5]&(1<<17))>>17;
+	__G_slot.ReintegrationAllow       = (buf[5]&(1<<18))>>18;
+	__G_slot.ClockSychronization      = (buf[5]&(1<<19))>>19;
+	__G_slot.SynchronizationFrame     = (buf[5]&(1<<20))>>20;
 	__G_slot.AtTime                   = buf[6];
 }
 
@@ -242,10 +242,24 @@ uint32_t MEDL_GetRegionAddr(uint32_t RegionType)
 	return (addr);
 }
 
-void* MEDL_GetRoundSlotAddr(uint32_t Mode, uint32_t TDMARound, uint32_t Slot)
+void* MEDL_GetRoundSlotAddr(uint32_t ModeNum, uint32_t TDMARound, uint32_t Slot)
 {
-	uint32_t round_slot = TDMARound * __G_medl_header.tdma_slots;
-	__medl_slot_extract(Mode,round_slot);
+	static uint32_t _ModeNum   = -1;
+	static uint32_t _TDMARound = -1;
+	static uint32_t _Slot      = -1;
+	uint32_t _round_slot;
+	/**
+	 * Only in the first time are the slot properties extracted.
+	 */
+	if((_ModeNum!=ModeNum)||(_TDMARound!=TDMARound)||(_Slot!=Slot))
+	{
+		_ModeNum    = ModeNum;
+		_TDMARound  = TDMARound;
+		_Slot       = Slot;
+		_round_slot = _TDMARound * __G_medl_header.tdma_slots + _Slot;
+
+		__medl_slot_extract(_Mode,_round_slot);
+	}
 
 	return ((void*)&__G_slot);
 }
@@ -258,4 +272,18 @@ uint32_t MEDL_GetSchedID(void)
 uint32_t MEDL_GetAppID(void)
 {
 	return (__G_app_id); 
+}
+
+uint32_t MEDL_GetRoundCycles(uint32_t ModeNum)
+{
+	return __G_medl_header.slot_mode_size[ModeNum];
+}
+
+uint32_t MEDL_GetTDMASlots(uint32_t ModeNum)
+{
+	/**
+	 * the parameter ModeNum is not used here temporarily. We assume that 
+	 * the TDMA slots of all modes are the same.
+	 */
+	return __G_medl_header.tdma_slots;
 }

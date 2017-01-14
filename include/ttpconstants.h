@@ -2,7 +2,7 @@
   ******************************************************************************
   * @file    	ttpconstants.h
   * @author  	Beyer
-  * @email   	sinfare@foxmail.com
+  * @email   	sinfare@hotmail.com
   * @version 	v1.0.0
   * @date    	2016.8
   * @brief   	Useful constants definition of TTP/C controller

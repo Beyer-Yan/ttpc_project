@@ -26,18 +26,7 @@
 
 #define MAX_FRAME_LENGTH		240
 
-/**
- * the status of frame-ready indicating. When the host ensures that the frame to 
- * be sent is ok, it shall write the particular bit pattern "0xEA" to the first
- * byte offset of the CNIAddressOffset of the corresponding slot configuration 
- * parameters, which means that the position of the application data starts from
- * the second byte. 
- * The host shall confirm the frame by writing the particular bit-pattern to the 
- * corresponding position before the controller sends the frame. if not, the
- * controller will raise the NR(Frame Not Ready) interruption and stop running.
- * The contoller will clear the bit-pattern to zero after reading it out.
- */
-#define STATUS_BIT_PATTERN     ((uint8_t)0xEA)
+
 
 /** frame type macro definitions */
 #define FRAME_N             	0
@@ -52,27 +41,22 @@
 #define FRAME_NULL				(uint32_t)0x00000005
 #define FRAME_INVALID			(uint32_t)0x00000006
 
-/** define the channel number */
-#define CH0                      0
-#define CH1                      1
-
-
 typedef enum{
-	MAC_EOK=0,				/**< No errors happend */
+	MAC_EOK=0,				/**< No errors happens */
 	MAC_ESLOT_NUM,			/**< Current slot > MAX_SLOT_NUMBER */
-	MAC_ENON_DATA,			/**< No data to be thansmitted  */
+	MAC_ENON_DATA,			/**< No data to be transmitted  */
 	MAC_ESIZE_OVER,			/**< The size of the message oversizes */
 	MAC_ERS,				/**< The message is not be confirmed by the host */
-	MAC_EMODE, 				/**< detect a mode vialation */
+	MAC_EMODE, 				/**< detect a mode violation */
 
-	MAC_ETX_COL,			/**< colision deteted during transmiting */
-	MAC_ETX_INV,			/**< invalid trasmission time */
+	MAC_ETX_COL,			/**< collision detected during transmitting */
+	MAC_ETX_INV,			/**< invalid transmission time */
 
 	MAC_ERX_NON,			/**< nothing has been received */
-	MAC_ERX_COL,			/**< colision detected during recieving */
+	MAC_ERX_COL,			/**< collision detected during receiving */
 	MAC_ERX_INV,			/**< invalid frames has been received */
-	MAC_ERX_ECRC,           /**< received a frame with crc falied */
-	MAC_ERX_LTH,            /**< reveived a frame with length error */
+	MAC_ERX_ECRC,           /**< received a frame with crc failed */
+	MAC_ERX_LTH,            /**< received a frame with length error */
 
 	MAC_EPHY,				/**< physical hardware fault */
 	MAC_EOTHER				/**< Other unknown errors */
@@ -83,14 +67,14 @@ typedef uint32_t crc32_t;
 typedef crc32_t  crc_t;
 
 /**
- * TTPC messages are asigned to specified slots statically. The particular 
+ * TTPC messages are assigned to specified slots statically. The particular 
  * message received will be put in the slot-relative message area according
  * to its slot.
  * The maximum value of a TTPC message in unit of byte. see AS6003, page 53
  * 
- * We set the size of message area forcely and fixedly for every round slot. The
+ * We set the size of message area forcedly and fixedly for every round slot. The
  * message to be received on CH0 and CH1 will be pulled in a dual-cell receiving 
- * buffer respectively. And the message to be transimitted redundantly on CH0
+ * buffer respectively. And the message to be transmitted redundantly on CH0
  * and CH1 is pushed from the sending single-cell buffer.
  * The status field is a one-byte memory cell, indicating the receiving status when 
  * the TTPC controller has received a message. Moreover, when the TTPC controller 
@@ -197,32 +181,6 @@ typedef struct ttpc_state
 	uint16_t Membership[4];
 }c_state_t;
 
-/** getters below */
-uint32_t    MAC_CSGetCurRoundSlot(void);
-uint32_t    MAC_CSGetCurMode(void);
-uint32_t    MAC_CSGetCurDMC(void);
-
-uint32_t    MAC_CSGetCurGTF(void);
-
-uint32_t    MAC_CSGetMemberBit(int Position);
-
-/** setters below */
-void 		MAC_CSSetRoundSlot(int RoundSlot);
-void		MAC_CSSetMode(uint32_t Mode);
-void 		MAC_CSSetDMC(uint32_t DMC);
-void 		MAC_CSSetGTF(uint32_t GTF);
-void        MAC_CSSetCState(c_state_t* c_state);
-void  		MAC_CSSetMemberBit(int PositionNumber);
-
-/** clear operation for membership flag */
-void 		MAC_CSClearMemberAll(void);
-void        MAC_CSClearMemberBit(int PositionNumber);
-
-/** macro definition for c_state accessment */
-#define MAC_CSGetCurRoundSlot() 	(C_STATE_CP&0x07ff)
-#define MAC_CSGetCurMode()			(C_STATE_CP&0x3800)
-#define MAC_CSGetCurDMC()			(C_STATE_CP&0xc000)
-
 /**
  * The macro fills the cs variable. PARAMETER LEGALITY WILL
  * NOT BE CHECKED. BE SURE THAT THE CS IS A POINTER, OR 
@@ -230,45 +188,22 @@ void        MAC_CSClearMemberBit(int PositionNumber);
  * @param  cs a c_state_t type variable.
  * @return    non
  */
-#define MAC_CSGetCState(pcs)		do{(pcs)->GlobalTime     = C_STATE_GT&0xffff;\
-                                       (pcs)->ClusterPosition= C_STATE_CP&0xffff;\
-                                       (pcs)->Membership[0]  = C_STATE_MV0&0xffff;\
-                                       (pcs)->Membership[1]  = C_STATE_MV1&0xffff;\
-                                       (pcs)->Membership[2]  = C_STATE_MV2&0xffff;\
-                                   	   (pcs)->Membership[3]  = C_STATE_MV3&0xffff;\
-                                   	}while(0)
-
-#define MAC_CSGetCurGTF()			(C_STATE_GT)
-#define MAC_CSGetMemberBit(pos)		(((*(C_STATE_BASE+((pos)/16)+2))>>((pos)%16))&1)
-
-
-#define MAC_CSSetRoundSlot(rs)		(C_STATE_CP|=((rs)&0x07ff))
-#define MAC_CSSetMode(md)			(C_STATE_CP|=((md)&0x3800))
-#define MAC_CSSetDMC(mc)			(C_STATE_CP|=((mc)&0xc000))
-#define MAC_CSSetGTF(gt)			(C_STATE_GT=(gt)&0xffff)
-
-
+#define MAC_GetCState(pcs)			do{(pcs)->GlobalTime     = C_STATE_GT&0xffff;\
+                                	       (pcs)->ClusterPosition= C_STATE_CP&0xffff;\
+                                	       (pcs)->Membership[0]  = C_STATE_MV0&0xffff;\
+                                	       (pcs)->Membership[1]  = C_STATE_MV1&0xffff;\
+                                	       (pcs)->Membership[2]  = C_STATE_MV2&0xffff;\
+                                	   	   (pcs)->Membership[3]  = C_STATE_MV3&0xffff;\
+                                 	}while(0)
 
 /** Be sure the cs is a pointer. Legality will not be checked. */
-#define MAC_CSSetCState(pcs) 		do{C_STATE_GT =(pcs)->GlobalTime&0xffff;\
-									   C_STATE_CP =(pcs)->ClusterPosition&0xffff;\
-									   C_STATE_MV0=(pcs)->Membership[0]&0xffff;\
-									   C_STATE_MV1=(pcs)->Membership[1]&0xffff;\
-									   C_STATE_MV2=(pcs)->Membership[2]&0xffff;\
-									   C_STATE_MV3=(pcs)->Membership[3]&0xffff;\
+#define MAC_SetCState(pcs) 			do{C_STATE_GT =(pcs)->GlobalTime&0xffff;\
+										   C_STATE_CP =(pcs)->ClusterPosition&0xffff;\
+										   C_STATE_MV0=(pcs)->Membership[0]&0xffff;\
+										   C_STATE_MV1=(pcs)->Membership[1]&0xffff;\
+										   C_STATE_MV2=(pcs)->Membership[2]&0xffff;\
+										   C_STATE_MV3=(pcs)->Membership[3]&0xffff;\
 									}while(0)
-
-#define MAC_CSSetMemberBit(pos)		((*(C_STATE_BASE+((pos)/16)+2))|=1<<((pos)%16))
-
-
-
-#define MAC_CSClearMemberAll()		do{C_STATE_MV0=0;\
-									   C_STATE_MV1=0;\
-									   C_STATE_MV2=0;\
-									   C_STATE_MV3=0;\
-									}while(0)
-
-#define MAC_CSClearMemberBit(pos)	((*(C_STATE_BASE+((pos)/16)+2))&=~(1<<((pos)%16)))
 
 /**
  * judge whether the c-state cs is the same as local c-state. Be sure that the cs is 
@@ -276,7 +211,7 @@ void        MAC_CSClearMemberBit(int PositionNumber);
  * @return 1 cs is the same as local c-state
  *         0 cs is not the same as local c-state
  */
-#define MAC_CSIsSame(pcs)          (((pcs)->GlobalTime     ==(C_STATE_GT&0xffff))  && \
+#define CS_IsSame(pcs)          (((pcs)->GlobalTime     ==(C_STATE_GT&0xffff))  && \
 									((pcs)->ClusterPosition==(C_STATE_CP&0xffff))  && \
 									((pcs)->Membership[0]  ==(C_STATE_MV0&0xffff)) && \
 									((pcs)->Membership[1]  ==(C_STATE_MV1&0xffff)) && \
@@ -305,39 +240,54 @@ X-FRAME  |            |          |            |          |             |
 /**
  * frame type assembly definition .
  */
-typedef struct ttpc_frame
+/**
+ * field splitting for frames. Definition below is only used to splitting
+ * frames.
+ * @attention zero-size array is only supported by gnu c extension.
+ */
+typedef struct TTP_frame
 {
-	ttpc_header_t  header;
-	/** the totol length, including the header and crc part */
-	uint8_t        frame_length;
+    // uint8_t dst[6];
+    // uint8_t src[6];
+    // uint8_t lth[2];
+
+    /** ttpc header */
+    uint8_t hdr[1];
+
+    /** anonymous union definition */
+    union
+    {
+        struct
+        {
+            /**
+             * flexible array is supported by iso-c99 and above, but 
+             * at least one fixed-memory variable is needed.
+             */
+            uint8_t payload[0];
+        }n;
+        struct
+        {
+            uint8_t cstate[12]; 
+            uint8_t crc32[4];
+        }i_cs;
+        struct
+        {
+            uint8_t cstate[12]; 
+            uint8_t crc32_0[4];
+            uint8_t payload[0];
+        }x; 
+    };
+        
+}*pTTP_frame;
 
 
-	uint8_t        frame_type;
-
+typedef struct ttp_frame_desc
+{
 	/** the timestamp of the received frame in uint of microtick */
 	uint32_t       rcv_timestamp;
+	pTTP_frame     pFrame;
 
-	union
-	{
-		struct
-		{
-			uint8_t* pAppData;
-		}N_frame;
-
-		struct
-		{
-			c_state_t  c_state;
-		}I_CS_frame;
-
-		struct
-		{
-			c_state_t  c_state;
-			crc_t      crc1;
-			uint8_t*   pAppData;
-		}X_frame;
-	};
-	crc_t    crc;
-}ttpc_frame_desc_t;
+}ttp_frame_desc_t;
 
 /**                                                               
                31-09              8-6       5-3        2-0       
@@ -397,8 +347,6 @@ uint32_t  MAC_GetFrameTimestamp(uint32_t channel);
  */
 uint32_t  MAC_GetFrameStatus(uint32_t channel);
 
-uint32_t  MAC_GetSlotStatus(void);
-
 /**
  * Push the data of the frame received to the corresponding CNI address. The frame
  * shall be a data frame.
@@ -411,9 +359,9 @@ void      MAC_PushAppData(uint32_t channel);
  * This function fills the description of the frame received. If the frame 
  * received is incorrect or null or invalid, the function will return 0.
  * @param desc[2]   the array pointer of the frame descriptions
- * @return   0  for invalid or incorrect or null frame,
- *           1  for the other frame.
- * @attention if the frame received is not ok, the desc pointer will be set\
+ * @return   0      for invalid or incorrect or null frame,
+ *           1      for the other frame.
+ * @attention if the frame received is not ok, the desc pointer will be set
  * NULL. 
  */
 uint32_t  MAC_GetFrameDesc(ttpc_frame_desc_t* desc[2]);
@@ -461,19 +409,121 @@ typedef struct mac_slot
 #define NOT_SYN_FRAME					(uint32_t)0x00000000
 
 /** RoundSlotProperty_t.FrameType */
-#define FRAME_TYPE_IMPLICIT 			(uint32_t)0x00000000	
+#define FRAME_TYPE_IMPLICIT 			(uint32_t)0x00000000
 #define FRAME_TYPE_EXPLICIT 			(uint32_t)0x00000001
 
-#define SET 							(uint32_t)0x00000001
-#define RESET 							(uint32_t)0x00000000
+#define SLOT_PHASE_PRP 					1
+#define SLOT_PHASE_AT 					2
+#define SLOT_PHASE_PRP 					3
 
+#define SENDING_FRAME 					1
+#define RECEIVING_FRAME  				2
 
-void      MAC_SetRoundSlotProperties(uint32_t Mode,uint32_t RoundSlot);
+#define NORMAL_SLOT							0
+#define LAST_SLOT_OF_CURRENT_TDMAROUND 		1
+#define FIRST_SLOT_OF_SUCCESSOR_TDMA_ROUND	2
+#define LAST_SLOT_OF_CURRENT_CLUSTER 		3
+#define FIRST_SLOT_OF_CURRENT_CLUSTER   	4
+
+/**
+ * Get the round slot of the current slot.
+ * @return  the round slot entry.
+ */
 RoundSlotProperty_t* MAC_GetRoundSlotProperties(void);
 
-uint32_t  MAC_IsFlagSet(uint32_t Flags);
+/**
+ * This function should be called after the membership point. In the membership
+ * point, the frame status will be confirmed, then the slot status will be validated.
+ * The slot status is used for clique detection.		 
+ * @return  the slot status.
+ */
 uint32_t  MAC_GetSlotStatus(void);
-void      MAC_UpdateRoundSlot();
+
+uint32_t  MAC_GetNodeSlot(void);
+uint32_t  MAC_GetTDMARound(void);
+
+/** 
+ * Get the TDMA slots for the current TDMA round, which shall be the same 
+ * in all TDMA round of a cluster cycle.
+ * @return  the slots number of the current TDMA round
+ */
+uint32_t  MAC_GetTDMASlots(void);
+
+/** 
+ * Get cluster cycles for the current mode. For different modes, the corresponding 
+ * cluster cycle may be different.
+ * @return  the cluster cycle of the current mode.
+ */
+uint32_t  MAC_GetClusterCycles(void);
+
+/**
+ * Check whether the current slot is the sending slot. This function shall be called
+ * after the slot is updated.
+ *
+ * The function only checks the logical name part of the whole logical name field, the
+ * multiplexed logical name part is not checked.
+ * 
+ * @return  1 if yes, 0 if not.
+ */	
+uint32_t  MAC_IsSendSlot(void);
+/**
+ * Return the trigger timestamps of the slot phases, psp,at,prp. 
+ * @param  Phase the psp, at, prp.
+ * @return       the timestamps
+ */
+uint32_t  MAC_GetPspTsmp(void);
+
+/**
+ * update the node slot and the TDMA round and the round slot. If the updated slot
+ * points the first slot of the cluster, the function will return FIRST_SLOT_OF_CURRENT_CLUSTER.
+ * If the updated slot points the last one of a TDMA round, the function will return 
+ * FIRST_SLOT_OF_CURRENT_CLUSTER. Otherwise, the function will return NORMAL_SLOT.
+ * @return  @arg NORMAL_SLOT
+ *          @arg LAST_SLOT_OF_CURRENT_TDMA_ROUND
+ *          @arg FIRST_SLOT_OF_CURRENT_CLUSTER
+ */
+uint32_t  MAC_UpdateSlot(void);
+
+/**
+ * Load the slot configuration parameters from the MEDL.
+ * @param  mode the current mode
+ * @param  tdma the current TDMA round
+ * @param  slot the current slot
+ * @return      the slot configuration parameters entry.
+ * @attention   ensure that the tdma and the slot are updated at the start of PSP before
+ *              calling this function.
+ */
+RoundSlotProperty_t* MAC_LoadSlotProperties(uint32_t mode,uint32_t tdma,uint32_t slot);
+
+/** 
+ * mark whether a frame should be transmitted in this slot.
+ * @param  SlotAcquisition SENDING_FRAME or RECEIVING_FRAME
+ * @return                 non
+ */
+void  	MAC_SetSlotAcquisition(uint32_t SlotAcquisition);
+uint32_t MAC_GetSlotAcquisition(void);
+
+/**
+ * Set the status of the current slot, which is executed during acknowledgment stage.
+ * @param  SlotStatus the slot status
+ * @return            non
+ */
+void    MAC_SetSlotStatus(uint32_t SlotStatus);
+
+/**
+ * This function checks pointer of the current slot.
+ * @return  the pointer status.
+ *              @arg NORMAL_SLOT
+ *              @arg LAST_SLOT_OF_CURRENT_TDMAROUND
+ *              @arg FIRST_SLOT_OF_SUCCESSOR_TDMA_ROUND
+ *              @arg LAST_SLOT_OF_CURRENT_CLUSTER
+ *              @arg FIRST_SLOT_OF_CURRENT_CLUSTER
+ * @attention 
+ *   The function performs the same as the function MAC_UpdateSlot seemingly. The
+ *   only difference between the two is that the function doesn't update the slot.
+ *   The function should be called after the slot is updated.
+ */
+uint32_t MAC_CheckSlot(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 ///identification function definitions                                        //
@@ -515,7 +565,7 @@ typedef struct mac_node
 #define MONOPOLIZED_MEMBERSHIP			(uint32_t)0x00000000
 
 void 		MAC_SetNodeProperties(NodeProperty_t *NodeProperty);
-NodeProperty_t* MAC_GetNodeProperty(void);
+NodeProperty_t* MAC_GetNodeProperties(void);
 
 uint32_t  	MAC_IsPassiveNode(void);
 uint32_t 	MAC_IsMultiplexedMembershipNode(void);

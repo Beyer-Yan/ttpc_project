@@ -18,11 +18,16 @@
 #include "medl.h"
 #include "virhw.h"
 #include "ttpservice.h"
+#include "protocol_data.h"
 
-static uint8_t recv_byte_stream[2][256] = {0};
-static uint8_t send_byte_stream[2][256] = {0};
+#define FRAME_BUFFER_SIZE         256
+#define ETH_FRAME_HEADER_SIZE     14
+#define TTP_FRAME_HEADER_SIZE     1
 
-#define TTP_FRAME_HEADER_OFFSET     14
+
+/** 4-byte alignment for buffers below */
+static uint8_t recv_byte_stream[2][FRAME_BUFFER_SIZE] = {0};
+static uint8_t send_byte_stream[2][FRAME_BUFFER_SIZE] = {0};
 
 /**
  * The mac_addr_t should be platform-dependent. We implement the TTPC protocol
@@ -41,26 +46,32 @@ static hwaddr dst = {
 /**
  * record the th length of ttp frame assembled.
  */
-static short __G_ttp_frame_length = 0;
+static uint16_t __G_ttp_frame_length = 0;
 
 
 ////////////////////////////////////////////////////////////////////////////////
 ///send frame operation                                                       //
 ////////////////////////////////////////////////////////////////////////////////
 
-static void __byte_copy(uint8_t* dst, uint8_t* src, int size)
+static __INLINE void __byte_copy_to_frame_buf(uint8_t* dst, uint8_t* src, int size)
 {
-    while(size--)
+    uint8_t *_dst_ch0 = dst;
+    uint8_t *_dst_ch1 = dst + FRAME_BUFFER_SIZE;
+
+    while(_size--)
     {
-        *dst++ = *src++;
+        *_dst_ch0++ = *src;
+        *_dst_ch1++ = *src++;
     }
 }
 
-static void __byte_copy_to_frame_buf(int index,uint8_t *src,int size)
-{
-    __byte_copy(send_byte_stream[CH0]+index,src,size);
-    __byte_copy(send_byte_stream[CH1]+index,src,size);
-}
+// static __INLINE void __byte_copy_to_frame_buf(uint8_t *dst,uint8_t *src,int size)
+// {
+//     __byte_copy(dst,src,size);
+//     __byte_copy(dst+256,src,size);
+// }
+
+
 
 /**
  * This function calculates the crc32 of the given buf.
@@ -91,18 +102,13 @@ static void __ttp_frame_crc32_reset()
 }
 
 /**
- * This function/macro calculates the frame type to be assembled.
+ * This function alculates the frame type to be assembled.
  * @attention round slot properties should be set before this function
  * is called.   
  * @return the frame type to be assembled.
  */
 
-#define __calc_frame_type()    \
-        (MAC_GetRoundSlotProperties()->FrameType==FRAME_TYPE_IMPLICIT?\
-        FRAME_N:(MAC_GetRoundSlotProperties()->AppDataLength?FRAME_X:\
-        FRAME_I))
-
-static uint32_t (__calc_frame_type)(void)
+static __INLINE uint32_t __calc_frame_type(void)
 {
     RoundSlotProperty_t* pSlot;
 
@@ -125,30 +131,17 @@ static uint32_t (__calc_frame_type)(void)
     }
 }
 
-// static void __assemble_frame_body_n()
-// {
-
-// }
-
-// static void __assemble_frame_body_i()
-// {
-
-// }
-
-// static void __asemble_frame_body_x()
-// {
-
-// }
-
-static uint32_t 
-__check_frame_legality(uint32_t frame_type, \
-                       uint32_t mcr\
-                       uint8_t* cni_base, \
-                       RoundSlotProperty_t* pSlot)
+static __INLINE uint32_t __check_frame_legality(uint32_t frame_type)
 {
+    RoundSlotProperty_t *pSlot;
+    uint32_t mcr;
+
+    mcr   = CNI_GetCurMCR();
+    pSlot = MAC_GetRoundSlotProperties();
+
     if((frame_type==FRAME_N)||(frame_type==FRAME_X))
     {
-        if(((uint8_t*)cni_base + pSlot->CNIAddressOffset)[0]!=STATUS_BIT_PATTERN)
+        if(!MSG_CheckMsgRF(pSlot->CNIAddressOffset))
         {
             return MAC_ERS;
         }
@@ -185,26 +178,21 @@ static uint32_t __assemble_ttp_frame(void)
     uint32_t crc32;
     uint32_t mcr;
     uint32_t frame_type;
-    uint8_t* cni_base_addr;
     uint8_t  check_res;
-
-    //to record the filling index of the two send_byte_stream.
-    int _index;
 
     RoundSlotProperty_t* pSlot;
     c_state_t c_state;
 
+    pETH_TTP_frame *pFrame;
+
     //error detecting
     frame_type    = __calc_frame_type();
-    _index        = TTP_FRAME_HEADER_OFFSET;
-    cni_base_addr = CNI_GetCNIBaseAddr();
     pSlot         = MAC_GetRoundSlotProperties();
     mcr           = CNI_GetCurMCR();
 
-    check_res = __check_frame_legality(frame_type,mcr,cni_base_addr,pSlot);
+    check_res = __check_frame_legality(frame_type);
     if(check_res!=MAC_EOK)
     {
-        __G_ttp_frame_length = 0;
         return check_res;
     }
 
@@ -216,33 +204,31 @@ static uint32_t __assemble_ttp_frame(void)
     
     header = ((mcr==MCR_NO_REQ?MCR_MODE_CLR:mcr)>>2)|(pSlot->FrameType&1);
 
-    __byte_copy_to_frame_buf(_index,&header,sizeof(header));
+    /** posit the ttp_frame in the send_buffer */
+    pFrame = (pTTP_frame)(&send_byte_stream[CH0][0] + ETH_FRAME_HEADER_SIZE);
 
-    _index += sizeof(header);
+    __byte_copy_to_frame_buf(pFrame->hdr,&header,sizeof(header));
 
     //assemble frame body.
-    MAC_CSGetCState(&c_state);
+    MAC_GetCState(&c_state);
 
     if(frame_type==FRAME_N)
     {
         /**
          * @see 5.3.1, AS6003, page 16/56
          */
-        /** skip the 1 byte status field for application data */
-        __byte_copy_to_frame_buf(_index,
-                                 cni_base_addr + pSlot->CNIAddressOffset + 1,
+        __byte_copy_to_frame_buf(pFrame->n.paylaod,
+                                 MSG_GetMsgAddr(pSlot->CNIAddressOffset),
                                  pSlot->AppDataLength);
-        _index += pSlot->appDataLength;
-
         //padding the crc region
         __ttp_frame_crc32_reset();
-        crc32 = __ttp_frame_crc32_calc(MEDL_GetSchedID());
-        crc32 = __ttp_frame_crc32_calc(send_byte_stream[CH0]+TTP_FRAME_HEADER_OFFSET,
-                                       _index-TTP_FRAME_HEADER_OFFSET);
-        crc32 =__ttp_frame_crc32_calc(&c_state,sizeof(c_state_t));
+        crc32 = __ttp_frame_crc32_calc(MEDL_GetSchedID(),CSID_SIZE);
+        crc32 = __ttp_frame_crc32_calc((uint8_t*)pFrame, pSlot->AppDataLength+TTP_FRAME_HEADER_SIZE);
+        crc32 = __ttp_frame_crc32_calc(&c_state,sizeof(c_state_t));
 
-        __byte_copy_to_frame_buf(_index,&crc32,4);
-        _index += 4;   
+        __byte_copy_to_frame_buf(pFrame->n.paylaod+pSlot->AppDataLength,&crc32,4);
+
+        __G_ttp_frame_length = TTP_FRAME_HEADER_SIZE + pSlot->AppDataLength + 4;
 
     }
     else // either FRAME_I or FRAME_X
@@ -251,40 +237,36 @@ static uint32_t __assemble_ttp_frame(void)
         * @see 5.3.2, AS6003, page 16/56
         */
        //frame_i assemble
-       __byte_copy_to_frame_buf(_index,&c_state,sizeof(c_state_t));
-       _index += sizeof(c_state_t);
+       __byte_copy_to_frame_buf(pFrame->i_cs.cstate,&c_state,sizeof(c_state_t));
 
        __ttp_frame_crc32_reset();
-       crc32 = __ttp_frame_crc32_calc(MEDL_GetSchedID());
-       crc32 =  __ttp_frame_crc32_calc(send_byte_stream[CH0]+TTP_FRAME_HEADER_OFFSET,
-                                       _index-TTP_FRAME_HEADER_OFFSET);
+       crc32 = __ttp_frame_crc32_calc(MEDL_GetSchedID(),CSID_SIZE);
+       crc32 = __ttp_frame_crc32_calc((uint8_t*)pFrame,sizeof(c_state_t)+TTP_FRAME_HEADER_SIZE);
        /**
         * attention that for 24-bits crc check mode, the 8-padding should be tailed
         * to the standard crc24.
         */
-       __byte_copy_to_frame_buf(_index,&crc32,4);
-
-       _index += 4;
+       __byte_copy_to_frame_buf(pFrame->crc32,&crc32,4);
+       __G_ttp_frame_length = TTP_FRAME_HEADER_SIZE + sizeof(c_state_t) + 4;
 
        if(frame_type==FRAME_X)
        {
             /**
              * @see 5.3.4, AS6003, page 18/56
              */
-            __byte_copy_to_frame_buf(_index,
-                                     cni_base_addr + pSlot->CNIAddressOffset + 1,
+            __byte_copy_to_frame_buf(pFrame->x.payload,\
+                                     MSG_GetMsgAddr(pSlot->CNIAddressOffset),
                                      pSlot->AppDataLength);
-            _index += pSlot->appDataLength;
 
             __ttp_frame_crc32_reset();
-            crc32 = __ttp_frame_crc32_calc(MEDL_GetSchedID());
-            crc32 = __ttp_frame_crc32_calc(send_byte_stream[CH0]+TTP_FRAME_HEADER_OFFSET,
-                                           _index-TTP_FRAME_HEADER_OFFSET);
-            __byte_copy_to_frame_buf(_index,&crc32,4);
-            _index += 4;
+            crc32 = __ttp_frame_crc32_calc(MEDL_GetSchedID(),CSID_SIZE);
+            crc32 = __ttp_frame_crc32_calc((uint8_t*)pFrame,
+                                           pSlot->AppDataLength+TTP_FRAME_HEADER_SIZE+sizeof(c_state_t)+4);
+            __byte_copy_to_frame_buf((uint8_t*)&pFrame->x.paylaod+pSlot->AppDataLength,&crc32,4);
+            
+            __G_ttp_frame_length += pSlot->AppDataLength;
        }    
     }
-    __G_ttp_frame_length = _index-TTP_FRAME_HEADER_OFFSET;
     return MAC_EOK;     
 }
 
@@ -296,17 +278,15 @@ static uint32_t __assemble_ttp_frame(void)
  */
 static uint32_t __assemble_eth_frame(void)
 {
-    int _index = 0;
-    __byte_copy_to_frame_buf(_index,dst,6);
-    _index += 6;
-    __byte_copy_to_frame_buf(_index,src,6);
-    _index += 6;
-    __byte_copy_to_frame_buf(_index,&client_size,2);
+    __byte_copy_to_frame_buf(&send_byte_stream[CH0][0],dst,6);
 
-    _index += 2; //not necessary
+    __byte_copy_to_frame_buf(&send_byte_stream[CH0][0]+6,src,6);
+
+    __byte_copy_to_frame_buf(&send_byte_stream[CH0][0]+12,&__G_ttp_frame_length,2);
+
     /**< 6 bytes dst, 6 bytes src, 2 bytes type/length */
     /** TTP_FRAME+HEADER_OFFSET */
-    return client_size + 6 + 6 + 2; 
+    return __G_ttp_frame_length + 6 + 6 + 2; 
 }
 /**
  * This function assembles cold start frame.
@@ -316,16 +296,19 @@ MAC_err_t MAC_PrepareSCFrame(void)
 {
     uint8_t header;
     uint32_t crc32;
-    int _index = TTP_FRAME_HEADER_OFFSET;
     uint32_t tsf;
+    uint16_t total_size; 
+
     c_state_t c_state;
     ScheduleParameter_t* pSch;
     NodeProperty_t*      pNode;
+    pTTP_frame           pFrame;
 
     header = (MCR_NO_REQ>>2)&FRAME_TYPE_EXPLICIT;
 
     pSch = MAC_GetScheduleParameter();
     pNode= MAC_GetNodeProperty();
+    pFrame = (pTTP_frame)(&send_byte_stream[CH0][0] + ETH_FRAME_HEADER_SIZE);
 
     /** check if the node has the qualification to cold-start */
     TTP_ASSERT(pSch->ColdStartAllow==COLD_START_ALLOWED);
@@ -335,35 +318,35 @@ MAC_err_t MAC_PrepareSCFrame(void)
     tsf = CNI_GetTSF();
 
     /** set c-state field, located in CNI */
-    MAC_CSSetGTF(tsf);
-    MAC_CSSetRoundSlot(pNode->LogicalNameSlotPosition);
-    MAC_CSSetMode(MODE_CS_ID);
-    MAC_CSSetDMC(DMC_NO_REQ);
-    MAC_CSClearMemberAll();
-    MAC_CSSetMemberBit(pNode->FlagPosition);
+    CS_SetGTF(tsf);
+    CS_SetRoundSlot(pNode->LogicalNameSlotPosition);
+    CS_SetMode(MODE_CS_ID);
+    CS_SetDMC(DMC_NO_REQ);
+    CS_ClearMemberAll();
+    CS_SetMemberBit(pNode->FlagPosition);
 
     /**
     * copy c-state of the CNI to the local c-state variable for
     * frame assembling because of the bit-mismatch. 
-    * @see  description of file ttpc_mac.h, line 147 to line 153
+    * @see  description of file ttpc_mac.h, line 191 to line 197
     */
-    MAC_CSGetCState(&c_state);
+    MAC_GetCState(&c_state);
 
-    __byte_copy_to_frame_buf(_index,&header,sizeof(header));
-    _index += 1;
+    __byte_copy_to_frame_buf(pFrame->hdr,&header,sizeof(header));
 
-    __byte_copy_to_frame_buf(_index,&c_state,sizeof(c_state));
-    _index += sizeof(c_state);
+    __byte_copy_to_frame_buf(pFrame->cstate,&c_state,sizeof(c_state));
 
     __ttp_frame_crc32_reset();
-    crc32 = __ttp_frame_crc32_calc(MEDL_GetSchedID());
-    crc32 = __ttp_frame_crc32_calc(send_byte_stream[CH0]+TTP_FRAME_HEADER_OFFSET,
-                                   _index-TTP_FRAME_HEADER_OFFSET);
-    __byte_copy_to_frame_buf(_index,&crc32,4);
-    _index += 4;
-    __G_ttp_frame_length = _index - TTP_FRAME_HEADER_OFFSET;
+    crc32 = __ttp_frame_crc32_calc(MEDL_GetSchedID(),CSID);
+    crc32 = __ttp_frame_crc32_calc((uint8_t*)pFrame,sizeof(c_state_t)+TTP_FRAME_HEADER_SIZE);
+    __byte_copy_to_frame_buf(pFrame->crc32,&crc32,4);
 
-    __assemble_eth_frame(_index-TTP_FRAME_HEADER_OFFSET);
+    __G_ttp_frame_length = TTP_FRAME_HEADER_SIZE + sizeof(c_state_t) + 4;
+
+    total_size = __assemble_eth_frame();
+
+    DRV_PrepareToTransmitOfCH0(send_byte_stream[CH0],total_size);
+    DRV_PrepareToTransmitOfCH1(send_byte_stream[CH1],total_size);
 
     return MAC_EOK;
 }
@@ -378,17 +361,17 @@ MAC_err_t MAC_PrepareSCFrame(void)
 MAC_err_t MAC_PushFrame(void)
 {
     uint32_t res;
+    uint16_t total_size;
 
     res = __assemble_ttp_frame();
     /**prepare to transmit */
     if(res==MAC_EOK)
     {
-        DRV_PrepareToTransmitOfCH0(send_byte_stream[CH0],
-                               __G_ttp_frame_length+TTP_FRAME_HEADER_OFFSET);
-        DRV_PrepareToTransmitOfCH1(send_byte_stream[CH1],
-                               __G_ttp_frame_length+TTP_FRAME_HEADER_OFFSET);
+        total_size = __assemble_eth_frame();
+
+        DRV_PrepareToTransmitOfCH0(send_byte_stream[CH0],total_size);
+        DRV_PrepareToTransmitOfCH1(send_byte_stream[CH1],total_size);
     }
-   
     return res;
 }
 

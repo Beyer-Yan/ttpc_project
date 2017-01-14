@@ -2,7 +2,7 @@
   ******************************************************************************
   * @file    	protocol.h
   * @author  	Beyer
-  * @email   	sinfare@foxmail.com
+  * @email   	sinfare@hotmail.com
   * @version 	v1.0.0
   * @date    	2016.10
   * @brief   	This file provides the high level interfaces to the TTPC protocol.
@@ -105,48 +105,48 @@ other module
  * to be coding !!
  */
 
-#define INIT_OK
+#define FSM_EVENT_INIT_OK
 
-#define CORRECT_FRAME_RECEIVED
+#define FSM_EVENT_CORRECT_FRAME_RECEIVED
 
-#define LISTEN_TIMEOUT_EXPIRED
-#define COLD_START_ALLOWED
-#define HOST_LIFE_UPDATED
+#define FSM_EVENT_LISTEN_TIMEOUT_EXPIRED
+#define FSM_EVENT_COLD_START_ALLOWED
+#define FSM_EVENT_HOST_LIFE_UPDATED
 
-#define CLIQUE_ERR
-#define COMMUNICATION_BLACKOUT
-#define SYNC_ERR
-#define ACK_ERR
-#define PERIODIC_MEDL_CRC_FAILED
+#define FSM_EVENT_CLIQUE_ERR
+#define FSM_EVENT_COMMUNICATION_BLACKOUT
+#define FSM_EVENT_SYNC_ERR
+#define FSM_EVENT_ACK_ERR
+#define FSM_EVENT_PERIODIC_MEDL_CRC_FAILED
 
-#define CO_ON
-#define INIT_ERR
+#define FSM_EVENT_CO_ON
+#define FSM_EVENT_INIT_ERR
 
-#define MAJORITY_CLIQUE
-#define LEAST_2_CONTROLLERS_ALIVE
+#define FSM_EVENT_CLIQUE_MAJORITY
+#define FSM_EVENT_LEAST_2_CONTROLLERS_ALIVE
 
-#define MINORITY_CLIQUE
-#define MAX_COLD_START_ENTRIES_EXCEEDED
-#define TRAFFIC_DETECT_DURING_STARTUP_TIMEOUT
+#define FSM_EVENT_CLIQUE_MINORITY
+#define FSM_EVENT_MAX_COLD_START_ENTRIES_EXCEEDED
+#define FSM_EVENT_TRAFFIC_DETECT_DURING_STARTUP_TIMEOUT
 
-#define MODE_VIOLATION_ERR
-#define ACK_FAILED
+#define FSM_EVENT_MODE_VIOLATION_ERR
+#define FSM_EVENT_ACK_FAILED
 
-#define NODE_SLOT_ACQUIRED
+#define FSM_EVENT_NODE_SLOT_ACQUIRED
 
-#define STATUS_FIELD_RESET
-#define CONTROLLER_ID_UPDATED
+#define FSM_EVENT_STATUS_FIELD_RESET
+#define FSM_EVENT_CONTROLLER_ID_UPDATED
 
-#define BIST_SET
-#define CA_SET
-#define TEST_OK
-#define FRAME_INDICATING_DOWNLOAD_MODE
-#define DOWNLOAD_OK
+#define FSM_EVENT_BIST_SET
+#define FSM_EVENT_CA_SET
+#define FSM_EVENT_TEST_OK
+#define FSM_EVENT_FRAME_INDICATING_DOWNLOAD_MODE
+#define FSM_EVENT_DOWNLOAD_OK
 
-#define CO_OFF
-#define HOST_LIFE_NOT_UPDATED
-#define CA_CLR
-#define BIST_CLR
+#define FSM_EVENT_CO_OFF
+#define FSM_EVENT_HOST_LIFE_NOT_UPDATED
+#define FSM_EVENT_CA_CLR
+#define FSM_EVENT_BIST_CLR
 
 /**@}*/// end of group StateMachine_Events
 

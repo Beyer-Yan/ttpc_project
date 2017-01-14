@@ -32,13 +32,9 @@
   * 
   ******************************************************************************
   */
- #ifndef __TTPSERVICE_H__
- #define __TTPSERVICE_H__
+#ifndef __TTPSERVICE_H__
+#define __TTPSERVICE_H__
 #include "ttpdef.h"
-/**
- * @defgroup TTPSERVICE
- */
-/*@{*/
 
 /** memory align */
 
@@ -67,19 +63,19 @@
  * If the root interrupt is closed, all the interruptions will be 
  * closed.
  */
-void close_root_interrupt(void);
-void open_root_interrupt(void);
+void SVC_CloseRootInt(void);
+void SVC_OpenRootInt(void);
 
 /**
  * enforce the sleep of the ttp controller. When the ttp controller comes into 
  * the sleep mode, only the interrruption can activate the controller.
  */
-void ttp_sleep(void);
+void SVC_Sleep(void);
 
 /**
  * freeze the ttp controller, set the corresbonding error bits
  */
-void ttp_freeze(void);
+void SVC_Freeze(void);
 
 /**
  * @todo more utillties should be added here.
@@ -96,40 +92,87 @@ void ttp_freeze(void);
 /**@{*/
 
 
-uint32_t cluser_startup(void*param);
+uint32_t SVC_ClusterStartup(void*param);
 
-uint32_t integration(void*param);
+uint32_t SVC_Integration(void*param);
 
-uint32_t sync_schema(void*param);
+uint32_t SVC_SyncSchema(void*param);
 
-uint32_t noise_tolerence(void*param);
+uint32_t SVC_NoiseTolerence(void*param);
 
-uint32_t acknowledgment(void*param);
+uint32_t SVC_Acknowledgment(void*param);
 
-uint32_t slot_acquirement(void*param);
+uint32_t SVC_SlotAcquirement(void*param);
+
+
+/**@}*/// end of group Comm_Services
 
 /**
  * @defgroup Safety_Services
  */
 /**@{*/
 
-uint32_t clique_detect(void*param);
+#define CLIQUE_MAJORITY              1
+#define CLIQUE_MINORITY              2
+#define CLIQUE_NO_ACTIVITY           3
+/**
+ * This function process the clique detecting. Each TTP controller shall evaluate
+ * once in a TDMA round whether it is in the majority clique by checking if it has
+ * perceived more agreed slots than failed slots. If this condition is not fulfilled, 
+ * meaning that the node detects that it is not consistent with the majority of 
+ * the nodes, the TTP controller shall report a clique error to the host and shall 
+ * stop operation. 
+ *
+ * If the sum of the agreed slot and the failed slot is less or equal than one, which
+ * indicates that no correct transmission activity, except possibly for the node's own,
+ * has been detected during the last slot of a TDMA round, then the TTP/C controller
+ * will raises the COMMUNICATION_BLACKOUT error and freeze. This condition is performed
+ * once per TDMA round, in the PSP phase prior the the controller's AT time of the node's
+ * sending slot of the successor TDMA round.
+ * slot.
+ * @return  the result of clique detecting.
+ *              @arg CLIQUE_MAJORITY
+ *              @arg CLIQUE_MINORITY
+ *              @arg CLIQUE_NO_ACTIVITY
+ */
+uint32_t SVC_CliqueDetect(void);
 
-uint32_t check_host_life_sign(void);
-uint32_t update_controller_life_sign(void);
+/**
+ * check whether the HLFS(Host Life Sign) is valid or not. If the HLFS is not
+ * valid, it will return 0. The checking operation shall be performed during
+ * PSP phase for once, because the controller will clear it after checking. 
+ * @return  check result.
+ *       @arg 0  host not valid
+ *       @arg !0 host ok
+ */
+static __INLINE uint32_t SVC_CheckHostLifeSign(void)
+{
+    return CNI_CheckHLFS();
+}
 
+/**
+ * update the controller life sign.
+ * @return  the value of the controller life sign
+ */
+static __INLINE uint32_t SVC_UpdateControllerLifeSign(void)
+{
+    return CNI_UpdateCLFS();
+}
 
 /**@}*/// end of group Safety_Services
 
 
-/**@}*/// end of group Comm_Services
+/**
+ * @defgroup HighLevel_Services
+ */
+/**@{*/
+
+//code here
+
+/**@}*/// end of group HighLevel_Services
+
 
 
 /**@}*/// end of group Service_Group
 
-
-
-/*@}*/
-
-
- #endif
+#endif

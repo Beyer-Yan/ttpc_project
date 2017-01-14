@@ -2,7 +2,7 @@
   ******************************************************************************
   * @file    	medl.h
   * @author  	Beyer
-  * @email   	sinfare@foxmail.com
+  * @email   	sinfare@hotmail.com
   * @version 	v1.0.0
   * @date    	2016.09
   * @brief   	The interfaces of the MEDL
@@ -101,7 +101,7 @@ typedef struct medl_header
    */
   uint32_t    slot_mode_addr[MODE_NUM];
   /**
-   * The size of slot-mode-data structure. The size may
+   * The numbers of slots for the corresponding mode. The size may
    * differ for different modes.
    */ 
   uint32_t    slot_mode_size[MODE_NUM];
@@ -142,6 +142,10 @@ uint32_t  MEDL_Init(void);
 uint32_t  MEDL_GetRegionAddr(uint32_t RegionType);
 uint32_t  MEDL_GetSchedID(void);
 uint32_t  MEDL_GetAppID(void);
-void* 	  MEDL_GetRoundSlotAddr(uint32_t Mode, uint32_t TDMARound, uint32_t Slot);
+
+uint32_t  MEDL_GetRoundCycles(uint32_t ModeNum);
+uint32_t  MEDL_GetTDMASlots(uint32_t ModeNum);
+
+void* 	  MEDL_GetRoundSlotAddr(uint32_t ModeNum, uint32_t TDMARound, uint32_t Slot);
 
 #endif 

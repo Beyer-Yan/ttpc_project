@@ -2,7 +2,7 @@
   ******************************************************************************
   * @file    	buffer.c
   * @author  	Beyer
-  * @email   	sinfare@foxmail.com
+  * @email   	sinfare@hotmail.com
   * @version 	v1.0.0
   * @date    	2016.8.22
   * @brief   	implementation of debug buffer interface
