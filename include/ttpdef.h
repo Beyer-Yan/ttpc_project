@@ -1613,6 +1613,10 @@ extern uint8_t msg_pool[MSG_POOL_LENGTH];
  */
 #define CNI_GetCurMCR() 			(TTP_CR0&CR_MCR)
 
+#define CNI_IsModeChangeRequsted()  ({uint32_t _mcr = CNI_GetCurMCR(); (_mcr == MCR_MODE_1) || \
+															  		   (_mcr == MCR_MODE_2) || \
+															  		   (_mcr == MCR_MODE_3);})
+#define CNI_ClrMCR() 				(TTP_CR0 = (TTP_CR0&~CR_MCR)|MCR_MODE_CLR)
 /**
  * check whether the HLFS(Host Life Sign) is valid or not. If the HLFS is not
  * valid, it will return 0. The checking operation shall be performed during
@@ -1621,7 +1625,7 @@ extern uint8_t msg_pool[MSG_POOL_LENGTH];
  *       @arg 0  host not valid
  *       @arg !0 host ok
  */
-#define CNI_CheckHLFS() 			({_hls=TTP_HLSR; TTP_HLSR=0; _hls>0?1:0;})
+#define CNI_CheckHLFS() 			({uint32_t _hls=TTP_HLSR; TTP_HLSR=0; _hls>0?1:0;})
 
 /** increase the TOC(Global Time Overflow Counter) */
 /**

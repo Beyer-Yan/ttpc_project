@@ -106,7 +106,5 @@ extern uint8_t PV_data[20];
 #define PV_GetObservedChannel() 		(PV_oc)
 #define PV_SetObservedChannel(ch) 		(PV_oc = ch)	
 
-
-
 #endif
 

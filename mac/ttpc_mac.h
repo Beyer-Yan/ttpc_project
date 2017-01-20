@@ -457,15 +457,22 @@ uint32_t  MAC_GetTDMASlots(void);
 uint32_t  MAC_GetClusterCycles(void);
 
 /**
- * Check whether the current slot is the sending slot. This function shall be called
+ * Check whether the current slot is the node own slot. These functions shall be called
  * after the slot is updated.
  *
- * The function only checks the logical name part of the whole logical name field, the
- * multiplexed logical name part is not checked.
+ * The function MAC_IsOwnNodeSlot only checks the logical name part of the whole logical
+ * name field, the multiplexed logical name part is not checked.
+ *
+ * The function MAC_IsSending slot check both the logical name part and the multiplexed
+ * part of the whole logical name.
  * 
  * @return  1 if yes, 0 if not.
  */	
+uint32_t  MAC_IsOwnNodeSlot(void);
 uint32_t  MAC_IsSendSlot(void);
+
+uint32_t  MAC_IsFirstSLotOfCluster(void);
+
 /**
  * Return the trigger timestamps of the slot phases, psp,at,prp. 
  * @param  Phase the psp, at, prp.
