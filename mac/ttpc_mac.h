@@ -308,9 +308,13 @@ MAC_err_t MAC_PushFrame(void);
 MAC_err_t MAC_PrepareCSFrame(void);
 
 void      MAC_StartTransmit(void);
+void      MAC_StopTransmit(void);
 
 uint32_t  MAC_GetTransmittedFlags(void);
 
+
+void      MAC_StartReceive(void);
+void      MAC_StopReceive(void);
 /** check whether the mac has received frame with returning 0 for receiving nothing, 
  *  returning 1 for receiving frames.
  *  receiving nothing.
@@ -438,23 +442,22 @@ RoundSlotProperty_t* MAC_GetRoundSlotProperties(void);
  * @return  the slot status.
  */
 uint32_t  MAC_GetSlotStatus(void);
-
 uint32_t  MAC_GetNodeSlot(void);
 uint32_t  MAC_GetTDMARound(void);
 
-/** 
- * Get the TDMA slots for the current TDMA round, which shall be the same 
- * in all TDMA round of a cluster cycle.
- * @return  the slots number of the current TDMA round
- */
-uint32_t  MAC_GetTDMASlots(void);
+// /** 
+//  * Get the TDMA slots for the current TDMA round, which shall be the same 
+//  * in all TDMA round of a cluster cycle.
+//  * @return  the slots number of the current TDMA round
+//  */
+// uint32_t  MAC_GetTDMASlots(void);
 
-/** 
- * Get cluster cycles for the current mode. For different modes, the corresponding 
- * cluster cycle may be different.
- * @return  the cluster cycle of the current mode.
- */
-uint32_t  MAC_GetClusterCycles(void);
+// /** 
+//  * Get cluster cycles for the current mode. For different modes, the corresponding 
+//  * cluster cycle may be different.
+//  * @return  the cluster cycle of the current mode.
+//  */
+// uint32_t  MAC_GetClusterCycles(void);
 
 /**
  * Check whether the current slot is the node own slot. These functions shall be called
@@ -470,7 +473,6 @@ uint32_t  MAC_GetClusterCycles(void);
  */	
 uint32_t  MAC_IsOwnNodeSlot(void);
 uint32_t  MAC_IsSendSlot(void);
-
 uint32_t  MAC_IsFirstSLotOfCluster(void);
 
 /**
@@ -509,6 +511,18 @@ RoundSlotProperty_t* MAC_LoadSlotProperties(uint32_t mode,uint32_t tdma,uint32_t
  */
 void  	MAC_SetSlotAcquisition(uint32_t SlotAcquisition);
 uint32_t MAC_GetSlotAcquisition(void);
+
+/**
+ * Set the time properties of the slot
+ * @param  ActAT the actual trigger point time for TP phase
+ * @param  TP    the time duration of TP phase in unit of macrotick
+ * @param  SD    the slot duration time for a slot in unit of macrotick
+ * @return       non
+ */
+void     MAC_SetTime(uint32_t ActAT,uint32_t TP,uint32_t SD);
+
+void     MAC_StartPhaseCirculation(void);
+void     MAC_StopPhaseCirculation(void);
 
 /**
  * Set the status of the current slot, which is executed during acknowledgment stage.

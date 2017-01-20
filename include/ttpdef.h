@@ -1583,8 +1583,10 @@ extern uint8_t msg_pool[MSG_POOL_LENGTH];
  *  Notice the overflow of the CTF. The function below will not handle the overflow,
  *  and the TTPC overflow field will be updated if the overflow of TTP_CTFR happens
  *  by a specific interruption.
+ *  @Attention The function shall be instantiated by hardware.
  */
 #define CNI_UpdateCTF() 			(++TTP_CTFR)
+#define CNI_GetCTF() 				(TTP_CTFR)
 
 /**
  * Set the corresbonding isr bit. The controller has no qualification to

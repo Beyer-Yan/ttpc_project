@@ -222,7 +222,7 @@ uint32_t psp(uint32_t ps)
 		}
 	}
 
-	res?_prepare_for_transmit() : _prepare_for_receive();
+	res ? _prepare_for_transmit() : _prepare_for_receive();
 
 	return 1;
 }

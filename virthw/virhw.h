@@ -249,9 +249,9 @@ uint32_t CRC_GetCRC(void);
 
 typedef struct
 {
-    uint32_t status;
-    uint32_t length;
-    int8_t *BufferAddr;
+    uint32_t    status;
+    uint32_t    length;
+    int8_t*     BufferAddr;
 }DataStreamTypeDef;
 
 
@@ -284,8 +284,8 @@ void DRV_StopTransmission(void);
 void DRV_StartReception(void);
 void DRV_StopReception(void);
 
-void DRV_PrepareToTransmitOfCH0(int8_t* BufferAddr, uint16_t length);
-void DRV_PrepareToTransmitOfCH1(int8_t* BufferAddr, uint16_t length);
+void DRV_PrepareToTransmitOfCH0(uint8_t* BufferAddr, uint16_t length);
+void DRV_PrepareToTransmitOfCH1(uint8_t* BufferAddr, uint16_t length);
 uint32_t DRV_CheckTransmitted(void);
 
 /**

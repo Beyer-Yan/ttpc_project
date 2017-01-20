@@ -131,45 +131,45 @@ static __INLINE uint32_t __calc_frame_type(void)
     }
 }
 
-static __INLINE uint32_t __check_frame_legality(uint32_t frame_type)
-{
-    RoundSlotProperty_t *pSlot;
-    uint32_t mcr;
+// static __INLINE uint32_t __check_frame_legality(uint32_t frame_type)
+// {
+//     RoundSlotProperty_t *pSlot;
+//     uint32_t mcr;
 
-    mcr   = CNI_GetCurMCR();
-    pSlot = MAC_GetRoundSlotProperties();
+//     mcr   = CNI_GetCurMCR();
+//     pSlot = MAC_GetRoundSlotProperties();
 
-    if((frame_type==FRAME_N)||(frame_type==FRAME_X))
-    {
-        if(!MSG_CheckMsgRF(pSlot->CNIAddressOffset))
-        {
-            return MAC_ERS;
-        }
-        if(pSlot->AppDataLength==0)
-        {
-            return MAC_ENON_DATA;
-        }
-        if(pSlot->AppDataLength>MAX_FRAME_LENGTH)
-        {
-            return MAC_ESIZE_OVER;
-        }
-    }
-    if(mcr>=MCR_MODE_CLR)
-    {
-        /**
-         * @attention ensure the continuous numeric definition of MCR field,
-         * meaning that DO NOT CHANGE THE MCR DEFINITION in ttpdef.h. IF YOU
-         * HAVE TO CHANGE IT, REMEMBLE TO CHANGE THE IMPLEMENTATION. 
-         */
-        return MAC_EMODE;
-    }
+//     if((frame_type==FRAME_N)||(frame_type==FRAME_X))
+//     {
+//         if(!MSG_CheckMsgRF(pSlot->CNIAddressOffset))
+//         {
+//             return MAC_ERS;
+//         }
+//         if(pSlot->AppDataLength==0)
+//         {
+//             return MAC_ENON_DATA;
+//         }
+//         if(pSlot->AppDataLength>MAX_FRAME_LENGTH)
+//         {
+//             return MAC_ESIZE_OVER;
+//         }
+//     }
+//     if(mcr>=MCR_MODE_CLR)
+//     {
+//         /**
+//          * @attention ensure the continuous numeric definition of MCR field,
+//          * meaning that DO NOT CHANGE THE MCR DEFINITION in ttpdef.h. IF YOU
+//          * HAVE TO CHANGE IT, REMEMBLE TO CHANGE THE IMPLEMENTATION. 
+//          */
+//         return MAC_EMODE;
+//     }
 
-    if(pSlot->ModeChangePermission==MODE_CHANGE_DENY)
-    {
-        return MAC_EMODE;
-    }
-    return MAC_EOK;
-}
+//     if(pSlot->ModeChangePermission==MODE_CHANGE_DENY)
+//     {
+//         return MAC_EMODE;
+//     }
+//     return MAC_EOK;
+// }
 
 
 static uint32_t __assemble_ttp_frame(void)
@@ -189,13 +189,7 @@ static uint32_t __assemble_ttp_frame(void)
     frame_type    = __calc_frame_type();
     pSlot         = MAC_GetRoundSlotProperties();
     mcr           = CNI_GetCurMCR();
-
-    check_res = __check_frame_legality(frame_type);
-    if(check_res!=MAC_EOK)
-    {
-        return check_res;
-    }
-
+    
     /**
      * @brief If no mode change was requested the mode change field 
      * shall be set to the value of "MCR_MODE_CLR" according to 

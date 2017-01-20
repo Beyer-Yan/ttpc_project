@@ -102,12 +102,15 @@ uint32_t SVC_NoiseTolerence(void*param);
 
 uint32_t SVC_Acknowledgment(void*param);
 
-uint32_t SVC_SlotAcquirement(void*param);
+
+
+uint32_t SVC_SlotAcquirement(void);
 
 
 /**@}*/// end of group Comm_Services
 
 /**
+ * 
  * @defgroup Safety_Services
  */
 /**@{*/
