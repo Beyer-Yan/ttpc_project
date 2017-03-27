@@ -25,9 +25,13 @@
 #define TTP_FRAME_HEADER_SIZE     1
 
 
-/** 4-byte alignment for buffers below */
-static uint8_t recv_byte_stream[2][FRAME_BUFFER_SIZE] = {0};
-static uint8_t send_byte_stream[2][FRAME_BUFFER_SIZE] = {0};
+/** 
+ * 4-byte alignment for buffers below .
+ * Every channel buffer of buffers below includes the
+ * ethernet dst,src and type/len field 
+ */
+static volatile uint8_t recv_byte_stream[2][FRAME_BUFFER_SIZE] = {0};
+static volatile uint8_t send_byte_stream[2][FRAME_BUFFER_SIZE] = {0};
 
 /**
  * The mac_addr_t should be platform-dependent. We implement the TTPC protocol
@@ -46,7 +50,7 @@ static hwaddr dst = {
 /**
  * record the th length of ttp frame assembled.
  */
-static uint16_t __G_ttp_frame_length = 0;
+static volatile uint16_t __G_ttp_frame_length = 0;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -189,6 +193,8 @@ static uint32_t __assemble_ttp_frame(void)
     frame_type    = __calc_frame_type();
     pSlot         = MAC_GetRoundSlotProperties();
     mcr           = CNI_GetCurMCR();
+
+    CNI_ClrMCR();
     
     /**
      * @brief If no mode change was requested the mode change field 
@@ -388,17 +394,17 @@ uint32_t MAC_GetTransmittedFlags(void)
     return res;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-///receive frame operation                                                    //
-////////////////////////////////////////////////////////////////////////////////
-/** check whether the mac has received frame with returning 0 for receiving nothing, 
- *  returning 1 for receiving frames.
- *  receiving nothing.
- */
-uint32_t  MAC_CheckReceived(void)
-{
-    return DRV_CheckReceived();
-}
+// ////////////////////////////////////////////////////////////////////////////////
+// ///receive frame operation                                                    //
+// ////////////////////////////////////////////////////////////////////////////////
+// /** check whether the mac has received frame with returning 0 for receiving nothing, 
+//  *  returning 1 for receiving frames.
+//  *  receiving nothing.
+//  */
+// uint32_t  MAC_CheckReceived(void)
+// {
+//     return DRV_CheckReceived();
+// }
 
 /**
  * This function returns the flags of frames received.  

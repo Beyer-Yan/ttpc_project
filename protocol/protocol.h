@@ -107,7 +107,7 @@ other module
 
 #define FSM_EVENT_INIT_OK
 
-#define FSM_EVENT_CORRECT_FRAME_RECEIVED
+#define FSM_EVENT_CSTATE_FRAME_RECEIVED
 
 #define FSM_EVENT_LISTEN_TIMEOUT_EXPIRED
 #define FSM_EVENT_COLD_START_ALLOWED
@@ -150,6 +150,17 @@ other module
 
 /**@}*/// end of group StateMachine_Events
 
+struct SubSeqRoutine
+{
+	volatile uint32_t* pIndicator;
+	void (*func[3])(void);
+};
+
+struct Processor
+{
+	void (*doState)();
+	struct SubSeqRoutine *pSubRoutine;
+};
 
 typedef struct FSM_State 
 {
@@ -170,7 +181,8 @@ typedef struct FSM_State
 	 * proceedings to do for state machine
 	 * in this state.
 	 */
-	void (*doState)(void);
+	struct Processor doStateProcessor;
+
 }FSM_State;
 
 /** send a event or events to state machine */

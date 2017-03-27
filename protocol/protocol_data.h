@@ -66,6 +66,7 @@ extern uint8_t PV_data[20];
  		  @arg 	FALTED_SLOTS_COUNTER 	
  		  @arg	MEMBERSHIP_FAILED_COUNTER
  */
+#define PV_SetCounter(counter,value)    (PV_data[counter]=value)
 #define PV_IncCounter(counter)			(PV_data[counter]++)
 #define PV_DecCounter(counter) 			(PV_data[counter]--)
 #define PV_ClrCounter(counter) 			(PV_data[counter]=0)
@@ -80,6 +81,8 @@ extern uint8_t PV_data[20];
 #define PV_GetAckState() 				(PV_as) 
 #define PV_SetAckState(state) 			(PV_as = state)
 #define PV_ClrAckState() 				(PV_as = 0)
+
+/** record the message address of the first successor  */
 #define PV_SetFSAddr(addr) 				(PV_fsaddr = addr)
 #define PV_GetFSAddr() 					(PV_fsaddr)
 #define PV_SetFirstSuccessorMemPos(pos) (PV_fsmp = pos)

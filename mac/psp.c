@@ -62,135 +62,165 @@ static __INLINE void _load_slot_configuration(void)
 	MAC_LoadSlotProperties(mode,tdma,slot);
 }
 
-static __INLINE void __process_clique_event(uint32_t clique_res)
-{
-	switch(clique_res)
-	{
-		case CLIQUE_MINORITY:
-			FSM_sendEvent(FSM_EVENT_CLIQUE_ERR);
-			break;
-		case CLIQUE_NO_ACTIVITY:
-			FSM_sendEvent(FSM_EVENT_COMMUNICATION_BLACKOUT);
-			break;
-		case CLIQUE_MAJORITY:
-			FSM_sendEvent(FSM_EVENT_CLIQUE_MAJORITY);
-		case default:
-			break;
-	}
-}
-
 static __INLINE uint32_t _check_clique(void)
 {
 	uint32_t res        = 0;
 	uint32_t clique_res = 0;
 
-	if(MAC_IsOwnNodeSlot())
-	{
-		/**  clique detecting */
-		clique_res = SVC_CliqueDetect();
+	/**  clique detecting */
+	clique_res = SVC_CliqueDetect();
 
-		if(clique_res==CLIQUE_MAJORITY)
+	switch(clique_res)
+	{
+		case CLIQUE_MINORITY:
+			FSM_sendEvent(FSM_EVENT_CLIQUE_ERR);
+			CNI_SetSRBit(SR_CE);
+			break;
+		case CLIQUE_NO_ACTIVITY:
+			FSM_sendEvent(FSM_EVENT_COMMUNICATION_BLACKOUT);
+			CNI_SetSRBit(SR_CE);
+			break;
+		case CLIQUE_MAJORITY:
+			FSM_sendEvent(FSM_EVENT_CLIQUE_MAJORITY);
 			res = 1;
-		__process_clique_event(clique_res);
+		case default:
+			break;
 	}
 
 	PV_ClrCounter(AGREED_SLOTS_COUNTER);
 	PV_ClrCounter(FAILED_SLOTS_COUNTER);
 	
-	if(res===0)
-	{
-		CNI_SetSRBit(SR_CE);
-	}
 	return res;
 }
 
 static __INLINE void _prepare_for_receive(void)
 {
+	RoundSlotProperty_t *pRS = MAC_GetRoundSlotProperties();
+
+	uint32_t mai = MAC_GetMacrotickParameter();
+
+	if(pRS->SynchronizationFrame == SYN_FRAME)
+	{
+		uint32_t est_interval = pRS->DelayCorrectionTerms + 2*mai;
+		SVC_SetEstimateArivalTimeInterval(es_time);
+	}
 
 	MAC_SetTime(pRS->AtTime,pRS->TransmissionDuration,pRS->SlotDuration); 
+
 	MAC_SetSlotAcquisition(RECEIVING_FRAME);
 }
 
 static __INLINE void _prepare_for_transmit(void)
 {
-	RoundSlotProperty_t pRS = MAC_GetRoundSlotProperties();
+	RoundSlotProperty_t *pRS = MAC_GetRoundSlotProperties();
 
 	uint32_t delay = pRS->SendDelay;
+
+	/**
+	 * A sending node shall perceive itself as fully operational in its PSP, and shall
+	 * therefore set its membership flag in the membership vector and set its agreed 
+	 * slot counter to 1.
+	 * @see AS6003, Page 34, Line -7.
+	 */
+	CS_SetMemberBit(pRS->FlagPosition);
+	PV_SetCounter(AGREED_SLOTS_COUNTER,1);
 
 	MAC_SetTime(pRS->AtTime + delay,pRS->TransmissionDuration,pRS->SlotDuration);
 	MAC_PushFrame();
 	MAC_SetSlotAcquisition(SENDING_FRAME);
-}
 
-static __INLINE void _process_mcr(uint32_t mcr)
-{
-	uint32_t dmc = DMC_NO_REQ;
-	switch(mcr)
-	{
-		case MCR_MODE_1: dmc = DMC_MODE_1; break;
-		case MCR_MODE_2: dmc = DMC_MODE_2; break;
-		case MCR_MODE_3: dmc = DMC_MODE_3; break;
-		case default: break;
-	}
-	CS_SetDMC(dmc);
+	/** init the ack state, only if the node plans to send in this slot */
+	PV_SetAckState(ACK_INIT);
 }
 
 static __INLINE uint32_t _is_data_frame()
 {
 	// the legality of the slot configuration shall be checked upper application
 	RoundSlotProperty_t* pRS = MAC_GetRoundSlotProperties();
-	uint32_t res = 0;
-    (pRS->FrameType==FRAME_TYPE_IMPLICIT)||(pSlot->AppDataLength)?res=1:res=0;
 
-    return res;
+    return ((pRS->FrameType==FRAME_TYPE_IMPLICIT)||(pSlot->AppDataLength)? 1 : 0 );
 }
-/**
- * PSP phase of TDMA circulation. 
- * If some error is happened during this circulation, this function will terminate
- * and return 0, otherwise return 1.
- * @return  0 some error happens
- *          1 function exits
- */
-uint32_t psp(uint32_t ps)
+
+void psp_for_passive(void)
+{
+
+	uint32_t res = 0;
+	RoundSlotProperty_t *pRS = MAC_GetRoundSlotProperties();
+
+	MAC_UpdateSlot();
+
+	/** check MEDL cofiguration */
+	#warning "periodic checking for MEDL has not been implemented"
+
+	if(MAC_IsFirstSLotOfCluster())
+	{
+		update_mode();
+	}
+	_load_slot_configuration();
+
+	if(MAC_IsOwnNodeSlot())
+	{
+		if(!_check_clique()) return ;
+	}
+
+	if(MAC_IsSendSlot())
+	{
+		if( SVC_SlotAcquirement() )
+		{
+			if(CNI_IsModeChangeRequsted())
+			{
+				if(pRS->ModeChangePermission==MODE_CHANGE_DENY)
+				{
+					CNI_SetSRBit(SR_MV);
+					FSM_sendEvent(FSM_EVENT_MODE_VIOLATION_ERR);
+					res = 0;
+					goto _end;
+				}
+				else
+				{
+					CS_SetMemberBit(pRS->FlagPosition); /**< now, membership acquired */
+				}
+			}
+			res = 1; /**< actually, the controller transmitted into activa state  */
+			FSM_sendEvent(FSM_EVENT_NODE_SLOT_ACQUIRED|FSM_EVENT_HOST_LIFE_UPDATED);
+		}
+	}
+
+	_end:
+	res ? _prepare_for_transmit() : _prepare_for_receive();
+}
+
+void psp_for_active(void)
 {
 	uint32_t res = 0;
-
 	MAC_UpdateSlot();
 
 	if(MAC_IsFirstSLotOfCluster())
 	{
 		update_mode();
 	}
-
 	_load_slot_configuration();
-	_check_clique()? (void)0 : return 0;
+
+	if(MAC_IsOwnNodeSlot())
+	{
+		if(!_check_clique()) return ;
+	}
 
 	if(MAC_IsSendSlot())
 	{
-		if(ps==PS_PASSIVE){
-			 res=SVC_SlotAcquirement();
-			 if(res!=0){
-			 	//slot acquired
-			 	FSM_sendEvent(FSM_EVENT_NODE_SLOT_ACQUIRED|FSM_EVENT_HOST_LIFE_UPDATED);
-			 	res = 1;
-			 }
-		}
-		else
-		{
-			if(SVC_CheckHostLifeSign()){
+
+			if(SVC_CheckHostLifeSign())
+			{
 				//host life updated during active state
 				FSM_sendEvent(FSM_EVENT_HOST_LIFE_UPDATED);
-				res = 1;
-			}
-			else if(FREE_SHOT_ENABLE == PV_GetFreeShotFlag()){
 				//freeshot state
 				PV_DisableFreeShot();
 				res = 1;
 			}
-			else{
+			else
+			{
 				FSM_sendEvent(FSM_EVENT_HOST_LIFE_NOT_UPDATED);
 			}
-		}
 	}
 
 	RoundSlotProperty_t *pRS = MAC_GetRoundSlotProperties();
@@ -199,14 +229,11 @@ uint32_t psp(uint32_t ps)
 	{
 		if(CNI_IsModeChangeRequsted())
 		{
-			if(pRS->ModeChangePermission==MODE_CHANGE_DENY){
+			if(pRS->ModeChangePermission==MODE_CHANGE_DENY)
+			{
 				CNI_SetSRBit(SR_MV);
 				FSM_sendEvent(FSM_EVENT_MODE_VIOLATION_ERR);
 				res = 0;
-			}else{
-				uint32_t mcr = CNI_GetCurMCR();
-				_process_mcr(mcr);
-				CNI_ClrMCR();
 			}
 		}
 	}
@@ -215,7 +242,8 @@ uint32_t psp(uint32_t ps)
 	{
 		if(_is_data_frame())
 		{
-			if(!MSG_CheckMsgRF(pRS->CNIAddressOffset)){
+			if(!MSG_CheckMsgRF(pRS->CNIAddressOffset))
+			{
 				CNI_SetSRBit(SR_NR);
 				res = 0;
 			}
@@ -223,8 +251,10 @@ uint32_t psp(uint32_t ps)
 	}
 
 	res ? _prepare_for_transmit() : _prepare_for_receive();
-
-	return 1;
 }
- 	
+
+void psp_for_coldstart(void)
+{
+
+}
  

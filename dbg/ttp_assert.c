@@ -29,7 +29,7 @@ void __TTP_Assert(char* txt)
 	
 	/** flush the old text */
 	dbg_flush();
-	close_root_interrupt();
+	SVC_CloseRootInt();
 
 	/** write the error text into the error buffer */
 	INFO("-----------------------------------------\n");
@@ -39,6 +39,6 @@ void __TTP_Assert(char* txt)
 	/** puts the register file */
 	while(1)
 	{
-		ttp_sleep();
+		SVC_Sleep();
 	}
 }

@@ -20,12 +20,6 @@
 #include "protocol.h"
 #include "virhw.h"
 
-static __INLINE void _raise_AT_synchronous_interrupt(void)
-{
-
-	#error "to be done";
-}
-
 /**
  * Update the global time field of the c-state.
  * At each action time, the cluster time field (CTF register) contains the same
@@ -38,15 +32,16 @@ static __INLINE void _tp_update_gt(void)
 	CS_SetGTF(cluster_time);
 }
 
-uint32_t tp(uint32_t ps)
+void tp(void)
 {
 	uint32_t slot_acquisition = MAC_GetSlotAcquisition();
 
+    //copy the global time to the GT field of c-state
 	_tp_update_gt();
 
 	slot_acquisition==SENDING_FRAME ? MAC_StartTransmit() : MAC_StartReceive();
 
-	_raise_AT_synchronous_interrupt();
+	SVC_RaiseATSynchronousInterrupt();
 
 	return 1;
 }

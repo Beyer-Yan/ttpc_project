@@ -32,7 +32,7 @@
   */
 #ifndef __VIRHW_H__
 #define __VIRHW_H__
-#include <ttpdef.h>
+#include "ttpdef.h"
 
 /**
  * @defgroup TTPC_HW_Def
@@ -106,11 +106,6 @@ typedef enum TimOpState
 #define CHANNEL_MODE			(uint16_t)0x0001
 #define COMPENSATE_MODE			(uint16_t)0x0002
 
-/**
- * clock adjust options
- */
-#define CLK_PHASE_ADJ			(uint16_t)0x0001
-#define CLK_FREQ_ADJ			(uint16_t)0x0002
 
 /**
  * User timer options
@@ -149,9 +144,6 @@ void TIM_SetMacrotick(uint16_t MacGranule);
 /* Macro/Micro-ticks getting operations ***********************************/
 uint32_t TIM_GetCurMicroticks(void);
 uint16_t TIM_GetCurMacroticks(void);
-
-/* Offset adjusting for local clock ***************************************/
-void TIM_AdjTime(uint16_t AdjMode, int32_t Offset, uint16_t Steps);
 
 /* Capture values *********************************************************/
 uint32_t TIM_GetCapture(uint16_t CapChannel);
@@ -233,6 +225,7 @@ void WDG_DisenableIT(void);
 void     CRC_DepInit(void);
 void     CRC_ResetData(void);
 uint32_t CRC_CalcBlock(uint32_t *pBuf, uint32_t BufLength);
+uint32_t CRC_Calc(uint32_t data);
 uint32_t CRC_GetCRC(void);
 
 /**@}*/// end of group EXTERNAL_CRC32	

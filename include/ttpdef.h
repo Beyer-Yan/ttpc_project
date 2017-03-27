@@ -1510,7 +1510,6 @@ extern uint8_t msg_pool[MSG_POOL_LENGTH];
 
 #define IS_TTP_MODE1(MODE1)		(((MODE1)==MODE1_ONCE) || \
 								 ((MODE1)==MODE1_PERIODIC))
-
 /**@}*/// end of group TTPC_Constants
 
 /**

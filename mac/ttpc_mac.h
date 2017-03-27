@@ -35,7 +35,7 @@
 
 /** for frame status field: the least significant 8-bits valid*/
 #define FRAME_CORRECT 			(uint32_t)0x00000001
-#define FRAME_TANTATIVE			(uint32_t)0x00000002
+#define FRAME_TENTATIVE			(uint32_t)0x00000002
 #define FRAME_MODE_VIOLATION	(uint32_t)0x00000003
 #define FRAME_INCORRECT 		(uint32_t)0x00000004
 #define FRAME_NULL				(uint32_t)0x00000005
@@ -211,12 +211,15 @@ typedef struct ttpc_state
  * @return 1 cs is the same as local c-state
  *         0 cs is not the same as local c-state
  */
-#define CS_IsSame(pcs)          (((pcs)->GlobalTime     ==(C_STATE_GT&0xffff))  && \
+#define CS_IsSame(pcs)              (((pcs)->GlobalTime    ==(C_STATE_GT&0xffff))  && \
 									((pcs)->ClusterPosition==(C_STATE_CP&0xffff))  && \
 									((pcs)->Membership[0]  ==(C_STATE_MV0&0xffff)) && \
 									((pcs)->Membership[1]  ==(C_STATE_MV1&0xffff)) && \
 									((pcs)->Membership[2]  ==(C_STATE_MV2&0xffff)) && \
 									((pcs)->Membership[3]  ==(C_STATE_MV3&0xffff)))
+
+#define CS_CheckCSAgreement(pcs)    (((pcs)->GlobalTime    ==(C_STATE_GT&0xffff))  && \
+                                    ((pcs)->ClusterPosition==(C_STATE_CP&0xffff)) )
 
 /** p
  *                                                                                
@@ -285,6 +288,11 @@ typedef struct ttp_frame_desc
 {
 	/** the timestamp of the received frame in uint of microtick */
 	uint32_t       rcv_timestamp;
+
+    /** total size of a TTP/C frame received, including the crc32 */
+    uint32_t       length;
+
+    /** pointer to the RECV frame buffer */
 	pTTP_frame     pFrame;
 
 }ttp_frame_desc_t;
@@ -315,14 +323,16 @@ uint32_t  MAC_GetTransmittedFlags(void);
 
 void      MAC_StartReceive(void);
 void      MAC_StopReceive(void);
-/** check whether the mac has received frame with returning 0 for receiving nothing, 
- *  returning 1 for receiving frames.
- *  receiving nothing.
- */
-uint32_t  MAC_CheckReceived(void);
+
+// * check whether the mac has received frame with returning 0 for receiving nothing, 
+//  *  returning 1 for receiving frames.
+//  *  receiving nothing.
+ 
+// uint32_t  MAC_CheckReceived(void);
 
 /**
- * This function returns the flags of frames received.	
+ * This function returns the flags of frames received.
+ * @param    Channel     the channel, CH0 or CH1	
  * @return  the flags of frames received, values below:
  *           @arg MAC_ERX_NON    nothing has been received
  *           @arg MAC_ERX_INV	 invalid frames has been received
@@ -331,7 +341,7 @@ uint32_t  MAC_CheckReceived(void);
  *           @arg MAC_ERX_ELT    received a frame with length error
  *           @arg MAC_EOK        reveived a good frame.
  */
-uint32_t  MAC_GetReceivedFlag(void);
+uint32_t  MAC_GetReceivedFlag(uint32_t Channel);
 
 /**
  * Get the timestamps of the received frame
@@ -340,35 +350,23 @@ uint32_t  MAC_GetReceivedFlag(void);
  */
 uint32_t  MAC_GetFrameTimestamp(uint32_t channel);
 
-/**
- * At the start of PRP phase, the acknowledgment algorithm will be performed. 
- * If the ack process instantiated by hardware, the ack will be perform as
- * soon as the mac receives a frame. But for software implement, the time 
- * cost for performing acknowledgment algorithm shall be taken consideration.
- * This function shall be called after the ack is performed.
- * @param   channel    the channel, CH0 or CH1	 
- * @return  the frame status
- */
-uint32_t  MAC_GetFrameStatus(uint32_t channel);
 
 /**
  * Push the data of the frame received to the corresponding CNI address. The frame
  * shall be a data frame.
- * @param  channel the channel, CH0 or CH1
+ * @param  pDesc the chosed frame description
  * @return         non
  */
-void      MAC_PushAppData(uint32_t channel);
+void      MAC_PullAppData(ttpc_frame_desc_t* pDesc);
 
 /**
  * This function fills the description of the frame received. If the frame 
  * received is incorrect or null or invalid, the function will return 0.
- * @param desc[2]   the array pointer of the frame descriptions
- * @return   0      for invalid or incorrect or null frame,
- *           1      for the other frame.
- * @attention if the frame received is not ok, the desc pointer will be set
- * NULL. 
+ * @param channel   the channel, CH0 or CH1
+ * @return          the array pointer of the frame descriptions of the corresponding
+ * @attention if the frame received is not ok, the function will return NULL. 
  */
-uint32_t  MAC_GetFrameDesc(ttpc_frame_desc_t* desc[2]);
+ttpc_frame_desc_t* MAC_GetFrameDesc(uint32_t Channel);
 
 ////////////////////////////////////////////////////////////////////////////////
 ///slots service definitions                                                  //
@@ -435,29 +433,19 @@ typedef struct mac_slot
  */
 RoundSlotProperty_t* MAC_GetRoundSlotProperties(void);
 
+// *
+//  * This function should be called after the membership point. In the membership
+//  * point, the frame status will be confirmed, then the slot status will be validated.
+//  * The slot status is used for clique detection.		 
+//  * @return  the slot status.
+ 
+// uint32_t  MAC_GetSlotStatus(void);
 /**
- * This function should be called after the membership point. In the membership
- * point, the frame status will be confirmed, then the slot status will be validated.
- * The slot status is used for clique detection.		 
- * @return  the slot status.
+ * Set the status of the current slot, which is executed during acknowledgment stage.
+ * @param  SlotStatus the slot status
+ * @return            non
  */
-uint32_t  MAC_GetSlotStatus(void);
-uint32_t  MAC_GetNodeSlot(void);
-uint32_t  MAC_GetTDMARound(void);
-
-// /** 
-//  * Get the TDMA slots for the current TDMA round, which shall be the same 
-//  * in all TDMA round of a cluster cycle.
-//  * @return  the slots number of the current TDMA round
-//  */
-// uint32_t  MAC_GetTDMASlots(void);
-
-// /** 
-//  * Get cluster cycles for the current mode. For different modes, the corresponding 
-//  * cluster cycle may be different.
-//  * @return  the cluster cycle of the current mode.
-//  */
-// uint32_t  MAC_GetClusterCycles(void);
+void    MAC_SetSlotStatus(uint32_t SlotStatus);
 
 /**
  * Check whether the current slot is the node own slot. These functions shall be called
@@ -474,24 +462,6 @@ uint32_t  MAC_GetTDMARound(void);
 uint32_t  MAC_IsOwnNodeSlot(void);
 uint32_t  MAC_IsSendSlot(void);
 uint32_t  MAC_IsFirstSLotOfCluster(void);
-
-/**
- * Return the trigger timestamps of the slot phases, psp,at,prp. 
- * @param  Phase the psp, at, prp.
- * @return       the timestamps
- */
-uint32_t  MAC_GetPspTsmp(void);
-
-/**
- * update the node slot and the TDMA round and the round slot. If the updated slot
- * points the first slot of the cluster, the function will return FIRST_SLOT_OF_CURRENT_CLUSTER.
- * If the updated slot points the last one of a TDMA round, the function will return 
- * FIRST_SLOT_OF_CURRENT_CLUSTER. Otherwise, the function will return NORMAL_SLOT.
- * @return  @arg NORMAL_SLOT
- *          @arg LAST_SLOT_OF_CURRENT_TDMA_ROUND
- *          @arg FIRST_SLOT_OF_CURRENT_CLUSTER
- */
-uint32_t  MAC_UpdateSlot(void);
 
 /**
  * Load the slot configuration parameters from the MEDL.
@@ -513,38 +483,25 @@ void  	MAC_SetSlotAcquisition(uint32_t SlotAcquisition);
 uint32_t MAC_GetSlotAcquisition(void);
 
 /**
- * Set the time properties of the slot
- * @param  ActAT the actual trigger point time for TP phase
- * @param  TP    the time duration of TP phase in unit of macrotick
- * @param  SD    the slot duration time for a slot in unit of macrotick
- * @return       non
+ * At the start of PRP phase, the acknowledgment algorithm will be performed. 
+ * If the ack process instantiated by hardware, the ack will be perform as
+ * soon as the mac receives a frame. But for software implement, the time 
+ * cost for performing acknowledgment algorithm shall be taken consideration.
+ * This function shall be called after the ack is performed.
+ * @param   channel    the channel, CH0 or CH1   
+ * @return  the frame status
  */
-void     MAC_SetTime(uint32_t ActAT,uint32_t TP,uint32_t SD);
+uint32_t  MAC_GetFrameStatus(uint32_t channel);
 
-void     MAC_StartPhaseCirculation(void);
-void     MAC_StopPhaseCirculation(void);
-
-/**
- * Set the status of the current slot, which is executed during acknowledgment stage.
- * @param  SlotStatus the slot status
- * @return            non
- */
-void    MAC_SetSlotStatus(uint32_t SlotStatus);
 
 /**
- * This function checks pointer of the current slot.
- * @return  the pointer status.
- *              @arg NORMAL_SLOT
- *              @arg LAST_SLOT_OF_CURRENT_TDMAROUND
- *              @arg FIRST_SLOT_OF_SUCCESSOR_TDMA_ROUND
- *              @arg LAST_SLOT_OF_CURRENT_CLUSTER
- *              @arg FIRST_SLOT_OF_CURRENT_CLUSTER
- * @attention 
- *   The function performs the same as the function MAC_UpdateSlot seemingly. The
- *   only difference between the two is that the function doesn't update the slot.
- *   The function should be called after the slot is updated.
+ * Set the frame status for the corresponding channel.
+ * @param  channel     the channel, CH0 or CH1    
+ * @return             non
  */
-uint32_t MAC_CheckSlot(void);
+void    MAC_SetFrameStatus(uint32_t Channel, uint32_t FrameStatus);
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 ///identification function definitions                                        //
@@ -639,12 +596,108 @@ ScheduleParameter_t* MAC_GetScheduleParameter(void);
 uint32_t 	MAC_GetMinimumIntegrationCount(void);
 uint32_t 	MAC_GetMaximumColdStartEntry(void);
 uint32_t 	MAC_GetMximumMembershipFailureCount(void);
+
+/**
+ * get the unified time interval of macrotick, normally the integral multiple of us
+ * @return  the time interval of macrotick granularity, in unit of ns.
+ */
 uint32_t 	MAC_GetMacrotickParameter(void);
 uint32_t 	MAC_GetPrecision(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 ///mac contrl service                                                         //
 ////////////////////////////////////////////////////////////////////////////////
+///
+/** 
+ * Get the TDMA slots for the current TDMA round, which shall be the same 
+ * in all TDMA round of a cluster cycle.
+ * @return  the slots number of the current TDMA round
+ */
+uint32_t  MAC_GetTDMARound(void);
+
+/** get the node slot at current round cyycle */
+uint32_t  MAC_GetNodeSlot(void);
+
+/** get the cycle slot in a cycle */
+uint32_t  MAC_GetRoundSlot(void);
+
+/**
+ * Return the trigger timestamps of the slot phases, psp,at,prp. 
+ * @param  Phase the psp, at, prp.
+ * @return       the timestamps
+ */
+
+/**
+ * This function returns the ratio of Macrotick to Microtick.
+ *
+ * @attention The integral multiple shall be guranteed by the hardware. If not, the hardware 
+ * shall not be allowed allowed/downloaded the corresponding MEDL 
+ * 
+ * @return the ratio of Macrotick to Microtick
+ */
+uint32_t  MAC_GetRatio();
+
+uint32_t  MAC_GetPspTsmp(void);
+
+/**
+ * update the node slot and the TDMA round and the round slot. If the updated slot
+ * points the first slot of the cluster, the function will return FIRST_SLOT_OF_CURRENT_CLUSTER.
+ * If the updated slot points the last one of a TDMA round, the function will return 
+ * FIRST_SLOT_OF_CURRENT_CLUSTER. Otherwise, the function will return NORMAL_SLOT.
+ * @return  @arg NORMAL_SLOT
+ *          @arg LAST_SLOT_OF_CURRENT_TDMA_ROUND
+ *          @arg FIRST_SLOT_OF_CURRENT_CLUSTER
+ */
+uint32_t  MAC_UpdateSlot(void);
+
+/**
+ * Set the time properties of the slot
+ * @param  ActAT the actual trigger point time for TP phase
+ * @param  TP    the time duration of TP phase in unit of macrotick
+ * @param  SD    the slot duration time for a slot in unit of macrotick
+ * @return       non
+ */
+void     MAC_SetTime(uint32_t ActAT,uint32_t TP,uint32_t SD);
+
+void     MAC_StartPhaseCirculation(void);
+void     MAC_StopPhaseCirculation(void);
+
+/**
+ * This function checks pointer of the current slot.
+ * @return  the pointer status.
+ *              @arg NORMAL_SLOT
+ *              @arg LAST_SLOT_OF_CURRENT_TDMAROUND
+ *              @arg FIRST_SLOT_OF_SUCCESSOR_TDMA_ROUND
+ *              @arg LAST_SLOT_OF_CURRENT_CLUSTER
+ *              @arg FIRST_SLOT_OF_CURRENT_CLUSTER
+ * @attention 
+ *   The function performs the same as the function MAC_UpdateSlot seemingly. The
+ *   only difference between the two is that the function doesn't update the slot.
+ *   The function should be called after the slot is updated.
+ */
+uint32_t MAC_CheckSlot(void);
+
+/**
+ * [MAC_xChannelActivity description]
+ * @return  0 channel silent, 1 channel active
+ */
+
+uint32_t MAC_SetChannelActivity(uint32_t Activity);
+uint32_t MAC_CheckChannelActivity(void);
+
+//void     MAC_SetWindow(uint32_t MiddleAxis);
+
+/** clock adjust mode options*/
+#define CLK_PHASE_ADJ           (uint16_t)0x0001
+#define CLK_FREQ_ADJ            (uint16_t)0x0002
+
+/**
+ * Offset adjusting for local clock
+ * @param AdjMode the adjust mode, CLK_PHASE_ADJ or CLK_FREQ_ADJ
+ * @param Offset  the clock offset, in unit of signed integer of microtick
+ * @param Steps   the steps for adjusting, normally 10.
+ */
+void MAC_AdjTime(uint16_t AdjMode, int32_t Offset, uint16_t Steps);
 
 /**
  * The parameters below shall be considered at mode changing phase.
@@ -666,6 +719,5 @@ uint32_t 	MAC_GetPrecision(void);
 		                    |           |                       		                                                        
 		              MAX TDMA CYCLES                           
  */
-
 
 #endif 

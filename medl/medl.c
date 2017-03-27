@@ -21,18 +21,18 @@
 
 #error "to be tested"
 
-static medl_header_t       __G_medl_header;
+static volatile medl_header_t       __G_medl_header;
 
 /**
  * variables below are used to buffer the frequently-used parameters.
  */
-static ScheduleParameter_t __G_sched;
-static NodeProperty_t      __G_role;
+static volatile ScheduleParameter_t __G_sched;
+static volatile NodeProperty_t      __G_role;
 
-static RoundSlotProperty_t __G_slot;
+static volatile RoundSlotProperty_t __G_slot;
 
-static uint32_t            __G_sched_id;
-static uint32_t            __G_app_id;
+static volatile uint32_t            __G_sched_id;
+static volatile uint32_t            __G_app_id;
 
 /**
  * this function is declared in the low-level hardware-relative file and is used to 
