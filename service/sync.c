@@ -24,7 +24,7 @@
 #define  FRMTS      1
 #undef   FRMTS
 
-#define  FIX_STEP   10;
+#define  FIX_STEP   100;
 
 /** @see "Time Triggered Protocol Spec", page 56*/
 static volatile int32_t _G_pushdown_stack[4] = {0};
@@ -32,7 +32,7 @@ static volatile int32_t _G_pushdown_stack[4] = {0};
 /** the estimate arival time interval of the frame aligned to local microtick */
 static volatile int32_t _G_estimate_time_interval = 0;
 
-static void _stack_push(int32_t offset)
+static __INLINE void _stack_push(int32_t offset)
 {
 	static int idx = 0;
 
@@ -62,7 +62,7 @@ static int32_t _average()
 	return (tmp[1] + tmp[2])/2;
 }
 
-static uint32_t _alignment_err(uint32_t value)
+static __INLINE uint32_t _alignment_err(uint32_t value)
 {
 	static uint32_t mai = MAC_GetMacrotickParameter(); /**< ma = macrotick interval */
 	static uint32_t ratio = MAC_GetRatio();
@@ -122,14 +122,15 @@ void SVC_SyncCalcOffset(uint32_t PSPTsmp, uint32_t FrameTsmp)
 	_stack_push(offset);
 }
 
-uint32_t SVC_ExecSyncSchema(void)
+uint32_t SVC_ExecSyncSchema(uint32_t Steps)
 {
 	int32_t avg  = _average();
 	int16_t erc  = (int16_t)CNI_GetERC();
 	int32_t csct = avg + _alignment_err_accumulated(erc);
 
-	uint32_t mai = MAC_GetMacrotickParameter();
-	int32_t aligned_pi = (int32_t)_alignment_err(mai); 
+	uint32_t precision = MAC_GetPrecision();
+
+	int32_t aligned_pi = (int32_t)_alignment_err(precision); 
 
 	if(csct > aligned_pi/2)
 	{
