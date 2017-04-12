@@ -378,8 +378,10 @@ void prp_for_passive(void)
         CS_ClearMemberBit(pRS->FlagPosition);
     }
 
+    int32_t step = (int32_t)pRS->SlotDuration;
+
     MAC_SetSlotStatus(slot_status);
-    pRS->ClockSychronization==CLOCK_SYN_NEEDED ? SVC_ExecSyncSchema() : (void)0;
+    pRS->ClockSychronization==CLOCK_SYN_NEEDED ? SVC_ExecSyncSchema(step) : (void)0;
 }
 
 static __INLINE uint32_t _is_data_frame()
@@ -623,11 +625,13 @@ void prp_for_active(void)
         }
     }
 
+    int32_t step = (int32_t)pRS->SlotDuration;
+
     MAC_SetFrameStatus(frame_status_ch[chosed_ch]);
     /** for the assumption that channel 0 and channel 1 are the same */
     is_data_frame() ? MSG_SetStatus(pRS->CNIAddressOffset, frame_status_ch[chosed_ch]) : (void)0;
 
-    pRS->ClockSychronization==CLOCK_SYN_NEEDED ? SVC_ExecSyncSchema() : (void)0;
+    pRS->ClockSychronization==CLOCK_SYN_NEEDED ? SVC_ExecSyncSchema(step) : (void)0;
 }
 
 void prp_for_coldstart(void)

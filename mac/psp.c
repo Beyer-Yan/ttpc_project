@@ -73,12 +73,12 @@ static __INLINE uint32_t _check_clique(void)
 	switch(clique_res)
 	{
 		case CLIQUE_MINORITY:
-			FSM_sendEvent(FSM_EVENT_CLIQUE_ERR);
+			FSM_sendEvent(FSM_EVENT_CLIQUE_MINORITY);
 			CNI_SetSRBit(SR_CE);
 			break;
 		case CLIQUE_NO_ACTIVITY:
 			FSM_sendEvent(FSM_EVENT_COMMUNICATION_BLACKOUT);
-			CNI_SetSRBit(SR_CE);
+			CNI_SetSRBit(SR_CB);
 			break;
 		case CLIQUE_MAJORITY:
 			FSM_sendEvent(FSM_EVENT_CLIQUE_MAJORITY);
@@ -182,7 +182,7 @@ void psp_for_passive(void)
 				}
 			}
 			res = 1; /**< actually, the controller transmitted into activa state  */
-			FSM_sendEvent(FSM_EVENT_NODE_SLOT_ACQUIRED|FSM_EVENT_HOST_LIFE_UPDATED);
+			FSM_sendEvent(FSM_EVENT_NODE_SLOT_ACQUIRED);
 		}
 	}
 

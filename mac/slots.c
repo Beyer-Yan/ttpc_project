@@ -23,15 +23,16 @@
 #include "ttpdebug.h"
 #include "medl.h"
 
-
+#define FrMT 		1
+#define MAX_STEPS   200
 
 /*********************************************************************************/
 /**
  * the global variables definitoions, slot relative.
  */
 /** slots partition parameters */
-static volatile uint32_t _G_ClusterCycles;
-static volatile uint32_t _G_TDMASlots;
+// static volatile uint32_t _G_ClusterCycles;
+// static volatile uint32_t _G_TDMASlots;
 
 /**
  * slots parameters, different for different slots. 
@@ -43,7 +44,7 @@ static volatile uint32_t _G_TDMARound   = 0;
 
 /** slots timing parameters */
 static volatile uint32_t _G_ActualAT; 	/**< actual action time in unit of macrotick */
-static volatile uint32_t _G_PRP;			/**< prp start time in unit of macrotick */
+static volatile uint32_t _G_PRP;		/**< prp start time in unit of macrotick */
 
 /** status of a slot, which is used for the clique detection */
 static volatile uint8_t  _G_SlotStatus;
@@ -51,9 +52,7 @@ static volatile uint8_t  _G_SlotStatus;
 /** SENDING_FRAME or RECEIVING_FRAME */
 static volatile uint8_t  _G_SlotAcquisitionFlag;
 
-static volatile uint8_t  _G_FrameStatusOfCH0
-static volatile uint8_t  _G_FrameStatusOfCH1
-
+static volatile uint32_t  _G_slot_pointer;
 
 /*********************************************************************************/
 /**
@@ -155,6 +154,7 @@ uint32_t MAC_UpdateSlot(void)
 	}
 
 	CS_SetRoundSlot(rs);
+	_G_slot_pointer = res;
 	return res;
 }
 
@@ -210,6 +210,15 @@ uint32_t MAC_SetSlotStatus(uint32_t SlotStatus)
 	_G_SlotStatus = SlotStatus;
 }
 
+void MAC_SetSlot(uint32_t slot)
+{
+	_G_Slot = slot;
+}
+
+void MAC_SetTDMARound(uint32_t tdma)
+{
+	_G_TDMASlots = tdma;
+}
 
 uint32_t MAC_GetNodeSlot(void)
 {
@@ -221,15 +230,15 @@ uint32_t MAC_GetTDMARound(void)
 	return _G_TDMARound;
 }
 
-uint32_t MAC_GetTDMASlots(void)
-{
-	return _G_TDMASlots;
-}
-
 
 uint32_t MAC_GetPspTsmp(void)
 {
 	return TIM_GetCapturePSP();
+}
+
+uint32_t MAC_GetRatio()
+{
+	return TIM_GetRatio();
 }
 
 void MAC_SetSlotAcquisition(uint32_t SlotAcquisition)
@@ -240,4 +249,74 @@ void MAC_SetSlotAcquisition(uint32_t SlotAcquisition)
 uint32_t MAC_GetSlotAcquisition(void)
 {
 	return _G_SlotAcquisitionFlag;
+}
+
+uint32_t  MAC_GetTDMARound(void)
+{
+	uint32_t tdma_slots = MEDL_GetTDMASlots();
+	return (_G_TDMARound*tdma_slots + _G_Slot);
+}
+
+void MAC_SetTime(uint32_t ActAT,uint32_t TP,uint32_t SD)
+{
+	uint16_t stime     = TIME_GetCaptureMacotickPSP();
+	uint16_t real_at   = stime + ActAT&0xffff;
+	uint16_t real_prp  = real_at + TP&0xffff;
+	uint16_t slot_end  = st_time + SD&0xffff;
+
+	TIM_SetTriggerAT(real_at);
+	TIM_SetTriggerPRP(real_prp);
+	TIM_SetTriggerUser0(slot_end);
+}
+
+void MAC_StartPhaseCirculation()
+{
+	to be done
+}
+
+void MAC_StopPhaseCirculation()
+{
+	to be done
+}
+
+uint32_t MAC_CheckSlot(void)
+{
+	return _G_slot_pointer;
+}
+
+void MAC_AdjTime(uint16_t AdjMode, int32_t Offset, int32_t Steps)
+{
+	//AdjMode is set CLK_FREQ_ADJ forcely
+
+	TTP_ASSERT(Steps<MAX_STEPS);
+
+	int32_t cor_val[MAX_STEPS]={0};
+
+	int32_t ratio = (int32_t)TIM_GetRatio();
+
+	int i = 0;
+	int j = 0;
+
+	int _step = Steps/(FrMT+1);
+
+	int32_t quotient = Offset/_step;
+	int32_t remain   = Offset%_step; 
+
+	for(j=0,i=0;i<_step;i++,j+=FrMT+1)
+	{
+		cor_val[j] = quotient;
+	}
+
+	int32_t tmp = ABS(remain);
+	for(i=0,j=0;i<tmp;i++,j+=FrMT+1)
+	{
+		cor_val[j] += remain>0?1:-1;
+	}
+
+	for(i=0;i<Steps;i++)
+	{
+		cor_val[i]+=ratio;
+	}
+
+	TIM_RatioAdj(cor_val, Steps);
 }

@@ -17,8 +17,8 @@
 #include "protocol.h"
 #include "ttpdebug.h"
 
-#define MAX_TRANSITION_NUM 		16
-#define MAX_STATE_NUM 			10
+#define MAX_TRANSITION_NUM 		20
+#define MAX_STATE_NUM 			11
 
 /**
  * This variable is used to record the events happened, mapping out the transition number
@@ -110,9 +110,21 @@ static const FSM_State __G_state[MAX_STATE_NUM] =
 			},
 	},
 
-	/* ACTIVE  */
+	/* SUB_CS */
 	{
 		.state_num        = 4,
+		.toState   	      = FSM_toSubColdStart,
+		.doState          = FSM_doSubColdStart,
+		.doStateProcessor = 
+			{
+				.doState  	   = FSM_doSubColdStart,
+				.pSubRoutine   = NULL,
+			},
+	}
+
+	/* ACTIVE  */
+	{
+		.state_num        = 5,
 		.toState          = FSM_toActive,
 		.doStateProcessor = 
 			{
@@ -123,7 +135,7 @@ static const FSM_State __G_state[MAX_STATE_NUM] =
 
 	/* PASSIVE */
 	{
-		.state_num        = 5,
+		.state_num        = 6,
 		.toState          = FSM_toPassive,
 		.doStateProcessor =  
 			{
@@ -134,7 +146,7 @@ static const FSM_State __G_state[MAX_STATE_NUM] =
 
 	/* AWAIT   */
 	{
-		.state_num        = 6,
+		.state_num        = 7,
 		.toState          = FSM_toAwait,
 		.doStateProcessor =  
 			{
@@ -145,7 +157,7 @@ static const FSM_State __G_state[MAX_STATE_NUM] =
 
 	/* TEST    */
 	{
-		.state_num        = 7,
+		.state_num        = 8,
 		.toState          = FSM_toTest,
 		.doStateProcessor =  
 			{
@@ -156,7 +168,7 @@ static const FSM_State __G_state[MAX_STATE_NUM] =
 
 	/* DOWNL   */
 	{
-		.state_num        = 8,
+		.state_num        = 9,
 		.toState          = FSM_toDownload,
 		.doStateProcessor =  
 			{
@@ -167,7 +179,7 @@ static const FSM_State __G_state[MAX_STATE_NUM] =
 
 	/* ERROR   */
 	{
-		.state_num        = 9,
+		.state_num        = 10,
 		.toState          = NULL,
 		.doStateProcessor =  
 			{
@@ -183,27 +195,29 @@ static const FSM_State __G_state[MAX_STATE_NUM] =
  */
 /** state pointers macro definitions*/
 #define S_N 				NULL 				/**< for NULL pointer */
-#define S_X 				&__G_state[9] 		/**< pointer to ERROR state */
+#define S_X 				&__G_state[10] 		/**< pointer to ERROR state */
 #define S_0 				&__G_state[0] 		/**< pointer to FREEZE state */
 #define S_1 				&__G_state[1] 		/**< pointer to INIT state */
 #define S_2 				&__G_state[2] 		/**< pointer to LISTEN state */
 #define S_3 				&__G_state[3] 		/**< pointer to COLD_START state */
-#define S_4 				&__G_state[4] 		/**< pointer to ACTIVE state */
-#define S_5 				&__G_state[5] 		/**< pointer to PASSIVE state */
-#define S_6 				&__G_state[6] 		/**< pointer to AWAIT state */
-#define S_7 				&__G_state[7] 		/**< pointer to TEST state */
-#define S_8 				&__G_state[8] 		/**< pointer to DOWNLOAD state */
+#define S_4 				&__G_state[4] 		/**< pointer to the subColdStart state */
+#define S_5 				&__G_state[5] 		/**< pointer to ACTIVE state */
+#define S_6 				&__G_state[6] 		/**< pointer to PASSIVE state */
+#define S_7 				&__G_state[7] 		/**< pointer to AWAIT state */
+#define S_8 				&__G_state[8] 		/**< pointer to TEST state */
+#define S_9 				&__G_state[9] 		/**< pointer to DOWNLOAD state */
 
 /** state names macro definitions*/
 #define S_FREEZE 			S_0
 #define S_INIT 				S_1
 #define S_LISTEN 			S_2
 #define S_COLD_START 		S_3
-#define S_ACTIVE 			S_4
-#define S_PASSIVE 			S_5
-#define S_AWAIT 			S_6
-#define S_TEST  			S_7
-#define S_DOWNLOAD 			S_8
+#define S_SUB_CS 			S_4
+#define S_ACTIVE 			S_5
+#define S_PASSIVE 			S_6
+#define S_AWAIT 			S_7
+#define S_TEST  			S_8
+#define S_DOWNLOAD 			S_9
 #define S_ERROR 			S_X
 /**
 		 *          0     1    2    3    4    5   6    7    8    9    10   11   12   13   14   15  
@@ -325,30 +339,7 @@ static uint32_t __calc_transition_num(void)
 	};
 
 
-	// #define B(i) 		(0xffffffff&~bit_mask[i])
-
-	// static uint32_t event_clr_mask[16] = {
-
-	// 	B(10)& B(0),
-	// 	B(10)& B(1),
-	// 	B(10)& B(2) & B(3) & B(4),
-	// 	B(10)& B(5) & B(6) & B(7) & B(8) & B(9),
-	// 	B(10)& B(11)& B(27),
-	// 	B(10)& B(12)& B(13)& B(4),
-	// 	B(10)& B(14)& B(15)& B(28)& B(16),
-	// 	B(10)& B(17)& B(18)& B(28),
-	// 	B(10)& B(4) & B(19),
-	// 	B(10)& B(20)& B(21)& B(29)& B(30),
-	// 	B(10)& B(12)& B(17)& B(28),
-	// 	B(10)& B(22),
-	// 	B(10)& B(13),
-	// 	B(10)& B(24),
-	// 	B(10)& B(25),
-	// 	B(10)& B(26) 	
-	// };
-	// #undef B
-
-	static uint32_t event_clr_mask[16] = {
+	static uint32_t event_clr_mask_old[20] = {
 		
 		0xfffffbfe,0xfffffbfd,0xfffffbe3,0xfffff81f,
 		0xf7fff3ff,0xffffcbef,0xeffe3bff,0xeff9fbff,
@@ -356,30 +347,27 @@ static uint32_t __calc_transition_num(void)
 		0xffffdbff,0xfefffbff,0xfdfffbff,0xfbfffbff,
 	};
 
-	// #define B(i) 		(1<<i)
+	static uint32_t event_clr_mask[20] = 
+	{
+		0xfffffbff,0xfffffffe,0xfffffffd,0xffffffe3,
+		0xfffffc1f,0xffffa7ff,0xffffffdf,0xffff1fff,
+		0xfffeffff,0xfff9ffff,0xfff7ffff,0xffeffdff,
+		0xff9bffff,0xff7fffff,0xfeffffff,0xfdffffff,
+		0xffffffbf,0xf3ffdfff,0xffffffe7,0xffff97ff,
+	};
 
-	// static uint16_t trans_mask[9]   = {
- 
-	// 	B(9)|B(11)|B(12),     /* state 00 */
-	// 	B(0)|B(4),            /* state 01 */
-	// 	B(1)|B(2)|B(4)|B(14), /* state 02 */
-	// 	B(4)|B(5)|B(6)|B(10), /* state 03 */
-	// 	B(3)|B(4)|B(7),       /* state 04 */
-	// 	B(3)|B(4)|B(8),       /* state 05 */
-	// 	B(4)|B(14),           /* state 06 */
-	// 	B(4)|B(13),           /* state 07 */
-	// 	B(4)|B(15),           /* state 08 */
-
-	// };
-
-	// #undef B
-
-	static uint16_t trans_mask = {
+	static uint16_t trans_mask_old[9] = {
 
 		0x1a00,0x0011,0x4016,
 		0x0470,0x0098,0x0118,
 		0x4010,0x2010,0x8010,
 
+	};
+
+	static uint32_t trans_mask[10] = 
+	{
+		0x00001a00,0x00000403,0x0000400d,0x00090061,0x00060001,
+		0x00000091,0x00000111,0x00004001,0x00002001,0x00008001,
 	};
 
 	static uint8_t tpos[16] = {
@@ -391,29 +379,32 @@ static uint32_t __calc_transition_num(void)
 	};
 
 	/** get the bit i of event bit pattern, return 0 or 1. i from 0 to 31 */
-	#define _BIT(i) 		((__G_event_bit_pattern&bit_mask[i])>>i)
+	#define E(i) 		((__G_event_bit_pattern&bit_mask[i])>>i)
 	/**
 	 * calculation process here. If no corresponding transition number is activated,
 	 * the variable transition_num will set to -1. And if valid transition number
 	 * is activated, the corresponding bits of the transition number occupying in
 	 * the events bits pattern shall be cleared.
 	 */
-	/* 01 */ tbp |= (_BIT(10)& _BIT(0))                                        <<0;
-	/* 02 */ tbp |= (_BIT(10)& _BIT(1))                                        <<1;
-	/* 03 */ tbp |= (_BIT(10)& _BIT(2) & _BIT(3) & _BIT(4))                    <<2;
-	/* 04 */ tbp |= (_BIT(10)&(_BIT(5) | _BIT(6) | _BIT(7) | _BIT(8)| _BIT(9)))<<3;
-	/* 05 */ tbp |= (_BIT(10)&(_BIT(11)| _BIT(27)))                            <<4;
-	/* 06 */ tbp |= (_BIT(10)& _BIT(12)& _BIT(13)& _BIT(4))                    <<5;
-	/* 07 */ tbp |= (_BIT(10)&(_BIT(14)| _BIT(15)| _BIT(28)| _BIT(16)))        <<6;
-	/* 08 */ tbp |= (_BIT(10)&(_BIT(17)| _BIT(18)| _BIT(28)))                  <<7;
-	/* 09 */ tbp |= (_BIT(10)& _BIT(4) & _BIT(19))                             <<8;
-	/* 10 */ tbp |= (_BIT(10)& _BIT(20)& _BIT(21)& _BIT(29)& _BIT(30))         <<9;
-	/* 11 */ tbp |= (_BIT(10)& _BIT(12)&(_BIT(17)| _BIT(28)))                  <<10;
-	/* 12 */ tbp |= (_BIT(10)& _BIT(22))                                       <<11;
-	/* 13 */ tbp |= (_BIT(10)& _BIT(13))                                       <<12;
-	/* 14 */ tbp |= (_BIT(10)& _BIT(24))                                       <<13;
-	/* 15 */ tbp |= (_BIT(10)& _BIT(25))                                       <<14;
-	/* 16 */ tbp |= (_BIT(10)& _BIT(26))                                       <<15;
+	/* 01 */ tbp |= ;
+	/* 02 */ tbp |= ;
+	/* 03 */ tbp |= ;
+	/* 04 */ tbp |= ;
+	/* 05 */ tbp |= ;
+	/* 06 */ tbp |= ;
+	/* 07 */ tbp |= ;
+	/* 08 */ tbp |= ;
+	/* 09 */ tbp |= ;
+	/* 10 */ tbp |= ;
+	/* 11 */ tbp |= ;
+	/* 12 */ tbp |= ;
+	/* 13 */ tbp |= ;
+	/* 14 */ tbp |= ;
+	/* 15 */ tbp |= ;
+	/* 16 */ tbp |= ;
+	/* 17 */ tbp |= ;
+	/* 18 */ tbp |= ;
+	/* 19 */ tbp |= ;
 
 	#undef _BIT
 

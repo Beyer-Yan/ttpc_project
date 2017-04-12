@@ -148,15 +148,26 @@ uint16_t TIM_GetCurMacroticks(void);
 /* Capture values *********************************************************/
 uint32_t TIM_GetCapture(uint16_t CapChannel);
 
+/** in unit of microtick */
 uint32_t TIM_GetCaptureRX0(void);
 uint32_t TIM_GetCaptureRX1(void);
 uint32_t TIM_GetCapturePSP(void);
 uint32_t TIM_GetCaptureUser(void);
 
+/**
+ * Function gets the macrotick value when psp starts.
+ * Different from function "TIM_GetCapturePSP", it returns the corresponding macrotick
+ * value of the value returned by fucntion "TIM_GetCapturePSP" at the same real time. 
+ * @return  the macrotick if PSP time.
+ */
+uint16_t TIME_GetCaptureMacotickPSP(void);
+
 void TIM_ClearCapureAll(void);
 void TIM_ClearCapture(uint16_t CapChannel);
 
 /* Trigger settings *******************************************************/
+
+/** in unit of macrotick */
 void TIM_SetTriggerAT(uint16_t AT);
 void TIM_SetTriggerPRP(uint16_t PRP);
 void TIM_SetTriggerUser0(uint16_t User);

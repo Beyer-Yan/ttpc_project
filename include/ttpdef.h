@@ -1520,6 +1520,15 @@ extern uint8_t msg_pool[MSG_POOL_LENGTH];
 ////////////////////////////////////////////////////////////////////////////////
 ///CNI access service                                                         //
 ////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * TCN definition 
+ * TTPC controller notifier register "CR0"
+ */
+#define TCN_ClrCO()				(TTP_CR0&=~CR_CO)
+#define TCN_ClrCA()				(TTP_CR0&=~CR_CA)
+#define TCN_ClrBIST() 			(TTP_CR0&=~CR_BIST)
+
 /**
  * Set and clear the corresponding bit of the TTP_SR register of CNI.
  * @param SR the status bit

@@ -651,7 +651,7 @@ uint32_t  MAC_GetPspTsmp(void);
 uint32_t  MAC_UpdateSlot(void);
 
 /**
- * Set the time properties of the slot
+ * Set the time properties of the slot.
  * @param  ActAT the actual trigger point time for TP phase
  * @param  TP    the time duration of TP phase in unit of macrotick
  * @param  SD    the slot duration time for a slot in unit of macrotick
@@ -676,14 +676,6 @@ void     MAC_StopPhaseCirculation(void);
  *   The function should be called after the slot is updated.
  */
 uint32_t MAC_CheckSlot(void);
-
-/**
- * [MAC_xChannelActivity description]
- * @return  0 channel silent, 1 channel active
- */
-
-uint32_t MAC_SetChannelActivity(uint32_t Activity);
-uint32_t MAC_CheckChannelActivity(void);
 
 //void     MAC_SetWindow(uint32_t MiddleAxis);
 
