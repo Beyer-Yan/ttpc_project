@@ -21,7 +21,7 @@
 /** basic types definition */
 
 /** The most platforms will support stdint.h. Maybe,the definition below is not needed. */
-#define USE_STDINC
+//#define USE_STDINC
 
 typedef enum {FALSE=0,TRUE} 		bool_t;
 
@@ -31,7 +31,7 @@ typedef enum {FALSE=0,TRUE} 		bool_t;
 	typedef short 					int16_t;
 	typedef unsigned short 			uint16_t;
 	typedef int 					int32_t;
-	typedef unsigned int 			uint32_t_t;
+	typedef unsigned int 			uint32_t;
 
 	/** half of a byte(4 bits type definition)*/
 	typedef unsigned char 			Nibble;
@@ -44,19 +44,6 @@ typedef enum {FALSE=0,TRUE} 		bool_t;
 	
 	#define NULL 					(void*)0
 	#define offsetoff(T, member)	((size_t)&((T*)0)->member)
-
-	/** @bref implementation specific of uint48 and uint64 */
-
-	typedef struct{
-		uint32_t_t lsb;
-		uint16_t msb;
-	}uint48_t;
-
-	typedef struct{
-		uint32_t_t lsb;
-		uint32_t_t msb;
-	}uint64_t;
-
 	/** max value of basic types */
 
 	#define UINT8_MAX 				0xff
@@ -1175,13 +1162,13 @@ extern uint32_t __ttpc_status_regs_group[16];
 #define TTP_MV0	 				TTP_CSR2
 /** [TTP_CSR3 (TTP_MV1)			 membership vector 1] */
 #define TTP_CSR3 				__ttpc_status_regs_group[3]	
-#define TTP_MVF1				TTP_CSR3
+#define TTP_MV1					TTP_CSR3
 /** [TTP_CSR4 (TTP_MV2)			 membership vector 2] */
 #define TTP_CSR4 				__ttpc_status_regs_group[4]	
-#define TTP_MVF2				TTP_CSR4
+#define TTP_MV2					TTP_CSR4
 /** [TTP_CSR5 (TTP_MV3)			 membership vector 3] */
 #define TTP_CSR5 				__ttpc_status_regs_group[5]	
-#define TTP_MVF3				TTP_CSR5
+#define TTP_MV3					TTP_CSR5
 
 /**
  * C-state structure definition. 32-bits register is specified for every item of c-state.
@@ -1427,7 +1414,7 @@ extern uint8_t msg_pool[MSG_POOL_LENGTH];
 #define IS_TTP_MODE(MODE)		(((MODE) == MODE_NO) || \
 								 ((MODE) == MODE_1)  || \
 								 ((MODE) == MODE_2)  || \
-								 ((MODE) == MODE_3)  || \ 
+								 ((MODE) == MODE_3)  || \
 								 ((MODE) == MODE_CLR))
 /** for register TTP_SR */
 
@@ -1566,9 +1553,9 @@ extern uint8_t msg_pool[MSG_POOL_LENGTH];
 
 /** id is a type of uint8_t[12] */
 #define CNI_GetUID(id) 				do{\
-										int i = 0;
-										for(;i<sizeof(ttp_id);i++)
-											id[i] = TTP_12_bytes_ID[i];
+										int i = 0;\
+										for(;i<sizeof(ttp_id);i++)\
+											id[i] = TTP_12_bytes_ID[i];\
 									}while(0)
 /**
  * The CSID and the APPID are type of uint32_t, meaning that the direct

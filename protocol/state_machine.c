@@ -372,10 +372,7 @@ static uint32_t __calc_transition_num(void)
 
 	static uint8_t tpos[16] = {
 
-		0,1,2,0,
-		3,0,0,0,
-		4,0,0,0,
-		0,0,0,0,
+		0,1,2,0,3,0,0,0,4,0,0,0,0,0,0,0,
 	};
 
 	/** get the bit i of event bit pattern, return 0 or 1. i from 0 to 31 */

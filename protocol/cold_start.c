@@ -49,7 +49,7 @@ void FSM_toColdStart(void)
     uint32_t slot = pNP->LogicalNameSlotPosition;
 
     RoundSlotProperty_t *pRS = MAC_LoadSlotProperties(MODE_CS_ID,0,slot);
-
+    
     //CS_SetGTF(tsf);
 
     //CS setting

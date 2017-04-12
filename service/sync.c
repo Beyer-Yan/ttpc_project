@@ -20,11 +20,6 @@
 #include "prococol_data.h"
 #include "virhw.h"
 
-#warning "FrMTs feature is not supported"
-#define  FRMTS      1
-#undef   FRMTS
-
-#define  FIX_STEP   100;
 
 /** @see "Time Triggered Protocol Spec", page 56*/
 static volatile int32_t _G_pushdown_stack[4] = {0};

@@ -17,7 +17,7 @@
  #ifndef __MEDL_H__
  #define __MEDL_H__
 
-#include <ttpdef.h>
+#include "ttpdef.h"
      
 #define MODE_NUM            3
 

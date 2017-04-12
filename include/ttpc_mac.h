@@ -21,7 +21,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 ///message struct definitions                                                 //
 ////////////////////////////////////////////////////////////////////////////////
-#include <ttpdef.h>
+#include "ttpdef.h"
 
 
 #define MAX_FRAME_LENGTH		240
@@ -41,7 +41,7 @@
 #define FRAME_NULL				(uint32_t)0x00000005
 #define FRAME_INVALID			(uint32_t)0x00000006
 
-typedef enum{
+typedef enum Mac_err{
 	MAC_EOK=0,				/**< No errors happens */
 	MAC_ESLOT_NUM,			/**< Current slot > MAX_SLOT_NUMBER */
 	MAC_ENON_DATA,			/**< No data to be transmitted  */
