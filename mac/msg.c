@@ -57,7 +57,7 @@ static volatile uint16_t __G_ttp_frame_length = 0;
 ///send frame operation                                                       //
 ////////////////////////////////////////////////////////////////////////////////
 
-static __INLINE void __byte_copy_to_frame_buf(uint8_t* dst, uint8_t* src, int size)
+static inline void __byte_copy_to_frame_buf(uint8_t* dst, uint8_t* src, int size)
 {
     uint8_t *_dst_ch0 = dst;
     uint8_t *_dst_ch1 = dst + FRAME_BUFFER_SIZE;
@@ -69,7 +69,7 @@ static __INLINE void __byte_copy_to_frame_buf(uint8_t* dst, uint8_t* src, int si
     }
 }
 
-// static __INLINE void __byte_copy_to_frame_buf(uint8_t *dst,uint8_t *src,int size)
+// static inline void __byte_copy_to_frame_buf(uint8_t *dst,uint8_t *src,int size)
 // {
 //     __byte_copy(dst,src,size);
 //     __byte_copy(dst+256,src,size);
@@ -112,7 +112,7 @@ static void __ttp_frame_crc32_reset()
  * @return the frame type to be assembled.
  */
 
-static __INLINE uint32_t __calc_frame_type(void)
+static inline uint32_t __calc_frame_type(void)
 {
     RoundSlotProperty_t* pSlot;
 
@@ -135,7 +135,7 @@ static __INLINE uint32_t __calc_frame_type(void)
     }
 }
 
-// static __INLINE uint32_t __check_frame_legality(uint32_t frame_type)
+// static inline uint32_t __check_frame_legality(uint32_t frame_type)
 // {
 //     RoundSlotProperty_t *pSlot;
 //     uint32_t mcr;

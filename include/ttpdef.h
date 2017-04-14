@@ -68,7 +68,7 @@ typedef enum {FALSE=0,TRUE} 		bool_t;
 	#define __ALIGNED			__attribute__((aligned))
 	#define __PACK				__attribute__((packed))
 	#define __WEAK				__weak
-	#define __INLINE			__inline
+	#define inline			inline
 	#define __ASM				__asm
 #else
 	#error "not supported tool chain"

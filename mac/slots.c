@@ -89,7 +89,7 @@ uint32_t  MAC_IsSendSlot(void)
 }
 
 
-static __INLINE _calc_mode_num(uint32_t mode)
+static inline _calc_mode_num(uint32_t mode)
 {
 	uint32_t mode_num;
 

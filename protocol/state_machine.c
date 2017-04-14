@@ -269,8 +269,7 @@ static int __calc_transition_num(void)
 		1<<20,1<<21,1<<22,1<<23,1<<24,1<<25,1<<26,1<<27,1<<28,1<<29,
 		1<<30,1<<31
 	};
-
-
+	
 	// static uint32_t event_clr_mask_old[20] = {
 		
 	// 	0xfffffbfe,0xfffffbfd,0xfffffbe3,0xfffff81f,
@@ -346,7 +345,7 @@ static int __calc_transition_num(void)
 	tbp &= trans_mask[sn];
 	tbp = tbp^(tbp-1)&tbp;
 
-	while(tbp) { tbp>>=1; tn++ }
+	while(tbp) { tbp>>=1; tn++; }
 	tn!=-1 ? __G_event_bit_pattern &= event_clr_mask[tn] : (void)0;
 	
 	return tn;
@@ -416,7 +415,7 @@ static void __protocol(void)
 	}
 } 
 
-__INLINE void __machine_reset()
+inline void __machine_reset()
 {
 	//__Gf_hook 		= NULL;
 	__G_start_flag  = FSM_STOPPED;  

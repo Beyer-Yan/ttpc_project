@@ -23,7 +23,7 @@
  #include "medl.h"
 
 
-static __INLINE _cni_init(void)
+static inline _cni_init(void)
 {
 	int _i = 0;
 
@@ -41,7 +41,7 @@ static __INLINE _cni_init(void)
 
 }
 
-static __INLINE _timer_init(void)
+static inline _timer_init(void)
 {
 	ScheduleParameter_t* pSP = MAC_GetScheduleParameter();
 	TIM_DepInit();
@@ -61,7 +61,7 @@ static __INLINE _timer_init(void)
 	TIM_SetMacrotick(pSP->MacrotickParameter);
 }
 
-static __INLINE _id_init(void)
+static inline _id_init(void)
 {
 	HW_GetPlatformID(TTP_ID_BASE,sizeof(ttp_id));
 	TTP_IDCR = MEDL_GetSchedID();

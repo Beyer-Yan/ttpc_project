@@ -40,7 +40,7 @@
  * @param src  the source address
  * @param size the size the the data, which shall be large then or equal to 0. 
  */
-// static __INLINE void _byte_copy(uint8_t *dst, uint8_t *src, int size)
+// static inline void _byte_copy(uint8_t *dst, uint8_t *src, int size)
 // {
 //     while(size--)
 //     {

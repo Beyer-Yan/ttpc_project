@@ -43,7 +43,7 @@
  * @param src  the source address
  * @param size the size the the data, which shall be large then or equal to 0. 
  */
-static __INLINE void _byte_copy(uint8_t *dst, uint8_t *src, int size)
+static inline void _byte_copy(uint8_t *dst, uint8_t *src, int size)
 {
     while(size--)
     {
@@ -250,7 +250,7 @@ static uint32_t _judge_valid(uint32_t* pframe_status, uint32_t channel)
     return _FRAME_VALID_;
 }
 
-static __INLINE void _process_mcr(uint32_t mcr)
+static inline void _process_mcr(uint32_t mcr)
 {
     uint32_t dmc = DMC_NO_REQ;
     switch(mcr)
@@ -384,7 +384,7 @@ void prp_for_passive(void)
     pRS->ClockSychronization==CLOCK_SYN_NEEDED ? SVC_ExecSyncSchema(step) : (void)0;
 }
 
-static __INLINE uint32_t _is_data_frame()
+static inline uint32_t _is_data_frame()
 {
     // the legality of the slot configuration shall be checked upper application
     RoundSlotProperty_t* pRS = MAC_GetRoundSlotProperties();

@@ -30,7 +30,7 @@
  * This function shall be called at the start time of a slot.
  */
 
-static __INLINE void _update_mode(void)
+static inline void _update_mode(void)
 {
 	dmc = CS_GetCurDMC();
 	if(dmc!=DMC_NO_REQ)
@@ -48,7 +48,7 @@ static __INLINE void _update_mode(void)
 	}
 }
 
-static __INLINE void _load_slot_configuration(void)
+static inline void _load_slot_configuration(void)
 {
 	/**
 	 * ensure that this function shall be called after updating the slot and the 
@@ -62,7 +62,7 @@ static __INLINE void _load_slot_configuration(void)
 	MAC_LoadSlotProperties(mode,tdma,slot);
 }
 
-static __INLINE uint32_t _check_clique(void)
+static inline uint32_t _check_clique(void)
 {
 	uint32_t res        = 0;
 	uint32_t clique_res = 0;
@@ -93,7 +93,7 @@ static __INLINE uint32_t _check_clique(void)
 	return res;
 }
 
-static __INLINE void _prepare_for_receive(void)
+static inline void _prepare_for_receive(void)
 {
 	RoundSlotProperty_t *pRS = MAC_GetRoundSlotProperties();
 
@@ -110,7 +110,7 @@ static __INLINE void _prepare_for_receive(void)
 	MAC_SetSlotAcquisition(RECEIVING_FRAME);
 }
 
-static __INLINE void _prepare_for_transmit(void)
+static inline void _prepare_for_transmit(void)
 {
 	RoundSlotProperty_t *pRS = MAC_GetRoundSlotProperties();
 
@@ -133,7 +133,7 @@ static __INLINE void _prepare_for_transmit(void)
 	PV_SetAckState(ACK_INIT);
 }
 
-static __INLINE uint32_t _is_data_frame()
+static inline uint32_t _is_data_frame()
 {
 	// the legality of the slot configuration shall be checked upper application
 	RoundSlotProperty_t* pRS = MAC_GetRoundSlotProperties();

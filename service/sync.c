@@ -17,7 +17,7 @@
 #include "ttpservice.h"
 #include "ttpc_mac.h"
 #include "ttpdebug.h"
-#include "prococol_data.h"
+#include "protocol_data.h"
 #include "virhw.h"
 
 
@@ -27,7 +27,7 @@ static volatile int32_t _G_pushdown_stack[4] = {0};
 /** the estimate arival time interval of the frame aligned to local microtick */
 static volatile int32_t _G_estimate_time_interval = 0;
 
-static __INLINE void _stack_push(int32_t offset)
+static inline void _stack_push(int32_t offset)
 {
 	static int idx = 0;
 
@@ -57,7 +57,7 @@ static int32_t _average()
 	return (tmp[1] + tmp[2])/2;
 }
 
-static __INLINE uint32_t _alignment_err(uint32_t value)
+static inline uint32_t _alignment_err(uint32_t value)
 {
 	static uint32_t mai = MAC_GetMacrotickParameter(); /**< ma = macrotick interval */
 	static uint32_t ratio = MAC_GetRatio();

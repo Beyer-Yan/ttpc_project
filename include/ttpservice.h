@@ -216,7 +216,7 @@ uint32_t SVC_CliqueDetect(void);
  *       @arg 0  host not valid
  *       @arg !0 host ok
  */
-static __INLINE uint32_t SVC_CheckHostLifeSign(void)
+static inline uint32_t SVC_CheckHostLifeSign(void)
 {
     return CNI_CheckHLFS();
 }
@@ -225,7 +225,7 @@ static __INLINE uint32_t SVC_CheckHostLifeSign(void)
  * update the controller life sign.
  * @return  the value of the controller life sign
  */
-static __INLINE uint32_t SVC_UpdateControllerLifeSign(void)
+static inline uint32_t SVC_UpdateControllerLifeSign(void)
 {
     return CNI_UpdateCLFS();
 }

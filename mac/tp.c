@@ -26,7 +26,7 @@
  * value as the c-state time field. During the TDMA slot, the cluster time advances
  * in steps of macroticks, while the c-state time is only updated each AT time.
  */
-static __INLINE void _tp_update_gt(void)
+static inline void _tp_update_gt(void)
 {
 	uint32_t cluster_time = CNI_GetCTF();
 	CS_SetGTF(cluster_time);
