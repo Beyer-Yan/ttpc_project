@@ -1403,7 +1403,7 @@ extern uint8_t msg_pool[MSG_POOL_LENGTH];
 	#define MODE_1 				((uint32_t)0x00000800)	/**< First  successor mode requested */
 	#define MODE_2 				((uint32_t)0x00001000)	/**< Second successor mode requested */
 	#define MODE_3 				((uint32_t)0x00001800)	/**< Third  successor mode requested */
-	#define MODE_CS_ID          ((uint32_t)0x00003800)  /**< mode used for startup */
+	#define MODE_CS_ID          ((uint32_t)0x00000000)  /**< mode used for startup */
 	//#define MODE_CLR			((uint32_t)0x00002000)	/**< Clear pending mode change request */
 
 #define IS_TTP_DMC(DMC)			(((DMC) == DMC_NO_REQ) || \

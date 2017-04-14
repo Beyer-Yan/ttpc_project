@@ -270,7 +270,7 @@ static int __calc_transition_num(void)
 		1<<30,1<<31
 	};
 
-	
+
 	// static uint32_t event_clr_mask_old[20] = {
 		
 	// 	0xfffffbfe,0xfffffbfd,0xfffffbe3,0xfffff81f,

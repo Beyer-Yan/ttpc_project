@@ -51,7 +51,7 @@ void FSM_toColdStart(void)
     RoundSlotProperty_t *pRS = MAC_LoadSlotProperties(MODE_CS_ID,0,slot);
     
     //CS_SetGTF(tsf);
-
+    
     //CS setting
     CS_SetRoundSlot(slot);
     CS_SetMode(MODE_CS_ID);
