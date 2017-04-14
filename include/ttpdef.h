@@ -1661,7 +1661,7 @@ extern uint8_t msg_pool[MSG_POOL_LENGTH];
 
 
 /** the clearance definitions below */
-#define CS_ClearMemberAll()			do{C_STATE_MV0=0;\
+#define CS_ClearMemberAll()			do{    C_STATE_MV0=0;\
 										   C_STATE_MV1=0;\
 										   C_STATE_MV2=0;\
 										   C_STATE_MV3=0;\

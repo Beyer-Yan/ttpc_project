@@ -17,16 +17,12 @@
 #ifndef __PROTOCOL_H__
 #define __PROTOCOL_H__
 
-#include <ttpdef.h>
+#include "ttpdef.h"
 
 /**
  * @defgroup Protocol_Layer
  */	
 /**@{*/
-
-
-other module
-
 
 ////////////////////////////////////////////////////////////////////////////////
 ///state machine definitions                                                  //
@@ -41,57 +37,65 @@ other module
  * Standard transition number that standard TTPC shall include
  */
 
-/** INIT -> LISTEN */
-#define TRANSITION_NUM_1 		0 
+/** LISTEN/COLD_START/SUB_COLD_START/ACTIVE/PASSIVE/INIT/AWAIT/TEST/DOWNLOAD -> FREEZE */
+#define TS1 		0 
 
-/** LISTEN -> PASSIVE */		
-#define TRANSITION_NUM_2 		1 
+/** INIT -> LISTEN */		
+#define TS2 		1 
 
-/** LISTEN -> COLD_START */
-#define TRANSITION_NUM_3 		2
+/** LISTEN -> PASSIVE */
+#define TS3 		2
 
-/** ACTIVE/PASSIVE -> FREEZE */ 	
-#define TRANSITION_NUM_4 		3 
+/** LISTEN -> COLD_START */ 	
+#define TS4 		3 
 
-/** LISTEN/COLD_START/ACTIVE/PASSIVE/INIT/AWAIT/TEST/DOWNLOAD -> FREEZE */
-#define TRANSITION_NUM_5 		4
+/** ACTIVE/PASSIVE -> FREEZE */
+#define TS5 		4
 
 /** COLD_START -> ACTIVE */
-#define TRANSITION_NUM_6 		5
+#define TS6 		5
 
 /** COLD_START -> LISTEN */
-#define TRANSITION_NUM_7 		6
+#define TS7 		6
 
 /** ACTIVE -> PASSIVE */
-#define TRANSITION_NUM_8 		7
+#define TS8 		7
 
 /** PASSIVE -> ACTIVE */
-#define TRANSITION_NUM_9 		8
-
-/** FREEZE -> INIT */
-#define TRANSITION_NUM_10 		9
-
-/** COLD_START -> PASSIVE */
-#define TRANSITION_NUM_11 		10
-
-/**
- * Implemetation specific transition number that TTPC should include
- */
+#define TS9 		8
 
 /** FREEZE -> TEST */
-#define TRANSITION_NUM_12 		11
+#define TS10 		9
 
-/** FREEZE -> AWAIT */
-#define TRANSITION_NUM_13 		12
+/** INIT -> FREEZE */
+#define TS11 		10
+
+ /** FREEZE -> AWAIT */
+#define TS12		11
+
+/** FREEZE -> INIT */
+#define TS13 		12
 
 /** TEST -> FREEZE */
-#define TRANSITION_NUM_14 		13
+#define TS14 		13
 
 /** LISTEN/AWAIT -> DOWNLOAD */
-#define TRANSITION_NUM_15 		14
+#define TS15 		14
 
 /** DOWNLOAD -> FREEZE */
-#define TRANSITION_NUM_16 		15
+#define TS16 		15
+
+/** COLD_START -> SUB_COLD_START */
+#define TS17 		16
+
+/** SUB_COLD_START -> LISTEN */
+#define TS18 		17
+
+/** SUB_COLD_START -> COLD_START */
+#define TS19 		18
+
+/** COLD_START -> PASSIVE */
+#define TS20 		19
 
 /**@}*/// end of group StateMachine_Transition_Num
 
@@ -100,10 +104,6 @@ other module
  * @defgroup StateMachine_Events
  */
 /**@{*/
-
-/**
- * to be coding !!
- */
 
 #define FSM_EVENT_INIT_OK
 
@@ -205,6 +205,7 @@ extern void FSM_toFreeze(void);
 extern void FSM_toInit(void);
 extern void FSM_toListen(void);
 extern void FSM_toColdStart(void);
+extern void FSM_toSubColdStart(void);
 extern void FSM_toActive(void);
 extern void FSM_toPassive(void);
 extern void FSM_toAwait(void);
@@ -216,6 +217,7 @@ extern void FSM_doFreeze(void);
 extern void FSM_doInit(void);
 extern void FSM_doListen(void);
 extern void FSM_doColdStart(void);
+extern void FSM_doSubColdStart(void);
 extern void FSM_doActive(void);
 extern void FSM_doPassive(void);
 extern void FSM_doAwait(void);
