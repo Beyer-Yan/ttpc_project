@@ -54,7 +54,7 @@ extern uint8_t PV_data[20];
 #define COLD_START_COUNTER 			0
 #define INTEGRATION_COUNTER 		1
 #define AGREED_SLOTS_COUNTER 		2
-#define FALTED_SLOTS_COUNTER 		3
+#define FAILED_SLOTS_COUNTER 		3
 #define MEMBERSHIP_FAILED_COUNTER 	4
 
 /**

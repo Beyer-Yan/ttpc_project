@@ -297,15 +297,6 @@ typedef struct ttp_frame_desc
 
 }ttp_frame_desc_t;
 
-/**                                                               
-               31-09              8-6       5-3        2-0       
- +-----------------------------+---------+---------+----------+  
- |              REV            |   SLTS  |   FS1   |   FS0    |  
- +-----------------------------+---------+---------+----------+  
-                                                            
- *               SLTS = MIN(FS0,FS1)                                                                
- */
-
 /**
  * The setting of the two interfaces below needs negotiating. MAC_PrepareSCFrame
  * function should be called at startup time and DO NOT CALL IT AT NORMAL OPERATION
@@ -414,7 +405,7 @@ typedef struct mac_slot
 #define FRAME_TYPE_IMPLICIT 			(uint32_t)0x00000000
 #define FRAME_TYPE_EXPLICIT 			(uint32_t)0x00000001
 
-#define SLOT_PHASE_PRP 					1
+#define SLOT_PHASE_PSP 					1
 #define SLOT_PHASE_AT 					2
 #define SLOT_PHASE_PRP 					3
 
@@ -423,7 +414,7 @@ typedef struct mac_slot
 
 #define NORMAL_SLOT							0
 #define LAST_SLOT_OF_CURRENT_TDMAROUND 		1
-#define FIRST_SLOT_OF_SUCCESSOR_TDMA_ROUND	2
+#define FIRST_SLOT_OF_SUCCESSOR_TDMAROUND	2
 #define LAST_SLOT_OF_CURRENT_CLUSTER 		3
 #define FIRST_SLOT_OF_CURRENT_CLUSTER   	4
 
@@ -527,7 +518,7 @@ uint32_t  MAC_GetAppID(void);
 typedef struct mac_node
 {
 	uint32_t LogicalNameSlotPosition;
-	uint32_t LogicalNameMulplexedID;
+	uint32_t LogicalNameMultiplexedID;
 	uint32_t PassiveFlag;				/**< Marks the node as a permanent passive */
 	uint32_t MultiplexedMembershipFlag;
 	uint32_t FlagPosition;				/**< flag position in membership vector */
@@ -565,7 +556,7 @@ typedef struct mac_schedule
 	uint32_t ExternalRateCorrectionAllow;
 	uint32_t MinimumIntegrationCount;
 	uint32_t MaximumColdStartEntry;
-	uint32_t MximumMembershipFailureCount;
+	uint32_t MaximumMembershipFailureCount;
 	uint32_t MacrotickParameter;
 	uint32_t Precision;
 	uint32_t CommunicationRate;
@@ -595,7 +586,7 @@ void  		MAC_SetScheduleParameter(ScheduleParameter_t* ScheduleParameter);
 ScheduleParameter_t* MAC_GetScheduleParameter(void);
 uint32_t 	MAC_GetMinimumIntegrationCount(void);
 uint32_t 	MAC_GetMaximumColdStartEntry(void);
-uint32_t 	MAC_GetMximumMembershipFailureCount(void);
+uint32_t 	MAC_GetMaximumMembershipFailureCount(void);
 
 /**
  * get the unified time interval of macrotick, normally the integral multiple of us
@@ -615,7 +606,7 @@ uint32_t 	MAC_GetPrecision(void);
  */
 uint32_t  MAC_GetTDMARound(void);
 
-/** get the node slot at current round cyycle */
+/** get the node slot at current round cycle */
 uint32_t  MAC_GetNodeSlot(void);
 
 /** get the cycle slot in a cycle */
@@ -630,7 +621,7 @@ uint32_t  MAC_GetRoundSlot(void);
 /**
  * This function returns the ratio of Macrotick to Microtick.
  *
- * @attention The integral multiple shall be guranteed by the hardware. If not, the hardware 
+ * @attention The integral multiple shall be guaranteed by the hardware. If not, the hardware 
  * shall not be allowed allowed/downloaded the corresponding MEDL 
  * 
  * @return the ratio of Macrotick to Microtick
@@ -645,7 +636,7 @@ uint32_t  MAC_GetPspTsmp(void);
  * If the updated slot points the last one of a TDMA round, the function will return 
  * FIRST_SLOT_OF_CURRENT_CLUSTER. Otherwise, the function will return NORMAL_SLOT.
  * @return  @arg NORMAL_SLOT
- *          @arg LAST_SLOT_OF_CURRENT_TDMA_ROUND
+ *          @arg LAST_SLOT_OF_CURRENT_TDMAROUND
  *          @arg FIRST_SLOT_OF_CURRENT_CLUSTER
  */
 uint32_t  MAC_UpdateSlot(void);
@@ -667,7 +658,7 @@ void     MAC_StopPhaseCirculation(void);
  * @return  the pointer status.
  *              @arg NORMAL_SLOT
  *              @arg LAST_SLOT_OF_CURRENT_TDMAROUND
- *              @arg FIRST_SLOT_OF_SUCCESSOR_TDMA_ROUND
+ *              @arg FIRST_SLOT_OF_SUCCESSOR_TDMAROUND
  *              @arg LAST_SLOT_OF_CURRENT_CLUSTER
  *              @arg FIRST_SLOT_OF_CURRENT_CLUSTER
  * @attention 

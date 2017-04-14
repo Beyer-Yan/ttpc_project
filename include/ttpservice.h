@@ -121,7 +121,7 @@ void     SVC_SyncCalcOffset(uint32_t PSPTsmp, uint32_t FrameTsmp);
 
 /**
  * This function sets the estimate time duration of a frame between the start point of 
- * PSP and the arival time of the frame during a not slot, in unit of ns
+ * PSP and the arival time of the frame during a node slot, in unit of ns
  * @param  EstimateTimeInterval the estimate arival time interval, in unit of ns
  * @return              non
  * 

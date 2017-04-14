@@ -21,7 +21,7 @@
 /** basic types definition */
 
 /** The most platforms will support stdint.h. Maybe,the definition below is not needed. */
-//#define USE_STDINC
+#define USE_STDINC
 
 typedef enum {FALSE=0,TRUE} 		bool_t;
 
@@ -68,7 +68,7 @@ typedef enum {FALSE=0,TRUE} 		bool_t;
 	#define __ALIGNED			__attribute__((aligned))
 	#define __PACK				__attribute__((packed))
 	#define __WEAK				__weak
-	#define inline			inline
+	#define __INLINE			__inline
 	#define __ASM				__asm
 #else
 	#error "not supported tool chain"

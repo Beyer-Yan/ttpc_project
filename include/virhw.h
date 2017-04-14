@@ -99,6 +99,8 @@ typedef enum TimOpState
 #define MIC_50_NS				(uint16_t)0x0008
 #define MIC_100_NS				(uint16_t)0x000C
 #define MIC_1_US 				(uint16_t)0x0010
+#define MIC_10_US				(uint16_t)0x0011
+#define MIC_100_US 				(uint16_t)0x0012
 
 /**
  * Compensate mode definitions
@@ -131,15 +133,18 @@ void TIM_DepInit(void);
 /* Base operations of TTPC timer *******************************************/
 void     TIM_CMD(TimOpState op);
 uint16_t TIM_GetRatio(void);
+void     TIM_RatioAdj(int32_t *corVal, int Steps);
 
 /* Microtick settings ******************************************************/ 
 void TIM_SetCompensateMode(uint16_t CompensateMode);
 void TIM_ChannelCMD(uint16_t TIM_Channel, FuncState NewState);
-void TIM_SetChannelMicrotick(uint16_t TIM_Channel, uint16_t MicGranule);
-void TIM_SetLocalMicrotick(uint16_t GranuleValue);
+void TIM_SetChannelMicrotickGranule(uint16_t TIM_Channel, uint16_t MicGranule);
+void TIM_SetLocalMicrotickGranule(uint16_t GranuleValue);
+void TIM_SetLocalMicrotickValue(uint32_t MicrotickValue);
 
 /* Macrotick setting ******************************************************/
-void TIM_SetMacrotick(uint16_t MacGranule);
+void TIM_SetMacrotickGranule(uint16_t MacGranule);
+void TIM_SetMacrotickValue(uint16_t MacrotickValue);
 
 /* Macro/Micro-ticks getting operations ***********************************/
 uint32_t TIM_GetCurMicroticks(void);
@@ -157,12 +162,12 @@ uint32_t TIM_GetCaptureUser(void);
 /**
  * Function gets the macrotick value when psp starts.
  * Different from function "TIM_GetCapturePSP", it returns the corresponding macrotick
- * value of the value returned by fucntion "TIM_GetCapturePSP" at the same real time. 
+ * value of the value returned by function "TIM_GetCapturePSP" at the same real time. 
  * @return  the macrotick if PSP time.
  */
-uint16_t TIME_GetCaptureMacotickPSP(void);
+uint16_t TIME_GetCaptureMacrotickPSP(void);
 
-void TIM_ClearCapureAll(void);
+void TIM_ClearCaptureAll(void);
 void TIM_ClearCapture(uint16_t CapChannel);
 
 /* Trigger settings *******************************************************/
@@ -302,6 +307,8 @@ DataStreamTypeDef DRV_GetReceived(void);
 // void DRV_SetCommRate(uint16_t Rate);
 
 /**@}*/// end of group Physical_transfer
+
+void HW_GetPlatformID(uint8_t *buf, uint8_t length);
 
 /**@}*/// end of group TTPC_HW_Def
 
