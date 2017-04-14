@@ -612,6 +612,12 @@ uint32_t  MAC_GetNodeSlot(void);
 /** get the cycle slot in a cycle */
 uint32_t  MAC_GetRoundSlot(void);
 
+/** set the cycle length of current mode */
+void      MAC_SetClusterCycleLength(uint32_t Length);
+
+/** set the TDMA length of the current mode */
+void      MAC_SetTDMACycleLength(uint32_t Length);
+
 /**
  * Return the trigger timestamps of the slot phases, psp,at,prp. 
  * @param  Phase the psp, at, prp.
@@ -680,7 +686,7 @@ uint32_t MAC_CheckSlot(void);
  * @param Offset  the clock offset, in unit of signed integer of microtick
  * @param Steps   the steps for adjusting, normally 10.
  */
-void MAC_AdjTime(uint16_t AdjMode, int32_t Offset, uint16_t Steps);
+void MAC_AdjTime(uint16_t AdjMode, int16_t Offset, int16_t Steps);
 
 /**
  * The parameters below shall be considered at mode changing phase.

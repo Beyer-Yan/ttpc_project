@@ -24,11 +24,32 @@
 #include "protocol_data.h"
 #include "ttpc_mac.h"
 #include "ttpdebug.h"
+#include "ttpservice.h"
 #include "virhw.h"
+#include "medl.h"
+
+uint32_t _G_ModeChanged = 0;
 
 /**
  * This function shall be called at the start time of a slot.
  */
+
+static inline uint32_t _calc_mode_num(uint32_t mode)
+{
+    uint32_t mode_num;
+
+    switch (mode) {
+    case MODE_1:
+        mode_num = 0;break;
+    case MODE_2:
+        mode_num = 1;break;
+    case MODE_3:
+        mode_num = 2;break;
+    default:
+        mode_num = 0;break;
+    }
+    return mode_num;
+}
 
 static inline void _update_mode(void)
 {
@@ -49,10 +70,15 @@ static inline void _update_mode(void)
         default:
             break;
         }
+
+		_G_ModeChanged = 1;
+
         CS_SetMode(mode);
         CS_SetDMC(DMC_NO_REQ);
         PV_DisableFreeShot();
-    }
+    } else {
+		_G_ModeChanged = 0;
+	}
 }
 
 static inline void _load_slot_configuration(void)
@@ -67,6 +93,14 @@ static inline void _load_slot_configuration(void)
 
     //check then load the configuration of the current slot.
     MAC_LoadSlotProperties(mode, tdma, slot);
+	if(_G_ModeChanged) {
+		uint32_t mode_num = _calc_mode_num(mode);
+		uint32_t ccl = MEDL_GetRoundCycleLength(mode_num); /* cluster cycle length */
+		uint32_t ctl = MEDL_GetTDMACycleLength(mode_num);  /* TDMA cycle length */
+
+		MAC_SetClusterCycleLength(ccl);
+		MAC_SetTDMACycleLength(ctl);
+	}
 }
 
 static inline uint32_t _check_clique(void)
@@ -104,9 +138,12 @@ static inline void _prepare_for_receive(void)
     RoundSlotProperty_t* pRS = MAC_GetRoundSlotProperties();
 
     uint32_t mai = MAC_GetMacrotickParameter();
+	uint32_t ma_psp_tsmp = TIM_GetCaptureMacrotickPSP();
+
+	uint32_t psp_du = pRS->AtTime - ma_psp_tsmp;
 
     if (pRS->SynchronizationFrame == SYN_FRAME) {
-        uint32_t est_interval = pRS->DelayCorrectionTerms + 2 * mai;
+        uint32_t est_interval = pRS->DelayCorrectionTerms + (2 + psp_du) * mai;
         SVC_SetEstimateArivalTimeInterval(est_interval);
     }
 
@@ -118,8 +155,9 @@ static inline void _prepare_for_receive(void)
 static inline void _prepare_for_transmit(void)
 {
     RoundSlotProperty_t* pRS = MAC_GetRoundSlotProperties();
+	NodeProperty_t*      pNP = MAC_GetNodeProperties();
 
-    uint32_t delay = pRS->SendDelay;
+    uint32_t delay = pNP->SendDelay;
 
     /**
 	 * A sending node shall perceive itself as fully operational in its PSP, and shall
@@ -143,7 +181,7 @@ static inline uint32_t _is_data_frame()
     // the legality of the slot configuration shall be checked upper application
     RoundSlotProperty_t* pRS = MAC_GetRoundSlotProperties();
 
-    return ((pRS->FrameType == FRAME_TYPE_IMPLICIT) || (pSlot->AppDataLength) ? 1 : 0);
+    return ((pRS->FrameType == FRAME_TYPE_IMPLICIT) || (pRS->AppDataLength) ? 1 : 0);
 }
 
 void psp_for_passive(void)
@@ -158,7 +196,7 @@ void psp_for_passive(void)
 #warning "periodic checking for MEDL has not been implemented"
 
     if (MAC_IsFirstSLotOfCluster()) {
-        update_mode();
+        _update_mode();
     }
     _load_slot_configuration();
 

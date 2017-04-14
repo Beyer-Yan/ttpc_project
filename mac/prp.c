@@ -259,7 +259,7 @@ static inline void _process_mcr(uint32_t mcr)
     case MCR_MODE_CLR:
         dmc = DMC_NO_REQ;
         break;
-    case default:
+    default:
         break;
     }
     CS_SetDMC(dmc);

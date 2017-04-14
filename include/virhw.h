@@ -165,7 +165,7 @@ uint32_t TIM_GetCaptureUser(void);
  * value of the value returned by function "TIM_GetCapturePSP" at the same real time. 
  * @return  the macrotick if PSP time.
  */
-uint16_t TIME_GetCaptureMacrotickPSP(void);
+uint16_t TIM_GetCaptureMacrotickPSP(void);
 
 void TIM_ClearCaptureAll(void);
 void TIM_ClearCapture(uint16_t CapChannel);

@@ -23,13 +23,14 @@
 #include "ttpc_mac.h"
 #include "ttpdebug.h"
 #include "virhw.h"
+#include "ttpservice.h"
 
 #define FrMT 1
 #define MAX_STEPS 200
 
 /*********************************************************************************/
 /**
- * the global variables definitoions, slot relative.
+ * the global variables definitions, slot relative.
  */
 /** slots partition parameters */
 // static volatile uint32_t _G_ClusterCycles;
@@ -43,10 +44,13 @@
 static volatile uint32_t _G_Slot = 0;
 static volatile uint32_t _G_TDMARound = 0;
 
-/** slots timing parameters */
-static volatile uint32_t
-    _G_ActualAT; /**< actual action time in unit of macrotick */
-static volatile uint32_t _G_PRP; /**< prp start time in unit of macrotick */
+static uint32_t _G_ClusterCycleLength = 0;
+static uint32_t _G_TDMACycleLength    = 0;
+
+
+// /** slots timing parameters */
+// static volatile uint32_t _G_ActualAT; /**< actual action time in unit of macrotick */
+// static volatile uint32_t _G_PRP; /**< prp start time in unit of macrotick */
 
 /** status of a slot, which is used for the clique detection */
 static volatile uint8_t _G_SlotStatus;
@@ -81,13 +85,17 @@ uint32_t MAC_IsSendSlot(void)
     pNP = MAC_GetNodeProperties();
     pRS = MAC_GetRoundSlotProperties();
 
-#define CHK() ((pNP->LogicalNameSlotPosition==pRS->LogicalSenderSlot)&&
-                                        (pNP->LogicalNameMulplexedID==0?1:pNP->LogicalNameMulplexedID==pRS->LogicalSenderMultiplexID))
-	/** ensure that the slot has been updated */
-	ss = CHK();
-#undef CHK
+    if(pNP->LogicalNameSlotPosition==pRS->LogicalSenderSlot){
+        if(pNP->LogicalNameMultiplexedID!=0){
+            if(pNP->LogicalNameMultiplexedID==pRS->LogicalSenderMultiplexID){
+                ss = 1;
+            }
+        } else {
+            ss = 1;
+        }     
+    }
 
-                                        return ss;
+    return ss;
 }
 
 static inline uint32_t _calc_mode_num(uint32_t mode)
@@ -101,7 +109,7 @@ static inline uint32_t _calc_mode_num(uint32_t mode)
         mode_num = 1;break;
     case MODE_3:
         mode_num = 2;break;
-    case default:
+    default:
         mode_num = 0;break;
     }
     return mode_num;
@@ -123,24 +131,24 @@ uint32_t MAC_UpdateSlot(void)
     uint32_t rs = CS_GetCurRoundSlot();
     uint32_t res;
 
-    if ((rs + 1) == _G_ClusterCycles) {
+    if ((rs + 1) == _G_ClusterCycleLength) {
         // points the first slot of a cluster cycle
         rs = 0;
         _G_TDMARound = 0;
         _G_Slot = 0;
         res = FIRST_SLOT_OF_CURRENT_CLUSTER;
-    } else if ((rs + 1) % _G_TDMASlots == _G_TDMASlots - 1) {
+    } else if ((rs + 1) % _G_TDMACycleLength == _G_TDMACycleLength - 1) {
         // points the last slot of a TDMA round
         rs++;
         _G_TDMARound++;
         _G_Slot++;
-        res = LAST_SLOT_OF_CURRENT_TDMA_ROUND;
+        res = LAST_SLOT_OF_CURRENT_TDMAROUND;
     } else {
         // points the first slot of a TDMA round
-        if ((rs + 1) % _G_TDMASlots == 0) {
+        if ((rs + 1) % _G_TDMACycleLength == 0) {
             _G_TDMARound++;
             _G_Slot = 0;
-            res = FIRST_SLOT_OF_SUCCESSOR_TDMA_ROUND;
+            res = FIRST_SLOT_OF_SUCCESSOR_TDMAROUND;
         } else {
             _G_Slot++;
             res = NORMAL_SLOT;
@@ -157,13 +165,13 @@ RoundSlotProperty_t* MAC_GetRoundSlotProperties(void)
 {
     uint32_t mode = CS_GetCurMode();
 
-    mode = _calc_mode_num(mode);
+    uint32_t mode_num = _calc_mode_num(mode);
     return MEDL_GetRoundSlotAddr(mode_num, _G_TDMARound, _G_Slot);
 }
 
 uint32_t MAC_GetSlotStatus(void) { return _G_SlotStatus; }
 
-uint32_t MAC_SetSlotStatus(uint32_t SlotStatus)
+void MAC_SetSlotStatus(uint32_t SlotStatus)
 {
     static volatile uint32_t tentative = 0;
 
@@ -197,59 +205,51 @@ uint32_t MAC_SetSlotStatus(uint32_t SlotStatus)
     case FRAME_INVALID:
         PV_IncCounter(FAILED_SLOTS_COUNTER);
         break;
+    default :
+        break;
     }
     _G_SlotStatus = SlotStatus;
 }
 
+/** setter implementation */
 void MAC_SetSlot(uint32_t slot) { _G_Slot = slot; }
+void MAC_SetTDMARound(uint32_t tdma) { _G_TDMARound = tdma; }
+void MAC_SetClusterCycleLength(uint32_t Length) { _G_TDMACycleLength = Length;}
+void MAC_SetTDMACycleLength(uint32_t Length) { _G_TDMACycleLength = Length; }
+void MAC_SetSlotAcquisition(uint32_t SlotAcquisition){ _G_SlotAcquisitionFlag = SlotAcquisition;}
 
-void MAC_SetTDMARound(uint32_t tdma) { _G_TDMASlots = tdma; }
-
+/** getter implementation */
 uint32_t MAC_GetNodeSlot(void) { return _G_Slot; }
-
 uint32_t MAC_GetTDMARound(void) { return _G_TDMARound; }
-
 uint32_t MAC_GetPspTsmp(void) { return TIM_GetCapturePSP(); }
-
 uint32_t MAC_GetRatio() { return TIM_GetRatio(); }
-
-void MAC_SetSlotAcquisition(uint32_t SlotAcquisition)
-{
-    _G_SlotAcquisitionFlag = SlotAcquisition;
-}
-
 uint32_t MAC_GetSlotAcquisition(void) { return _G_SlotAcquisitionFlag; }
-
-uint32_t MAC_GetTDMARound(void)
-{
-    uint32_t tdma_slots = MEDL_GetTDMASlots();
-    return (_G_TDMARound * tdma_slots + _G_Slot);
-}
+uint32_t MAC_GetRoundSlot(void) { return (_G_TDMARound * _G_TDMACycleLength + _G_Slot);}
 
 void MAC_SetTime(uint32_t ActAT, uint32_t TP, uint32_t SD)
 {
-    uint16_t stime = TIME_GetCaptureMacrotickPSP();
+    uint16_t stime = TIM_GetCaptureMacrotickPSP();
     uint16_t real_at = stime + ActAT & 0xffff;
     uint16_t real_prp = real_at + TP & 0xffff;
-    uint16_t slot_end = st_time + SD & 0xffff;
+    uint16_t slot_end = stime + SD & 0xffff;
 
     TIM_SetTriggerAT(real_at);
     TIM_SetTriggerPRP(real_prp);
     TIM_SetTriggerUser0(slot_end);
 }
 
-void MAC_StartPhaseCirculation() { to be done }
+void MAC_StartPhaseCirculation() { /*to be done*/ }
 
-void MAC_StopPhaseCirculation(){ to be done }
+void MAC_StopPhaseCirculation(){ /*to be done*/ }
 
 uint32_t MAC_CheckSlot(void)
 {
     return _G_slot_pointer;
 }
 
-void MAC_AdjTime(uint16_t AdjMode, int32_t Offset, int32_t Steps)
+void MAC_AdjTime(uint16_t AdjMode, int16_t Offset, int16_t Steps)
 {
-    // AdjMode is set CLK_FREQ_ADJ forcely
+    // AdjMode is set CLK_FREQ_ADJ forcedly
 
     TTP_ASSERT(Steps < MAX_STEPS);
 

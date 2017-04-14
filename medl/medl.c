@@ -274,12 +274,12 @@ uint32_t MEDL_GetAppID(void)
 	return (__G_app_id); 
 }
 
-uint32_t MEDL_GetRoundCycles(uint32_t ModeNum)
+uint32_t MEDL_GetRoundCycleLength(uint32_t ModeNum)
 {
 	return __G_medl_header.slot_mode_size[ModeNum];
 }
 
-uint32_t MEDL_GetTDMASlots(uint32_t ModeNum)
+uint32_t MEDL_GetTDMACycleLength(uint32_t ModeNum)
 {
 	/**
 	 * the parameter ModeNum is not used here temporarily. We assume that 

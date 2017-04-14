@@ -143,8 +143,8 @@ uint32_t  MEDL_GetRegionAddr(uint32_t RegionType);
 uint32_t  MEDL_GetSchedID(void);
 uint32_t  MEDL_GetAppID(void);
 
-uint32_t  MEDL_GetRoundCycles(uint32_t ModeNum);
-uint32_t  MEDL_GetTDMASlots(uint32_t ModeNum);
+uint32_t  MEDL_GetRoundCycleLength(uint32_t ModeNum);
+uint32_t  MEDL_GetTDMACycleLength(uint32_t ModeNum);
 
 void* 	  MEDL_GetRoundSlotAddr(uint32_t ModeNum, uint32_t TDMARound, uint32_t Slot);
 
