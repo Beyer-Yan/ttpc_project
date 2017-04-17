@@ -14,9 +14,8 @@
   * 
   ******************************************************************************
   */
-
-#include "protocol.h"
 #include "ttpc_mac.h"
+#include "protocol.h"
 #include "medl.h"
 #include "virhw.h"
 #include "ttpservice.h"
@@ -83,9 +82,11 @@ void FSM_toColdStart(void)
     PV_DisableFreeShot();
 
     //start the real clock and transmition
+    phase_indicator = 2; //start from prp, for psp=0,tp=1,prp=2
     MAC_PrepareCSFrame();
     MAC_StartPhaseCirculation();
     MAC_StartTransmit();
+    MAC_SetSlotAcquisition(SENDING_FRAME);
 }
 
 void FSM_doColdStart(void)
@@ -95,11 +96,30 @@ void FSM_doColdStart(void)
 
 void FSM_toSubColdStart(void)
 {
+    MAC_StopPhaseCirculation();
 
+    //reset phase_indicator
+    phase_indicator = 0;
 }
 
 void FSM_doSubColdStart(void)
 {
+    ScheduleParameter_t* pSP = MAC_GetScheduleParameter();
+    if (PV_GetCounter(COLD_START_COUNTER) > pSP->MaximumColdStartEntry) {
+        FSM_sendEvent(FSM_EVENT_MAX_COLD_START_ENTRIES_EXCEEDED);
+    } else {
+        FSM_sendEvent(FSM_EVENT_COLD_START_ALLOWED);
 
+        TIM_WaitAlarm(pSP->StartupTimeout);
+        if (DRV_CheckReceived()) {
+            FSM_sendEvent(FSM_EVENT_TRAFFIC_DETECT_DURING_STO);
+        } else {
+            //check validity of host
+            if (CNI_CheckHLFS()) {
+                FSM_sendEvent(FSM_EVENT_HOST_LIFE_UPDATED);
+            } else {
+                FSM_sendEvent(FSM_EVENT_HOST_LIFE_NOT_UPDATED);
+            }
+        }
+    }
 }
-

@@ -96,6 +96,9 @@ void FSM_doInit(void)
 
     _timer_init();
 
+    PV_EnableBigBang();
+    PV_EnableFreeShot();
+
     //platform init
     DMA_DepInit();
     WDG_DepInit();

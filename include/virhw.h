@@ -178,6 +178,9 @@ void TIM_SetTriggerPRP(uint16_t PRP);
 void TIM_SetTriggerUser0(uint16_t User);
 void TIM_SetTriggerUser1(uint16_t User);
 
+/** sync operation for waiting for the elapsing of number of "Alarm" macroticks. */
+void TIM_WaitAlarm(uint16_t  Alarm);
+
 /* user settings **********************************************************/
 void TIM_EnableUserIT(void);
 void TIM_DisenableUserIT(void);
@@ -262,9 +265,6 @@ typedef struct
     uint32_t    length;
     int8_t*     BufferAddr;
 }DataStreamTypeDef;
-
-
-
 
 /**
  * status macro definitions

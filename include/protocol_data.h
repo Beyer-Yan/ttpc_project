@@ -92,7 +92,7 @@ extern uint8_t PV_data[20];
 #define BIG_BANG_ENABLE 				0
 #define BIG_BANG_DISABLE 				1
 #define FREE_SHOT_ENABLE  				0
-#define FREE_SHOT_DIsABLE				1
+#define FREE_SHOT_DISABLE				1
 
 #define PV_GetBigBangFlag()				(PV_bbf)
 #define PV_EnableBigBang()		 		(PV_bbf = BIG_BANG_ENABLE)
