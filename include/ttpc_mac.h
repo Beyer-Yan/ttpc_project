@@ -646,7 +646,8 @@ uint32_t  MAC_GetPspTsmp(void);
  *          @arg FIRST_SLOT_OF_CURRENT_CLUSTER
  */
 uint32_t  MAC_UpdateSlot(void);
-
+void      MAC_SetSlot(uint32_t Slot);
+void      MAC_SetTDMARound(uint32_t tdma);
 /**
  * Set the time properties of the slot.
  * @param  ActAT the actual trigger point time for TP phase

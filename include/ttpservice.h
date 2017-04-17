@@ -133,6 +133,11 @@ void     SVC_SetEstimateArivalTimeInterval(uint32_t EstimateTimeInterval);
 uint32_t SVC_GetEstimateArivalTimeInterval();
 
 /**
+ * This function clears the value of the correction term.
+ */
+void     SVC_ClrClockSyncFIFO(void);
+
+/**
  * The function performs the syncronization algorithm according to the offsets calculated.
  * @return  1 for syncronization finished, 0 for syncronization failed. 
  */

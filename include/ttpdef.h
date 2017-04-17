@@ -1416,6 +1416,19 @@ extern uint8_t msg_pool[MSG_POOL_LENGTH];
 								 ((MODE) == MODE_2)  || \
 								 ((MODE) == MODE_3)  || \
 								 ((MODE) == MODE_CLR))
+
+#define CALC_MODE_NUM(mode)		({\
+									uint32_t _mode_num;\
+									switch (mode){\
+									case MODE_1: _mode_num=1;break;\
+									case MODE_2: _mode_num=2;break;\
+									case MODE_3: _mode_num=3;break;\
+									case MODE_CS_ID: _mode_num=0;break;\
+									default:     _mode_num=0;break;\
+									}\
+									_mode_num;\
+								})
+
 /** for register TTP_SR */
 
 #define SR_PS 					((uint32_t)0x0000000F)	/**< Protocol state machine */

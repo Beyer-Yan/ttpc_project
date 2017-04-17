@@ -33,24 +33,6 @@ uint32_t _G_ModeChanged = 0;
 /**
  * This function shall be called at the start time of a slot.
  */
-
-static inline uint32_t _calc_mode_num(uint32_t mode)
-{
-    uint32_t mode_num;
-
-    switch (mode) {
-    case MODE_1:
-        mode_num = 0;break;
-    case MODE_2:
-        mode_num = 1;break;
-    case MODE_3:
-        mode_num = 2;break;
-    default:
-        mode_num = 0;break;
-    }
-    return mode_num;
-}
-
 static inline void _update_mode(void)
 {
     uint32_t dmc = CS_GetCurDMC();
@@ -94,7 +76,7 @@ static inline void _load_slot_configuration(void)
     //check then load the configuration of the current slot.
     MAC_LoadSlotProperties(mode, tdma, slot);
 	if(_G_ModeChanged) {
-		uint32_t mode_num = _calc_mode_num(mode);
+		uint32_t mode_num = CALC_MODE_NUM(mode);
 		uint32_t ccl = MEDL_GetRoundCycleLength(mode_num); /* cluster cycle length */
 		uint32_t ctl = MEDL_GetTDMACycleLength(mode_num);  /* TDMA cycle length */
 

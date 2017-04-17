@@ -98,30 +98,13 @@ uint32_t MAC_IsSendSlot(void)
     return ss;
 }
 
-static inline uint32_t _calc_mode_num(uint32_t mode)
-{
-    uint32_t mode_num;
-
-    switch (mode) {
-    case MODE_1:
-        mode_num = 0;break;
-    case MODE_2:
-        mode_num = 1;break;
-    case MODE_3:
-        mode_num = 2;break;
-    default:
-        mode_num = 0;break;
-    }
-    return mode_num;
-}
-
 RoundSlotProperty_t* MAC_LoadSlotProperties(uint32_t mode, uint32_t tdma,
     uint32_t slot)
 {
 
     uint32_t mode_num;
 
-    mode_num = _calc_mode_num(mode);
+    mode_num = CALC_MODE_NUM(mode);
 
     return MEDL_GetRoundSlotAddr(mode_num, tdma, slot);
 }
@@ -165,7 +148,7 @@ RoundSlotProperty_t* MAC_GetRoundSlotProperties(void)
 {
     uint32_t mode = CS_GetCurMode();
 
-    uint32_t mode_num = _calc_mode_num(mode);
+    uint32_t mode_num = CALC_MODE_NUM(mode);
     return MEDL_GetRoundSlotAddr(mode_num, _G_TDMARound, _G_Slot);
 }
 
@@ -212,7 +195,7 @@ void MAC_SetSlotStatus(uint32_t SlotStatus)
 }
 
 /** setter implementation */
-void MAC_SetSlot(uint32_t slot) { _G_Slot = slot; }
+void MAC_SetSlot(uint32_t Slot) { _G_Slot = Slot; }
 void MAC_SetTDMARound(uint32_t tdma) { _G_TDMARound = tdma; }
 void MAC_SetClusterCycleLength(uint32_t Length) { _G_TDMACycleLength = Length;}
 void MAC_SetTDMACycleLength(uint32_t Length) { _G_TDMACycleLength = Length; }

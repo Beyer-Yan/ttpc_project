@@ -48,35 +48,44 @@ void FSM_toColdStart(void)
 
     uint32_t slot = pNP->LogicalNameSlotPosition;
 
-    RoundSlotProperty_t *pRS = MAC_LoadSlotProperties(MODE_CS_ID,0,slot);
+    uint32_t mode_num = CALC_MODE_NUM(MODE_CS_ID);
+    RoundSlotProperty_t *pRS = MAC_LoadSlotProperties(mode_num,0,slot);
     
-    //CS_SetGTF(tsf);
-    
-    //CS setting
+    //CS initing and settings
+    CS_SetGTF(tsf);
     CS_SetRoundSlot(slot);
     CS_SetMode(MODE_CS_ID);
     CS_SetDMC(DMC_NO_REQ);
     CS_ClearMemberAll();
     CS_SetMemberBit(pRS->FlagPosition);
 
-    //MAC setting
+    //MAC settings
+    MAC_SetClusterCycleLength(MEDL_GetRoundCycleLength(mode_num));
+    MAC_SetTDMACycleLength(MEDL_GetTDMACycleLength(mode_num));
     MAC_SetSlot(slot);
     MAC_SetTDMARound(0);
 
     //SVC synchronization setting
     SVC_ClrClockSyncFIFO();
 
-    //counters setting
-    
-
-    //slot timing properties setting
-    uint16_t real_prp  = tsf + TP&0xffff;
-    uint16_t slot_end  = 0 + SD&0xffff;
-
-    TIM_SetTriggerAT(real_at);
+    //timer settings and slot timing properties setting
+    TIM_SetLocalMicrotickValue(0);
+    TIM_SetMacrotickValue(tsf+pNP->SendDelay);
+    uint16_t real_prp  = (tsf+pNP->SendDelay+pRS->TransmissionDuration)&0xffff;
+    uint16_t slot_end  = (tsf + pRS->SlotDuration - pRS->AtTime)&0xffff;
     TIM_SetTriggerPRP(real_prp);
     TIM_SetTriggerUser0(slot_end);
 
+    //counters setting
+    PV_IncCounter(COLD_START_COUNTER);
+    PV_SetCounter(FAILED_SLOTS_COUNTER,0);
+    PV_SetCounter(INTEGRATION_COUNTER,pSP->MinimumIntegrationCount);
+    PV_DisableFreeShot();
+
+    //start the real clock and transmition
+    MAC_PrepareCSFrame();
+    MAC_StartPhaseCirculation();
+    MAC_StartTransmit();
 }
 
 void FSM_doColdStart(void)

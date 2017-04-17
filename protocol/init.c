@@ -14,12 +14,12 @@
   * 
   ******************************************************************************
   */
+#include "medl.h"
 #include "protocol.h"
 #include "protocol_data.h"
 #include "ttpc_mac.h"
 #include "ttpdebug.h"
 #include "virhw.h"
-#include "medl.h"
 
 static inline void _cni_init(void)
 {
@@ -36,10 +36,19 @@ static inline void _cni_init(void)
     }
 }
 
-static inline void  _timer_init(void)
+static inline void _pv_init(void)
+{
+    int i = 0;
+    for (; i < sizeof(PV_data); i++) {
+        PV_data[i] = 0;
+    }
+}
+
+static inline void _timer_init(void)
 {
     ScheduleParameter_t* pSP = MAC_GetScheduleParameter();
     TIM_DepInit();
+
     TIM_SetCompensateMode(COMPENSATE_MODE);
     TIM_ChannelCMD(TIM_CH_1, DISABLE);
     TIM_ChannelCMD(TIM_CH_2, DISABLE);
@@ -52,13 +61,14 @@ static inline void  _timer_init(void)
 
     //for compensate mode
     TIM_SetLocalMicrotickGranule(MIC_50_NS);
+    TIM_SetLocalMicrotickValue(0);
 
     TIM_SetMacrotickGranule(pSP->MacrotickParameter);
 }
 
 static inline void _id_init(void)
 {
-    HW_GetPlatformID(TTP_ID_BASE, sizeof(ttp_id));
+    HW_GetPlatformID((uint8_t*)TTP_ID_BASE, sizeof(ttp_id));
     TTP_IDCR = MEDL_GetSchedID();
     TTP_IDAR = MEDL_GetAppID();
 }
@@ -85,6 +95,12 @@ void FSM_doInit(void)
     _id_init();
 
     _timer_init();
+
+    //platform init
+    DMA_DepInit();
+    WDG_DepInit();
+    CRC_DepInit();
+    DRV_DepInit();
 
     FSM_sendEvent(FSM_EVENT_INIT_OK);
 }

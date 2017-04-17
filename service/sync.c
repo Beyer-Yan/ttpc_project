@@ -36,6 +36,14 @@ static inline void _stack_push(int32_t offset)
 
 }
 
+void SVC_ClrClockSyncFIFO(void)
+{
+	_G_pushdown_stack[0] = 0;
+	_G_pushdown_stack[1] = 0;
+	_G_pushdown_stack[2] = 0;
+	_G_pushdown_stack[3] = 0;
+}
+
 static int32_t _average()
 {
 	int32_t tmp[4];
