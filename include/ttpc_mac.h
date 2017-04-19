@@ -143,7 +143,7 @@ typedef crc32_t  crc_t;
 
 typedef struct ttpc_header
 {
-	uint8_t header
+	uint8_t header;
 }ttpc_header_t;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -348,7 +348,7 @@ uint32_t  MAC_GetFrameTimestamp(uint32_t channel);
  * @param  pDesc the chosed frame description
  * @return         non
  */
-void      MAC_PullAppData(ttpc_frame_desc_t* pDesc);
+void      MAC_PullAppData(ttp_frame_desc_t* pDesc);
 
 /**
  * This function fills the description of the frame received. If the frame 
@@ -357,7 +357,7 @@ void      MAC_PullAppData(ttpc_frame_desc_t* pDesc);
  * @return          the array pointer of the frame descriptions of the corresponding
  * @attention if the frame received is not ok, the function will return NULL. 
  */
-ttpc_frame_desc_t* MAC_GetFrameDesc(uint32_t Channel);
+ttp_frame_desc_t* MAC_GetFrameDesc(uint32_t Channel);
 
 ////////////////////////////////////////////////////////////////////////////////
 ///slots service definitions                                                  //
@@ -378,7 +378,7 @@ typedef struct mac_slot
 	uint32_t FrameType;					/**<  implicit or explicit */
 	uint32_t ModeChangePermission;
 	uint32_t ReintegrationAllow;
-	uint32_t ClockSychronization;
+	uint32_t ClockSynchronization;
 	uint32_t SynchronizationFrame;
 	/* the time for action in unit of macrotick relative to the start of round slot*/
 	uint32_t AtTime;					

@@ -32,6 +32,7 @@
   */
 #ifndef __VIRHW_H__
 #define __VIRHW_H__
+
 #include "ttpdef.h"
 
 /**
@@ -177,6 +178,12 @@ void TIM_SetTriggerAT(uint16_t AT);
 void TIM_SetTriggerPRP(uint16_t PRP);
 void TIM_SetTriggerUser0(uint16_t User);
 void TIM_SetTriggerUser1(uint16_t User);
+
+void TIM_SetForPoll(uint16_t Value, uint16_t AlarmNumber);
+uint32_t TIM_PollAlarm(uint16_t AlarmNumber);
+
+#define  TIM_SetPollDefault(v) 		TIM_SetForPoll(v,0)
+#define  TIM_PollAlarmDefault() 	TIM_PollAlarm(0)
 
 /** sync operation for waiting for the elapsing of number of "Alarm" macroticks. */
 void TIM_WaitAlarm(uint16_t  Alarm);

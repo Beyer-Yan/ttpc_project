@@ -11,7 +11,7 @@
   *
   * @desc
   * This file aims to provide the basic operation interface for byte processing
-  * and the ttpc protocol services.
+  * and the TTPC protocol services.
   * The TTPC protocol provides three groups services to the higher layers,
   * COMMUNICATION SERVICES, SAFETY SERVICES, HIGHER LEVEL SERVICES.
   *
@@ -19,11 +19,11 @@
   * integration, noise tolerance, acknowledgment scheme and the fault-tolerent clock
   * synchronization.
   *
-  * SAFETY SERVICES establish the node membership, the clique avoidance algorithmm, 
+  * SAFETY SERVICES establish the node membership, the clique avoidance algorithm, 
   * the independent bus guardian and the host/controller lifesign algorithm.
   *
-  * HIGHER LEVEL SERVICES are requsted by the host and are used for switching 
-  * between transmission schedules at run time, syncronizing the cluster with 
+  * HIGHER LEVEL SERVICES are requested by the host and are used for switching 
+  * between transmission schedules at run time, synchronizing the cluster with 
   * an external clock or other TTPC cluster or for a role-change of a node.
   *
   * Both the communication and the safety services provide a failed-operational 
@@ -34,6 +34,7 @@
   */
 #ifndef __TTPSERVICE_H__
 #define __TTPSERVICE_H__
+
 #include "ttpdef.h"
 
 /** memory align */
@@ -76,17 +77,17 @@ void SVC_RaiseSynchronousInterrupt(void);
 
 /**
  * enforce the sleep of the ttp controller. When the ttp controller comes into 
- * the sleep mode, only the interrruption can activate the controller.
+ * the sleep mode, only the interruption can activate the controller.
  */
 void SVC_Sleep(void);
 
 /**
- * freeze the ttp controller, set the corresbonding error bits
+ * freeze the ttp controller, set the corresponding error bits
  */
 void SVC_Freeze(void);
 
 /**
- * @todo more utillties should be added here.
+ * @todo more utilities should be added here.
  */
 
 /**
@@ -145,7 +146,8 @@ uint32_t SVC_ExecSyncSchema(void);
 
 /************************************************************************************/
 
-uint32_t SVC_NoiseTolerence(void*param);
+/** not needed in the current implementation version */
+uint32_t SVC_NoiseTolerance(void*param);
 
 /************************************************************************************/
 
@@ -159,18 +161,18 @@ typedef void (*AckFunc)(void);
 /**
  * Acknowledgement of the receipt of a frame by the successor of the sender.
  * @param  check_a  check_ia or check_iia, see the ack-stage definition
- * @oaram  check_b  check_ib or check_iib, see the ack-stage definiton
+ * @param  check_b  check_ib or check_iib, see the ack-stage definiton
  * @param  ch       the channel number, CH0 or CH1
- * @param  pFunc    the function pointer to the ackownledgement processor. This parameter
+ * @param  pFunc    the function pointer to the acknowledgement processor. This parameter
  *                  will point to the processor of the corresponding ack-phase, i.e, if
  *                  the FT ack-pattern is detected during ack-stage one, then it will
- *                  point the function for pcoressing the FT pattern processor.
+ *                  point the function for processing the FT pattern processor.
  * @return          ack status of the passed frame of channel ch.
  * 
-  *                 @arg 0 ack not finished, waiting for the next successor.
- *                  @arg 1 negtive ackownledgement.
- *                  @arg 2 tentative ackownledgement, ack not finished.
- *                  @arg 3 positive ackownledgement
+ *                  @arg 0 ack not finished, waiting for the next successor.
+ *                  @arg 1 negative acknowledgement.
+ *                  @arg 2 tentative acknowledgement, ack not finished.
+ *                  @arg 3 positive acknowledgement
  */
 uint32_t SVC_Acknowledgment(uint32_t check_a, uint32_t check_b, uint32_t ch, AckFunc *pFunc );
 
@@ -237,7 +239,6 @@ static inline uint32_t SVC_UpdateControllerLifeSign(void)
 
 /**@}*/// end of group Safety_Services
 
-
 /**
  * @defgroup HighLevel_Services
  */
@@ -246,8 +247,6 @@ static inline uint32_t SVC_UpdateControllerLifeSign(void)
 //code here
 
 /**@}*/// end of group HighLevel_Services
-
-
 
 /**@}*/// end of group Service_Group
 

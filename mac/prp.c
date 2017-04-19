@@ -21,15 +21,17 @@
 #include "ttpdebug.h"
 #include "virhw.h"
 
+#include "ttpservice.h"
+
 /**
  * This function sets the channel activity.
  * When no frames are received, the function will set CHANNEL_DUMMY flag, meaning that
  * there is not sender sending frame in the current slot. If an invalid activity was 
- * obeseved only one channel, and silence on the other channel, transient noise is 
+ * observed only one channel, and silence on the other channel, transient noise is 
  * assumed. 
  *
  * If transmission activity was observed on both channels, the node's first successor is 
- * considered to have transmited and failed, and the channel activity flag shall be set
+ * considered to have transmitted and failed, and the channel activity flag shall be set
  * to CHANNEL_ACTIVE.
  */
 
@@ -84,11 +86,11 @@ static uint32_t _frame_crc32_calc(uint8_t* pdata, int size, uint32_t type)
     CRC_Calc(ScheduleID);
 
     for (i = 0; i < quotient; i++) {
-        _byte_copy(&tmp, pdata + i * 4, 4);
+        _byte_copy((uint8_t*)&tmp, pdata + i * 4, 4);
         CRC_Calc(tmp);
     }
     if (remain != 0) {
-        _byte_copy(&tmp, pdata + quotient * 4, remain);
+        _byte_copy((uint8_t*)&tmp, pdata + quotient * 4, remain);
         CRC_Calc(tmp & crc32_mask[remain - 1]);
     }
 
@@ -99,7 +101,7 @@ static uint32_t _frame_crc32_calc(uint8_t* pdata, int size, uint32_t type)
     if (type == FRAME_TYPE_IMPLICIT) {
         c_state_t c_state;
         MAC_GetCState(&c_state);
-        CRC_CalcBlock(&c_state,sizeof(c_state);
+        CRC_CalcBlock((uint32_t*)&c_state,sizeof(c_state));
     }
     return CRC_GetCRC();
 }
@@ -123,9 +125,9 @@ static uint32_t _frame_crc32_check(ttp_frame_desc_t* pDesc, uint32_t type)
     crc_pos = (uint8_t*)(pDesc->pFrame) + pDesc->length - sizeof(frame_crc32);
     pRS = MAC_GetRoundSlotProperties();
 
-    _byte_copy(&frame_crc32, crc_pos, sizeof(frame_crc32));
+    _byte_copy((uint8_t*)&frame_crc32, crc_pos, sizeof(frame_crc32));
 
-    checked_crc32 = _frame_crc32_calc(pDesc->pFrame, pDesc->length - sizeof(frame_crc32), type);
+    checked_crc32 = _frame_crc32_calc((uint8_t*)pDesc->pFrame, pDesc->length - sizeof(frame_crc32), type);
     if (checked_crc32 != frame_crc32)
         return 0;
 
@@ -139,7 +141,7 @@ static uint32_t _frame_crc32_check(ttp_frame_desc_t* pDesc, uint32_t type)
          * be explicitly compared. If these two c-states differ, then the same case distinction as with a 
          * c-state error of an error of an implicit c-state has to be made.
          */
-        _byte_copy(&c_state, pDesc->pFrame->x->cstate, sizeof(c_state));
+        _byte_copy((uint8_t*)&c_state, pDesc->pFrame->x.cstate, sizeof(c_state));
         if (!CS_IsSame(&c_state))
             return 0;
     }
@@ -187,20 +189,20 @@ static uint32_t _judge_valid(uint32_t* pframe_status, uint32_t channel)
     }
 
     /** for FRMAE_INV checking */
-    if (rev_res == MAC_ERX_INV) {
+    if (rcv_res == MAC_ERX_INV) {
         *pframe_status = FRAME_INVALID;
         return _FRAME_INVALID_;
     }
 
     RoundSlotProperty_t* pRS = MAC_GetRoundSlotProperties();
-    ttpc_frame_desc_t* pDesc = MAC_GetFrameDesc(channel);
+    ttp_frame_desc_t* pDesc = MAC_GetFrameDesc(channel);
 
     uint32_t frame = pRS->FrameType == FRAME_TYPE_IMPLICIT ? FRAME_N : (!pRS->AppDataLength ? FRAME_I : FRAME_X);
 
     //for time window ...
     uint32_t mid_axis = SVC_GetEstimateArivalTimeInterval();
 
-    if (!_judge_time_window(mid_axis), pDesc->rcv_timestamp)
+    if (!_judge_time_window(mid_axis, pDesc->rcv_timestamp))
         return _FRAME_INVALID_;
 
     int actual_frame_size;
@@ -217,9 +219,7 @@ static uint32_t _judge_valid(uint32_t* pframe_status, uint32_t channel)
     case FRAME_X:
         actual_frame_size = 1 + 16 + 4 + pRS->AppDataLength + 4;
         break;
-
-    case default:
-        break;
+    default: break;
     }
 
     if (actual_frame_size != pDesc->length) {
@@ -265,7 +265,7 @@ static inline void _process_mcr(uint32_t mcr)
     CS_SetDMC(dmc);
 }
 
-static uint32_t _get_frame_status(ttpc_frame_desc_t* pDesc_ch, uint32_t type)
+static uint32_t _get_frame_status(ttp_frame_desc_t* pDesc_ch, uint32_t type)
 {
     int res = _frame_crc32_check(pDesc_ch, type);
     uint32_t frame_status;
@@ -299,7 +299,7 @@ void prp_for_passive(void)
     uint32_t slot_status;
     uint32_t channel_activity;
 
-    ttpc_frame_desc_t* pDesc_ch[2] = { NULL, NULL };
+    ttp_frame_desc_t* pDesc_ch[2] = { NULL, NULL };
     RoundSlotProperty_t* pRS = MAC_GetRoundSlotProperties();
     ScheduleParameter_t* pSP = MAC_GetScheduleParameter();
 
@@ -328,7 +328,7 @@ void prp_for_passive(void)
     if (slot_status == FRAME_CORRECT) {
 
         /** for mode change processor */
-        ttpc_frame_desc_t* pDesc_chosed;
+        ttp_frame_desc_t* pDesc_chosed;
 
         pDesc_chosed = frame_status[0] == FRAME_CORRECT ? pDesc_ch[0] : pDesc_ch[1];
         uint8_t header = pDesc_chosed->pFrame->hdr[0];
@@ -365,7 +365,7 @@ void prp_for_passive(void)
     int32_t step = (int32_t)pRS->SlotDuration;
 
     MAC_SetSlotStatus(slot_status);
-    pRS->ClockSychronization == CLOCK_SYN_NEEDED ? SVC_ExecSyncSchema(step) : (void)0;
+    pRS->ClockSynchronization == CLOCK_SYN_NEEDED ? SVC_ExecSyncSchema(step) : (void)0;
 }
 
 static inline uint32_t _is_data_frame()
@@ -385,7 +385,7 @@ static inline uint32_t _is_data_frame()
  * @param pDesc   [description]
  * @param type    [description]
  */
-static void _ack_stage(uint32_t* check_a, uint32_t* check_b, ttpc_frame_desc_t* pDesc, uint32_t type)
+static void _ack_stage(uint32_t* check_a, uint32_t* check_b, ttp_frame_desc_t* pDesc, uint32_t type)
 {
     RoundSlotProperty_t* pRS = MAC_GetRoundSlotProperties();
     NodeProperty_t* pNP = MAC_GetNodeProperties();
@@ -424,7 +424,7 @@ static void _ack_stage(uint32_t* check_a, uint32_t* check_b, ttpc_frame_desc_t* 
  * @param  pFunc   the pointer of the ack function.
  * @return         frame status of channel ch.
  */
-static uint32_t _ack_result(ttpc_frame_desc_t* pDesc, uint32_t type, uint32_t ch, AckFunc* pFunc)
+static uint32_t _ack_result(ttp_frame_desc_t* pDesc, uint32_t type, uint32_t ch, AckFunc* pFunc)
 {
     uint32_t check_a;
     uint32_t check_b;
@@ -503,7 +503,7 @@ void prp_for_active(void)
 
     uint32_t slot_status;
 
-    ttpc_frame_desc_t* pDesc_ch[2];
+    ttp_frame_desc_t* pDesc_ch[2];
     RoundSlotProperty_t* pRS;
 
     pRS = MAC_GetRoundSlotProperties();
@@ -589,7 +589,7 @@ void prp_for_active(void)
     /** for the assumption that channel 0 and channel 1 are the same */
     is_data_frame() ? MSG_SetStatus(pRS->CNIAddressOffset, frame_status_ch[chosed_ch]) : (void)0;
 
-    pRS->ClockSychronization == CLOCK_SYN_NEEDED ? SVC_ExecSyncSchema(step) : (void)0;
+    pRS->ClockSynchronization == CLOCK_SYN_NEEDED ? SVC_ExecSyncSchema(step) : (void)0;
 }
 
 void prp_for_coldstart(void)

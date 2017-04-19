@@ -42,6 +42,8 @@ static inline void _pv_init(void)
     for (; i < sizeof(PV_data); i++) {
         PV_data[i] = 0;
     }
+    PV_EnableBigBang();
+    PV_EnableFreeShot();
 }
 
 static inline void _timer_init(void)
@@ -95,9 +97,6 @@ void FSM_doInit(void)
     _id_init();
 
     _timer_init();
-
-    PV_EnableBigBang();
-    PV_EnableFreeShot();
 
     //platform init
     DMA_DepInit();

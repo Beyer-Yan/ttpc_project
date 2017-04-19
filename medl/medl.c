@@ -141,7 +141,7 @@ static void __medl_slot_extract(uint32_t mode, uint32_t round_slot)
 	__G_slot.FrameType                = (buf[5]&(1<<16))>>16;
 	__G_slot.ModeChangePermission     = (buf[5]&(1<<17))>>17;
 	__G_slot.ReintegrationAllow       = (buf[5]&(1<<18))>>18;
-	__G_slot.ClockSychronization      = (buf[5]&(1<<19))>>19;
+	__G_slot.ClockSynchronization      = (buf[5]&(1<<19))>>19;
 	__G_slot.SynchronizationFrame     = (buf[5]&(1<<20))>>20;
 	__G_slot.AtTime                   = buf[6];
 }
