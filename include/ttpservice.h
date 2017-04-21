@@ -147,7 +147,7 @@ uint32_t SVC_ExecSyncSchema(void);
 /************************************************************************************/
 
 /** not needed in the current implementation version */
-uint32_t SVC_NoiseTolerance(void*param);
+//uint32_t SVC_NoiseTolerance(void*param);
 
 /************************************************************************************/
 

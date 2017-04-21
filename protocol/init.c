@@ -21,6 +21,8 @@
 #include "ttpdebug.h"
 #include "virhw.h"
 
+#include "ttpservice.h"
+
 static inline void _cni_init(void)
 {
     int _i = 0;
@@ -104,5 +106,6 @@ void FSM_doInit(void)
     CRC_DepInit();
     DRV_DepInit();
 
+    SVC_RaiseSynchronousInterrupt();
     FSM_sendEvent(FSM_EVENT_INIT_OK);
 }

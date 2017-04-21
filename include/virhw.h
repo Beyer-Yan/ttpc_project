@@ -133,6 +133,10 @@ void TIM_DepInit(void);
 
 /* Base operations of TTPC timer *******************************************/
 void     TIM_CMD(TimOpState op);
+
+void     TIM_EnableTrigger(void);
+void     TIM_DisableTrigger(void);
+
 uint16_t TIM_GetRatio(void);
 void     TIM_RatioAdj(int32_t *corVal, int Steps);
 

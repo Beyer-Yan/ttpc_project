@@ -1636,6 +1636,7 @@ extern uint8_t msg_pool[MSG_POOL_LENGTH];
  *       @arg !0 host ok
  */
 #define CNI_CheckHLFS() 			({uint32_t _hls=TTP_HLSR; TTP_HLSR=0; _hls>0?1:0;})
+#define CNI_ResetHLFS() 			(TTP_HLSR=0)
 
 /** increase the TOC(Global Time Overflow Counter) */
 /**

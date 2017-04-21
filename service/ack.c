@@ -22,12 +22,13 @@
 #include "virhw.h"
 #include "protocol_data.h"
 #include "ttpservice.h"
+#include "protocol.h"
 
 #define TYPE_DECISION    1
 #define TYPE_TENTATIVE   2
 #define TYPE_BACKTRACE   3
 #define TYPE_POSITIVE    4
-#define TYPE_NEGTIVE     5
+#define TYPE_NEGATIVE    5
 
 
 
@@ -212,7 +213,7 @@ static void _process_FF(void)
     NodeProperty_t*      pNP = MAC_GetNodeProperties();
     RoundSlotProperty_t* pRS = MAC_GetRoundSlotProperties();
 
-    //MAC_CheckChannelActivity() ? PV_IncCounter(FALTED_SLOTS_COUNTER) : (void)0;
+    //MAC_CheckChannelActivity() ? PV_IncCounter(FAILTED_SLOTS_COUNTER) : (void)0;
 
     CS_SetMemberBit(pNP->FlagPosition);
     CS_ClearMemberBit(pRS->FlagPosition);
@@ -238,7 +239,7 @@ static void _process_FTT(void)
     CS_SetMemberBit(pRS->FlagPosition);
 
     //PV_IncCounter(AGREED_SLOTS_COUNTER);
-    //PV_IncCounter(FALTED_SLOTS_COUNTER);
+    //PV_IncCounter(FAILTED_SLOTS_COUNTER);
     PV_ClrCounter(MEMBERSHIP_FAILED_COUNTER);
 
     MSG_SetStatus(first_successor_addr,FRAME_INCORRECT);
@@ -276,7 +277,7 @@ static void _process_FTFT(void)
     //PV_IncCounter(FALTED_SLOTS_COUNTER);
     PV_IncCounter(MEMBERSHIP_FAILED_COUNTER); 
 
-    uint32_t max_member_fail =  MAC_GetMximumMembershipFailureCount();
+    uint32_t max_member_fail =  MAC_GetMaximumMembershipFailureCount();
 
     if(max_member_fail == PV_GetCounter(MEMBERSHIP_FAILED_COUNTER))
     {
@@ -296,7 +297,7 @@ static void _process_FTFT(void)
 /**
  * Both check IIa and check IIb fail.
  * The membership flag position of the second successor will be removed in this case, and the next
- * node will become the second succeccor.
+ * node will become the second successor.
  */
 static void _process_FTFF(void)
 {
@@ -344,7 +345,7 @@ static const struct dnode dtree[9] =
     {TYPE_BACKTRACE, 3, { 0, 0}},    /*4*/
     {TYPE_POSITIVE,  4, {END,END}},  /*5*/
     {TYPE_DECISION,  0, { 7, 8}},    /*6*/
-    {TYPE_NEGTIVE,   5, {END,END}},  /*7*/
+    {TYPE_NEGATIVE,  5, {END,END}},  /*7*/
     {TYPE_BACKTRACE, 6, { 3, 3}}     /*8*/
 };
 
@@ -352,7 +353,7 @@ struct ack_db
 {
     uint32_t cur_pos;
     uint32_t cur_state;
-    const struct dnode (*tree)[9]; 
+    const struct dnode *tree; 
 }
 
 static struct ack_db adb[2] = 
@@ -391,7 +392,7 @@ static struct ack_db adb[2] =
 static uint32_t _dtree_search(uint32_t branch, uint32_t adb_ch, AckFunc *pFunc)
 {
     struct ack_db* p = &adb[adb_ch];
-    struct dnode * pn;
+    const struct dnode * pn;
     uint32_t res = 4;
 
     p->cur_pos = p->tree[p->cur_pos].check[branch];
@@ -414,11 +415,11 @@ static uint32_t _dtree_search(uint32_t branch, uint32_t adb_ch, AckFunc *pFunc)
             res = 3;
             p->cur_state = ACK_FINISHED;
             break;
-        case TYPE_NEGTIVE:
+        case TYPE_NEGATIVE:
             res = 1;
             p->cur_state = ACK_FINISHED;
             break;
-        case default:break;
+        default:break;
     }
 
     *pFunc = process[pn->process_num];
