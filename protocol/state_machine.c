@@ -300,13 +300,13 @@ static int __calc_transition_num(void)
 		0x00000091,0x00000111,0x00004001,0x00002001,0x00008001,
 	};
 
-	static uint8_t tpos[16] = {
+	// static uint8_t tpos[16] = {
 
-		0,1,2,0,3,0,0,0,4,0,0,0,0,0,0,0,
-	};
-	static uint8_t wpos[4] = {
-		0,4,8,12
-	};
+	// 	0,1,2,0,3,0,0,0,4,0,0,0,0,0,0,0,
+	// };
+	// static uint8_t wpos[4] = {
+	// 	0,4,8,12
+	// };
 
 	/** get the bit i of event bit pattern, return 0 or 1. i from 0 to 31 */
 	#define E(i) 		((__G_event_bit_pattern&bit_mask[i])>>i)

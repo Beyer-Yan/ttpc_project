@@ -96,7 +96,7 @@ static int32_t _alignment_err_accumulated(int32_t value)
 	TTP_ASSERT(!mai%ratio);
 
 	err   = (value%lmi + err)%lmi;
-	theta = (value%lmi + err)/lmi;
+	theta = (value%lmi + err)/lmi;·
 
 	return	value/lmi + theta;
 

@@ -70,7 +70,7 @@ void FSM_toListen(void)
     ScheduleParameter_t* pSP = MAC_GetScheduleParameter();
 
     TIM_CMD(CLEAR);
-    TIM_SetPollDefault(pSP->ColdStartTimeout);
+    TIM_SetPollDefault(pSP->ColdStartTimeout); 
     TIM_CMD(START);
 
     MAC_StartReceive();
@@ -149,7 +149,7 @@ void FSM_doListen(void)
 
         uint32_t exe_mi = cur_mi - (pDesc[0]->rcv_timestamp + pDesc[1]->rcv_timestamp) / 2;
         uint16_t ratio = TIM_GetRatio();
-        
+
         uint32_t cps_value = pRS->DelayCorrectionTerms + pSP->Precision;
         uint32_t cps_mi = cps_value / (pSP->MacrotickParameter / ratio);
 
@@ -159,7 +159,7 @@ void FSM_doListen(void)
         TIM_SetMacrotickValue(actual_ma);
         TIM_SetLocalMicrotickValue(actual_mi);
 
-        phase_indicator = 0; /**< point to the psp phase o the next slot */
+        phase_indicator = 0;        /**< point to the psp phase o the next slot */
         TIM_CMD(START);
         MAC_StartPhaseCirculation(); /**< start synchronization mode */
 
