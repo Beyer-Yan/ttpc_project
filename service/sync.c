@@ -20,12 +20,11 @@
 #include "protocol_data.h"
 #include "virhw.h"
 
-
 /** @see "Time Triggered Protocol Spec", page 56*/
 static volatile int32_t _G_pushdown_stack[4] = {0};
 
 /** the estimate arival time interval of the frame aligned to local microtick */
-static volatile int32_t _G_estimate_time_interval = 0;
+static volatile int32_t _G_aligned_estimate_time_interval = 0;
 
 static inline void _stack_push(int32_t offset)
 {
@@ -96,7 +95,7 @@ static int32_t _alignment_err_accumulated(int32_t value)
 	TTP_ASSERT(!mai%ratio);
 
 	err   = (value%lmi + err)%lmi;
-	theta = (value%lmi + err)/lmi;·
+	theta = (value%lmi + err)/lmi;
 
 	return	value/lmi + theta;
 
@@ -108,18 +107,17 @@ void SVC_SetEstimateArivalTime(uint32_t EstimateTimeInterval)
 	TTP_ASSERT(!(EstimateTimeInterval&0x80000000));
 
 	int32_t _eti = (int32_t)EstimateTimeInterval;
-	_G_estimate_time_interval = _alignment_err_accumulated(_eti);
-
+	_G_aligned_estimate_time_interval = _alignment_err_accumulated(_eti);
 }
 
-void SVC_GetEstimateArivalTime()
+uint32_t SVC_GetAlignedEstimateArivalTimeInterval()
 {
-	return _G_estimate_time_interval;
+	return _G_aligned_estimate_time_interval;
 }
 
 void SVC_SyncCalcOffset(uint32_t PSPTsmp, uint32_t FrameTsmp)
 {
-	uint32_t estimate_frame_tsmp = PSPTsmp + (uint32_t)_G_estimate_time_interval;
+	uint32_t estimate_frame_tsmp = PSPTsmp + (uint32_t)SVC_GetAlignedEstimateArivalTimeInterval;
 	int32_t  offset = (int)(FrameTsmp - estimate_frame_tsmp);
 
 	_stack_push(offset);

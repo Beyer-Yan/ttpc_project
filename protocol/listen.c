@@ -150,6 +150,7 @@ void FSM_doListen(void)
         uint32_t exe_mi = cur_mi - (pDesc[0]->rcv_timestamp + pDesc[1]->rcv_timestamp) / 2;
         uint16_t ratio = TIM_GetRatio();
 
+        //perform "correction" + "precision" of "sender", meaning cps_value
         uint32_t cps_value = pRS->DelayCorrectionTerms + pSP->Precision;
         uint32_t cps_mi = cps_value / (pSP->MacrotickParameter / ratio);
 

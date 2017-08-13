@@ -56,7 +56,7 @@ static void (*__Gf_hook)(uint32_t ps) = NULL;
  */
 static volatile char __G_start_flag = FSM_STOPPED;
 
-/** extern definition for three phases cirlation of the corresponding states */
+/** extern definition for three phases circulation of the corresponding states */
 extern struct SubSeqRoutine SSR_active;
 extern struct SubSeqRoutine SSR_passive;
 extern struct SubSeqRoutine SSR_coldstart;

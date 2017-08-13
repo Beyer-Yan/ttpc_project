@@ -106,6 +106,7 @@ void FSM_doInit(void)
     CRC_DepInit();
     DRV_DepInit();
 
+    
     SVC_RaiseSynchronousInterrupt();
     FSM_sendEvent(FSM_EVENT_INIT_OK);
 }

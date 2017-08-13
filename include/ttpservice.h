@@ -131,7 +131,7 @@ void     SVC_SyncCalcOffset(uint32_t PSPTsmp, uint32_t FrameTsmp);
  * be performed.
  */
 void     SVC_SetEstimateArivalTimeInterval(uint32_t EstimateTimeInterval);
-uint32_t SVC_GetEstimateArivalTimeInterval();
+uint32_t SVC_GetAlignedEstimateArivalTimeInterval();
 
 /**
  * This function clears the value of the correction term.
@@ -142,7 +142,7 @@ void     SVC_ClrClockSyncFIFO(void);
  * The function performs the syncronization algorithm according to the offsets calculated.
  * @return  1 for syncronization finished, 0 for syncronization failed. 
  */
-uint32_t SVC_ExecSyncSchema(void);
+uint32_t SVC_ExecSyncSchema(uint32_t Steps);
 
 /************************************************************************************/
 
