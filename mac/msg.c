@@ -30,8 +30,8 @@
  * Every channel buffer of buffers below includes the
  * ethernet dst,src and type/len field 
  */
-static volatile uint8_t recv_byte_stream[2][FRAME_BUFFER_SIZE] = {0};
-static volatile uint8_t send_byte_stream[2][FRAME_BUFFER_SIZE] = {0};
+static volatile uint8_t recv_byte_stream[2][FRAME_BUFFER_SIZE] = {{0},{0}};
+static volatile uint8_t send_byte_stream[2][FRAME_BUFFER_SIZE] = {{0},{0}};
 
 /**
  * The mac_addr_t should be platform-dependent. We implement the TTPC protocol
@@ -62,7 +62,7 @@ static inline void __byte_copy_to_frame_buf(uint8_t* dst, uint8_t* src, int size
     uint8_t *_dst_ch0 = dst;
     uint8_t *_dst_ch1 = dst + FRAME_BUFFER_SIZE;
 
-    while(_size--)
+    while(size--)
     {
         *_dst_ch0++ = *src;
         *_dst_ch1++ = *src++;
@@ -106,7 +106,7 @@ static void __ttp_frame_crc32_reset()
 }
 
 /**
- * This function alculates the frame type to be assembled.
+ * This function calculates the frame type to be assembled.
  * @attention round slot properties should be set before this function
  * is called.   
  * @return the frame type to be assembled.
@@ -315,22 +315,22 @@ MAC_err_t MAC_PrepareSCFrame(void)
     TTP_ASSERT(pNode->MultiplexedMembershipFlag==MONOPOLIZED_MEMBERSHIP);
     TTP_ASSERT(pNode->PassiveFlag==NOT_PASSIVE);
 
-    tsf = CNI_GetTSF();
+    // tsf = CNI_GetTSF();
 
-    /** set c-state field, located in CNI */
-    CS_SetGTF(tsf);
-    CS_SetRoundSlot(pNode->LogicalNameSlotPosition);
-    CS_SetMode(MODE_CS_ID);
-    CS_SetDMC(DMC_NO_REQ);
-    CS_ClearMemberAll();
-    CS_SetMemberBit(pNode->FlagPosition);
+    // /** set c-state field, located in CNI */
+    // CS_SetGTF(tsf);
+    // CS_SetRoundSlot(pNode->LogicalNameSlotPosition);
+    // CS_SetMode(MODE_CS_ID);
+    // CS_SetDMC(DMC_NO_REQ);
+    // CS_ClearMemberAll();
+    // CS_SetMemberBit(pNode->FlagPosition);
 
-    /**
-    * copy c-state of the CNI to the local c-state variable for
-    * frame assembling because of the bit-mismatch. 
-    * @see  description of file ttpc_mac.h, line 191 to line 197
-    */
-    MAC_GetCState(&c_state);
+    // /**
+    // * copy c-state of the CNI to the local c-state variable for
+    // * frame assembling because of the bit-mismatch. 
+    // * @see  description of file ttpc_mac.h, line 191 to line 197
+    // */
+    // MAC_GetCState(&c_state);
 
     __byte_copy_to_frame_buf(pFrame->hdr,&header,sizeof(header));
 
@@ -389,7 +389,7 @@ uint32_t MAC_GetTransmittedFlags(void)
         case DRV_OK : res = MAC_EOK;      break;
         case TXD_COL: res = MAC_ETX_COL;  break;
         case PHY_ERR: res = MAC_EPHY;     break;
-        case default: res = MAC_EOTHER;   break;
+        default: res = MAC_EOTHER;   break;
     }
     return res;
 }
@@ -437,7 +437,7 @@ uint32_t  MAC_GetReceivedFlag(void)
         case PHY_ERR : res = MAC_EPHY;      break;
         case LTH_ERR : res = MAC_ERX_LTH;   break;
         case DRV_INV : res = MAC_ERX_INV;   break;
-        case default : res = MAC_EOTHER;    break;
+        default : res = MAC_EOTHER;    break;
     }
     return res;
 }

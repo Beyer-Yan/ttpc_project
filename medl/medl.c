@@ -52,7 +52,7 @@ static void __medl_header_extract(void)
 	int res = 0;
 
 	/** read header from the 0 address relative the base addr */
-	res = medl_real_read(&__G_medl_header, MEDL_HEADER_SIZE, 0);
+	res = medl_real_read((char*)&__G_medl_header, MEDL_HEADER_SIZE, 0);
 
 	TTP_ASSERT(res!=0);
 }
@@ -73,7 +73,7 @@ static void __medl_sched_extract(void)
 	__G_sched.ExternalRateCorrectionAllow  = (buf[0]&(1<<2))>>2;
 	__G_sched.MinimumIntegrationCount      = (buf[0]&(0xff<<8))>>8;
 	__G_sched.MaximumColdStartEntry        = (buf[0]&(0xff<<16))>>16;
-	__G_sched.MximumMembershipFailureCount = (buf[0]&(0xff<<24))>>24;
+	__G_sched.MaximumMembershipFailureCount= (buf[0]&(0xff<<24))>>24;
 	__G_sched.MacrotickParameter           = buf[1];
 	__G_sched.Precision                    = buf[2];
 	__G_sched.CommunicationRate            = buf[3];
@@ -94,7 +94,7 @@ static void __medl_role_extract(void)
 
 	TTP_ASSERT(res!=0);
 	__G_role.LogicalNameSlotPosition       = (buf[0]&(0xffff<<16))>>16;
-	__G_role.LogicalNameMulplexedID    	   = (buf[0]&0xffff);
+	__G_role.LogicalNameMultiplexedID 	   = (buf[0]&0xffff);
 	__G_role.PassiveFlag               	   = (buf[1]&(1<<0))>>0;				
 	__G_role.MultiplexedMembershipFlag 	   = (buf[1]&(1<<1))>>1;
 	__G_role.FlagPosition              	   = (buf[1]&(0xff<<8))>>8;				
@@ -133,7 +133,8 @@ static void __medl_slot_extract(uint32_t mode, uint32_t round_slot)
 	__G_slot.LogicalSenderSlot        = (buf[0]&(0xffff<<16))>>16;
 	__G_slot.LogicalSenderMultiplexID = (buf[0]&0xffff);
 	__G_slot.SlotDuration             = buf[1];	
-	__G_slot.TransmissionDuration     = buf[2];
+	__G_slot.PSPDuration              = buf[2]&0xffff;
+	__G_slot.TransmissionDuration     = buf[2]>>16;
 	__G_slot.DelayCorrectionTerms     = buf[3];	
 	__G_slot.CNIAddressOffset         = buf[4];	
 	__G_slot.AppDataLength            = (buf[5]&0xff);
@@ -237,7 +238,7 @@ uint32_t MEDL_GetRegionAddr(uint32_t RegionType)
 		case SCHEDULE_REGION : addr = (uint32_t)&__G_sched; 	break;
 		case ROLE_REGION     : addr = (uint32_t)&__G_role;  	break;
 		case ID_REGION       : addr = (uint32_t)&__G_sched_id;  break;
-		case default         : addr = 0;      
+		default              : addr = 0;      
 	}
 	return (addr);
 }

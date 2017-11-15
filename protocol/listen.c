@@ -24,6 +24,9 @@
 
 extern uint32_t phase_indicator;
 
+/*
+ * can be optimized, etc 4-bytes alignment
+ */
 static inline void _byte_copy(uint8_t* dst, uint8_t* src, int size)
 {
     while (size--) {
@@ -67,15 +70,24 @@ static inline void _process_slot_parameters()
 }
 void FSM_toListen(void)
 {
-    ScheduleParameter_t* pSP = MAC_GetScheduleParameter();
-
     TIM_CMD(CLEAR);
-    TIM_SetPollDefault(pSP->ColdStartTimeout); 
-    TIM_CMD(START);
-
     MAC_StartReceive();
     MAC_SetSlot(0);
     MAC_SetTDMARound(0);
+    TIM_CMD(START);
+}
+
+static uint32_t _disturb(void)
+{
+    //disturb function shall be specified more detailed
+    if ((MAC_GetReceivedFlag(CH0) == MAC_EOK && MAC_GetReceivedFlag(CH1) == MAC_EOK))
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
 }
 
 void FSM_doListen(void)
@@ -87,22 +99,16 @@ void FSM_doListen(void)
     ttp_frame_desc_t* pDesc[2];
     c_state_t cstate[2];
 
-    int frame_valid = 0;
+    int listen_res = 0;
 
     pSP = MAC_GetScheduleParameter();
     pNP = MAC_GetNodeProperties();
 
     //break when timeout or received a valid frame.
-    while (1) {
-        if (TIM_PollAlarmDefault()) {
-            break;
-        } else if ((MAC_GetReceivedFlag(CH0) == MAC_EOK && MAC_GetReceivedFlag(CH1) == MAC_EOK)) {
-            frame_valid = 1;
-            break;
-        }
-    }
+    listen_res = TIM_WaitAlarm(pSP->ListenTimeout, _disturb);
+
     //received frames
-    if (frame_valid) {
+    if (listen_res) {
 
         pDesc[0] = MAC_GetFrameDesc(CH0);
         pDesc[1] = MAC_GetFrameDesc(CH1);
@@ -129,6 +135,8 @@ void FSM_doListen(void)
         }
 
         MAC_SetCState(&cstate[0]);
+
+        //set current slot parameter according the sender's c-state
         _process_slot_parameters();
 
         pRS = MAC_GetRoundSlotProperties();
@@ -143,27 +151,31 @@ void FSM_doListen(void)
         CNI_ResetHLFS(); /**< more reasonable Op interface shall be negotiated */
 
         // cluster time correcting.
-        uint32_t cur_mi = TIM_GetCurMicroticks();
-        TIM_CMD(STOP);
-        TIM_CMD(CLEAR);
-
-        uint32_t exe_mi = cur_mi - (pDesc[0]->rcv_timestamp + pDesc[1]->rcv_timestamp) / 2;
-        uint16_t ratio = TIM_GetRatio();
+        uint16_t ratio = TIM_GetFrequencyDiv();
 
         //perform "correction" + "precision" of "sender", meaning cps_value
         uint32_t cps_value = pRS->DelayCorrectionTerms + pSP->Precision;
         uint32_t cps_mi = cps_value / (pSP->MacrotickParameter / ratio);
+        uint32_t cur_mi = TIM_GetCurMicrotick();
+        TIM_CMD(STOP);
+        TIM_CMD(CLEAR);
 
-        uint16_t actual_ma = CS_GetCurGTF() + (exe_mi + cps_mi) / ratio;
+        uint32_t exe_mi = cur_mi - (pDesc[0]->rcv_timestamp + pDesc[1]->rcv_timestamp) / 2;   
+        uint32_t actual_ma = CS_GetCurGTF() + (exe_mi + cps_mi) / ratio;
         uint32_t actual_mi = (exe_mi + cps_mi) % ratio;
 
-        TIM_SetMacrotickValue(actual_ma);
-        TIM_SetLocalMicrotickValue(actual_mi);
+        TIM_SetCurMacrotick(actual_ma);
+        TIM_SetCurMicrotick(actual_mi);
+        MAC_SetPhaseCycleStartPoint(CS_GetCurGTF()-pRS->AtTime,0);
+
+        //attention that the AT and the PRP time have expired at this time.
+        MAC_SetTime(CS_GetCurGTF(),pRS->TransmissionDuration,pRS->PSPDuration,pRS->SlotDuration);
 
         phase_indicator = 0;        /**< point to the psp phase o the next slot */
         TIM_CMD(START);
         MAC_StartPhaseCirculation(); /**< start synchronization mode */
 
+        CNI_SetSRBit(ISR_CV); //CSATE available
         FSM_sendEvent(FSM_EVENT_CSTATE_FRAME_RECEIVED);
 
     } else {

@@ -25,9 +25,6 @@
 #include "virhw.h"
 #include "ttpservice.h"
 
-#define FrMT 1
-#define MAX_STEPS 200
-
 /*********************************************************************************/
 /**
  * the global variables definitions, slot relative.
@@ -41,12 +38,11 @@
  * Attention that round_slots = _G_TDMARound * _G_TDMASlots + _G_Slot
  */
 /** slots assignment */
-static volatile uint32_t _G_Slot = 0;
+static volatile uint32_t _G_Slot      = 0;
 static volatile uint32_t _G_TDMARound = 0;
 
 static uint32_t _G_ClusterCycleLength = 0;
 static uint32_t _G_TDMACycleLength    = 0;
-
 
 // /** slots timing parameters */
 // static volatile uint32_t _G_ActualAT; /**< actual action time in unit of macrotick */
@@ -114,6 +110,23 @@ uint32_t MAC_UpdateSlot(void)
     uint32_t rs = CS_GetCurRoundSlot();
     uint32_t res;
 
+    rs = (rs+1)%_G_ClusterCycleLength;
+
+    _G_TDMARound = rs/_G_TDMACycleLength;
+    _G_Slot = rs%_G_TDMACycleLength;
+
+    res = rs==0 ? FIRST_SLOT_OF_CURRENT_CLUSTER :
+     _G_Slot==0 ? FIRST_SLOT_OF_SUCCESSOR_TDMAROUND :
+                  NORMAL_SLOT;
+
+    /* 
+    if(rs==0)
+    {
+        _G_TDMARound = 0;
+        _G_Slot = 0;
+    }
+    else if(rs%_G_TDMACycleLength==0)
+
     if ((rs + 1) == _G_ClusterCycleLength) {
         // points the first slot of a cluster cycle
         rs = 0;
@@ -138,6 +151,7 @@ uint32_t MAC_UpdateSlot(void)
         }
         rs++;
     }
+    */
 
     CS_SetRoundSlot(rs);
     _G_slot_pointer = res;
@@ -204,62 +218,67 @@ void MAC_SetSlotAcquisition(uint32_t SlotAcquisition){ _G_SlotAcquisitionFlag = 
 /** getter implementation */
 uint32_t MAC_GetNodeSlot(void) { return _G_Slot; }
 uint32_t MAC_GetTDMARound(void) { return _G_TDMARound; }
-uint32_t MAC_GetPspTsmp(void) { return TIM_GetCapturePSP(); }
-uint32_t MAC_GetRatio() { return TIM_GetRatio(); }
+uint32_t MAC_GetRatio() { return TIM_GetFrequencyDiv(); }
 uint32_t MAC_GetSlotAcquisition(void) { return _G_SlotAcquisitionFlag; }
 uint32_t MAC_GetRoundSlot(void) { return (_G_TDMARound * _G_TDMACycleLength + _G_Slot);}
 
-void MAC_SetTime(uint32_t ActAT, uint32_t TP, uint32_t SD)
+void MAC_SetTime(uint32_t ActAT, uint32_t TP,uint32_t PSP, uint32_t SD)
 {
-    uint16_t stime = TIM_GetCaptureMacrotickPSP();
-    uint16_t real_at = stime + ActAT & 0xffff;
+    uint16_t real_at =  ActAT & 0xffff;
     uint16_t real_prp = real_at + TP & 0xffff;
-    uint16_t slot_end = stime + SD & 0xffff;
+    uint16_t slot_end = real_at + SD & 0xffff - PSP - TP;
 
-    TIM_SetTriggerAT(real_at);
+    TIM_SetTriggerAT(ActAT);
     TIM_SetTriggerPRP(real_prp);
-    TIM_SetTriggerUser0(slot_end);
+    TIM_SetTriggerSlotEnd(slot_end);
 }
 
-void MAC_StartPhaseCirculation() { /*to be done*/ }
+void MAC_StartPhaseCirculation() { TIM_EnableTrigger(); }
 
-void MAC_StopPhaseCirculation(){ /*to be done*/ }
+void MAC_StopPhaseCirculation(){ TIM_DisableTrigger(); }
 
 uint32_t MAC_CheckSlot(void)
 {
     return _G_slot_pointer;
 }
 
-void MAC_AdjTime(uint16_t AdjMode, int16_t Offset, int16_t Steps)
+void MAC_AdjTime(uint16_t AdjMode, int16_t Offset)
 {
     // AdjMode is set CLK_FREQ_ADJ forcedly
 
-    TTP_ASSERT(Steps < MAX_STEPS);
+    // TTP_ASSERT(Steps < MAX_STEPS);
 
-    int32_t cor_val[MAX_STEPS] = { 0 };
+    // int32_t cor_val[MAX_STEPS] = { 0 };
 
-    int32_t ratio = (int32_t)TIM_GetRatio();
+    // int32_t ratio = (int32_t)TIM_GetFrequencyDiv();
 
-    int i = 0;
-    int j = 0;
+    // int i = 0;
+    // int j = 0;
 
-    int _step = Steps / (FrMT + 1);
+    // int _step = MAX_STEPS / (FrMT + 1);
 
-    int32_t quotient = Offset / _step;
-    int32_t remain = Offset % _step;
+    // int32_t quotient = Offset / _step;
+    // int32_t remain = Offset % _step;
 
-    for (j = 0, i = 0; i < _step; i++, j += FrMT + 1) {
-        cor_val[j] = quotient;
+    // for (j = 0, i = 0; i < _step; i++, j += FrMT + 1) {
+    //     cor_val[j] = quotient;
+    // }
+
+    // int32_t tmp = ABS(remain);
+    // for (i = 0, j = 0; i < tmp; i++, j += FrMT + 1) {
+    //     cor_val[j] += remain > 0 ? 1 : -1;
+    // }
+
+    // for (i = 0; i < MAX_STEPS; i++) {
+    //     cor_val[i] += ratio;
+    // }
+
+    if(AdjMode == CLK_PHASE_ADJ)
+    {
+        TIM_SetStateCorrectionTerm(Offset);
     }
-
-    int32_t tmp = ABS(remain);
-    for (i = 0, j = 0; i < tmp; i++, j += FrMT + 1) {
-        cor_val[j] += remain > 0 ? 1 : -1;
+    else
+    {
+        //TIM_RatioAdj(cor_val);
     }
-
-    for (i = 0; i < Steps; i++) {
-        cor_val[i] += ratio;
-    }
-
-    TIM_RatioAdj(cor_val, Steps);
 }

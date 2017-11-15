@@ -23,9 +23,11 @@
 /** The most platforms will support stdint.h. Maybe,the definition below is not needed. */
 #define USE_STDINC
 
+#define __CC_ARM
+
 typedef enum {FALSE=0,TRUE} 		bool_t;
 
-#ifndef USE_STDINC
+#ifdef USE_STDINC
 	typedef char 					int8_t;
 	typedef unsigned char 			uint8_t;
 	typedef short 					int16_t;
@@ -1286,7 +1288,7 @@ typedef uint8_t 				ttp_id[12];
 /**
  * TTP Cluster Time Field Register definition.
  * This register specifies the globally synchronized time with a granularity of one macrotick.
- * The register is read only for the host.  The value of this register  is not defined if the 
+ * The register is read only for the host and will be undefined if the 
  * C-state is not valid.
  */
 #define TTP_CTFR 				__ttpc_status_regs_group[14]
@@ -1417,17 +1419,20 @@ extern uint8_t msg_pool[MSG_POOL_LENGTH];
 								 ((MODE) == MODE_3)  || \
 								 ((MODE) == MODE_CLR))
 
-#define CALC_MODE_NUM(mode)		({\
-									uint32_t _mode_num;\
-									switch (mode){\
-									case MODE_1: _mode_num=1;break;\
-									case MODE_2: _mode_num=2;break;\
-									case MODE_3: _mode_num=3;break;\
-									case MODE_CS_ID: _mode_num=0;break;\
-									default:     _mode_num=0;break;\
-									}\
-									_mode_num;\
-								})
+static inline uint32_t CALC_MODE_NUM(uint32_t mode)
+{
+	uint32_t _mode_num;
+
+	switch (mode){
+	case MODE_1: _mode_num=1;    break;
+	case MODE_2: _mode_num=2;    break;
+	case MODE_3: _mode_num=3;    break;
+	case MODE_CS_ID: _mode_num=0;break;
+	default:     _mode_num=0;    break;
+	}
+
+	return _mode_num;
+}
 
 /** for register TTP_SR */
 
@@ -1623,9 +1628,13 @@ extern uint8_t msg_pool[MSG_POOL_LENGTH];
  */
 #define CNI_GetCurMCR() 			(TTP_CR0&CR_MCR)
 
-#define CNI_IsModeChangeRequsted()  ({uint32_t _mcr = CNI_GetCurMCR(); (_mcr == MCR_MODE_1) || \
-															  		   (_mcr == MCR_MODE_2) || \
-															  		   (_mcr == MCR_MODE_3);})
+static inline uint32_t CNI_IsModeChangeRequested()
+{
+	uint32_t _mcr = CNI_GetCurMCR();
+
+	 return ((_mcr == MCR_MODE_1) || (_mcr == MCR_MODE_2) || (_mcr == MCR_MODE_3));
+}
+
 #define CNI_ClrMCR() 				(TTP_CR0 = (TTP_CR0&~CR_MCR)|MCR_MODE_CLR)
 /**
  * check whether the HLFS(Host Life Sign) is valid or not. If the HLFS is not
@@ -1635,7 +1644,13 @@ extern uint8_t msg_pool[MSG_POOL_LENGTH];
  *       @arg 0  host not valid
  *       @arg !0 host ok
  */
-#define CNI_CheckHLFS() 			({uint32_t _hls=TTP_HLSR; TTP_HLSR=0; _hls>0?1:0;})
+static inline uint32_t CNI_CheckHLFS()
+{
+	uint32_t _hls=TTP_HLSR; 
+	TTP_HLSR=0;
+	return  _hls>0?1:0;
+}
+			
 #define CNI_ResetHLFS() 			(TTP_HLSR=0)
 
 /** increase the TOC(Global Time Overflow Counter) */
@@ -1708,9 +1723,15 @@ extern uint8_t msg_pool[MSG_POOL_LENGTH];
  */
 #define STATUS_BIT_PATTERN     			((uint8_t)0xEA)
 
-#define _RF_CLR(offset) 				((MSG_POOL_BASE+(offset))[0]=0,1)			
-#define MSG_CheckMsgRF(offset) 			((MSG_POOL_BASE+(offset))[0]==STATUS_BIT_PATTERN?_RF_CLR(offset):0)
-#undef  _RF_CLR
+static inline uint32_t MSG_CheckMsgRF(uint32_t offset)
+{
+	uint32_t res = 0;
+
+	res = ((MSG_POOL_BASE+(offset))[0]==STATUS_BIT_PATTERN)?1:0;
+	(MSG_POOL_BASE+(offset))[0]=0;
+
+	return res;
+}
 
 #define MSG_SetStatus(offset,status) 	((MSG_POOL_BASE+(offset))[0]=(status))	
 
@@ -1720,11 +1741,7 @@ extern uint8_t msg_pool[MSG_POOL_LENGTH];
 //attention the 1 byte status or NR.
 #define MSG_GetMsgAddr(offset) 			(msg_pool+(offset)+1)		 		
 
-
-
 /**@}*/// end of group CNI_Operations
-
-
 
 
 /**@}*/// end of group TTPC_CNI_Def

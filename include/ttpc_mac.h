@@ -65,7 +65,6 @@ typedef enum Mac_err{
 #warning "incompatible crc bits with AS6003"
 typedef uint32_t crc32_t;
 typedef crc32_t  crc_t;
-
 /**
  * TTPC messages are assigned to specified slots statically. The particular 
  * message received will be put in the slot-relative message area according
@@ -368,15 +367,18 @@ typedef struct mac_slot
 {
 	uint32_t LogicalSenderSlot;
 	uint32_t LogicalSenderMultiplexID;
+
 	uint32_t SlotDuration;				/**< in unit of macroticks */
-	uint32_t TransmissionDuration;
+	uint32_t PSPDuration;               /**< in unit of macroticks */
+	uint32_t TransmissionDuration;      /**< in unit of macroticks */
+
 	uint32_t DelayCorrectionTerms;		/**< in unit of ns */
 	uint32_t CNIAddressOffset;			/**< offset relative to CNI base addr */
 	uint32_t AppDataLength;
 	uint32_t FlagPosition;				/**< flag position in membership vector of 
 	                                         the current sending node*/
 	uint32_t FrameType;					/**<  implicit or explicit */
-	uint32_t ModeChangePermission;
+	uint32_t ModeChangePermission;      
 	uint32_t ReintegrationAllow;
 	uint32_t ClockSynchronization;
 	uint32_t SynchronizationFrame;
@@ -483,7 +485,6 @@ uint32_t MAC_GetSlotAcquisition(void);
  * @return  the frame status
  */
 uint32_t  MAC_GetFrameStatus(uint32_t channel);
-
 
 /**
  * Set the frame status for the corresponding channel.
@@ -633,8 +634,10 @@ void      MAC_SetTDMACycleLength(uint32_t Length);
  * @return the ratio of Macrotick to Microtick
  */
 uint32_t  MAC_GetRatio();
+uint32_t  MAC_GetSlotStartMacroticks(void);
 
-uint32_t  MAC_GetPspTsmp(void);
+uint32_t  MAC_GetSlotStartMicroticks(void);
+uint32_t  MAC_GetATMicroticks(void);
 
 /**
  * update the node slot and the TDMA round and the round slot. If the updated slot
@@ -653,9 +656,19 @@ void      MAC_SetTDMARound(uint32_t tdma);
  * @param  ActAT the actual trigger point time for TP phase
  * @param  TP    the time duration of TP phase in unit of macrotick
  * @param  SD    the slot duration time for a slot in unit of macrotick
+ * @param  PSP   the psp time duration of the slot in unit if macrotick
  * @return       non
  */
-void     MAC_SetTime(uint32_t ActAT,uint32_t TP,uint32_t SD);
+void     MAC_SetTime(uint32_t ActAT,uint32_t TP, uint32_t PSP,uint32_t SD);
+
+/**
+ * Set the start time of the phase circulation, indicating the start macrotick point of the periodic
+ * TDMA round.
+ * @param CycleStartTime   the start macrotick time of the cluster cycle
+ * @param TDMAStartOffset  the start offset of the TDMA round in the cluster cycle
+ * @return                 non
+ */
+void MAC_SetPhaseCycleStartPoint(uint32_t CycleStartTime, uint32_t TDMAStartOffset /* 0 always for current version */);
 
 void     MAC_StartPhaseCirculation(void);
 void     MAC_StopPhaseCirculation(void);
@@ -687,7 +700,7 @@ uint32_t MAC_CheckSlot(void);
  * @param Offset  the clock offset, in unit of signed integer of microtick
  * @param Steps   the steps for adjusting, normally 10.
  */
-void MAC_AdjTime(uint16_t AdjMode, int16_t Offset, int16_t Steps);
+void MAC_AdjTime(uint16_t AdjMode, int16_t Offset);
 
 /**
  * The parameters below shall be considered at mode changing phase.

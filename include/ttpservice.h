@@ -82,6 +82,15 @@ void SVC_RaiseSynchronousInterrupt(void);
 void SVC_Sleep(void);
 
 /**
+ * wait for clock events supporting for the cpu that is not capable of sleep mode.
+ * the function wait until the event related to the "PhaseNumber" happens.
+ * @PhaseNumber  the phase number when in synchronization mode, such as PSP,TP,PRP
+ *               the PSP numbered by 0, the TP number by 1, the PRP number by 2.
+ */
+void SVC_Wait(uint32_t PhaseNumber);
+
+
+/**
  * freeze the ttp controller, set the corresponding error bits
  */
 void SVC_Freeze(void);
@@ -114,11 +123,10 @@ uint32_t SVC_Integration(void*param);
 /**
  * This function calculates the clock offset between the estimate arival time and the 
  * actual arival time.
- * @param  PSPTsmp   the timestamp of the start point of PSP, in unit of microtick
  * @param  FrameTsmp the arival timestamp of the frame, in unit of microtick
  * @return           non
  */
-void     SVC_SyncCalcOffset(uint32_t PSPTsmp, uint32_t FrameTsmp);
+void     SVC_SyncCalcOffset(uint32_t FrameTsmp);
 
 /**
  * This function sets the estimate time duration of a frame between the start point of 

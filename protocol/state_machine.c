@@ -16,6 +16,7 @@
   */
 #include "protocol.h"
 #include "ttpdebug.h"
+#include "ttpservice.h"
 
 #define MAX_TRANSITION_NUM 		20
 #define MAX_STATE_NUM 			11
@@ -114,13 +115,12 @@ static const FSM_State __G_state[MAX_STATE_NUM] =
 	{
 		.state_num        = 4,
 		.toState   	      = FSM_toSubColdStart,
-		.doState          = FSM_doSubColdStart,
 		.doStateProcessor = 
 			{
 				.doState  	   = FSM_doSubColdStart,
 				.pSubRoutine   = NULL,
 			},
-	}
+	},
 
 	/* ACTIVE  */
 	{
@@ -323,7 +323,7 @@ static int __calc_transition_num(void)
 	/* 03 */ tbp |= G(E(2),2);
 	/* 04 */ tbp |= G(E(3)&E(4)&E(5),3);
 	/* 05 */ tbp |= G(E(6)|E(7)|E(8)|E(9)|E(10),4);
-	/* 06 */ tbp |= G(E(12)&E(13)&E(E5),5);
+	/* 06 */ tbp |= G(E(12)&E(13)&E(5),5);
 	/* 07 */ tbp |= G(E(6),6);
 	/* 08 */ tbp |= G(E(14)|E(15)|E(16),7);
 	/* 09 */ tbp |= G(E(17),8);
@@ -364,7 +364,6 @@ static int __calc_transition_num(void)
  */
 static void __protocol(void)
 {
-
 	int _x; 	/**< state number */
 	int _y; 	/**< transition number */
 	static int state_changed = 1;
@@ -394,10 +393,10 @@ static void __protocol(void)
 		{
 			struct SubSeqRoutine* _p = (__G_cur_state->doStateProcessor).pSubRoutine;
 			volatile uint32_t*    _i = _p->pIndicator;
-
+			//waiting for trigger event
+			SVC_Wait(*_i);
 			_p->func[*_i]();
 			*_i = (*_i+1)%(sizeof(_p->func)/sizeof(_p->func[0]));
-
 		}
 
 		_y = __calc_transition_num();

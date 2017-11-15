@@ -354,7 +354,7 @@ struct ack_db
     uint32_t cur_pos;
     uint32_t cur_state;
     const struct dnode *tree; 
-}
+};
 
 static struct ack_db adb[2] = 
 {

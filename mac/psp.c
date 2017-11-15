@@ -29,10 +29,22 @@
 #include "medl.h"
 
 uint32_t _G_ModeChanged = 0;
+static volatile uint32_t _G_SlotStartMacrotickTime = 0; 
+static volatile uint32_t _G_SlotStartMicrotickTime = 0;
+
+static volatile uint32_t _G_ClusterCycleStartTime  = 0;
+static volatile uint32_t _G_TDMARoundStartTime     = 0;
 
 /**
  * This function shall be called at the start time of a slot.
  */
+
+static inline void _update_time()
+{
+    _G_SlotStartMacrotickTime = TIM_GetCurMacrotick();
+    _G_SlotStartMicrotickTime = TIM_GetCurMicrotick();
+}
+
 static inline void _update_mode(void)
 {
     uint32_t dmc = CS_GetCurDMC();
@@ -85,6 +97,29 @@ static inline void _load_slot_configuration(void)
 	}
 }
 
+static inline void _slot_properties_update()
+{
+    uint32_t res;
+    RoundSlotProperty_t *pRS;
+    
+    _update_time();
+    res = MAC_UpdateSlot();
+    if (res == FIRST_SLOT_OF_CURRENT_CLUSTER) {
+        _update_mode();
+        _G_ClusterCycleStartTime = _G_SlotStartMacrotickTime;
+        _G_TDMARoundStartTime    = _G_SlotStartMacrotickTime;
+    }
+
+    if(res==FIRST_SLOT_OF_SUCCESSOR_TDMAROUND)
+    {
+        _G_TDMARoundStartTime = _G_SlotStartMacrotickTime;
+    }
+    _load_slot_configuration();
+
+    pRS = MAC_GetRoundSlotProperties();
+    CS_SetGTF(_G_ClusterCycleStartTime + _G_TDMARoundStartTime + pRS->AtTime);
+}
+
 static inline uint32_t _check_clique(void)
 {
     uint32_t res = 0;
@@ -118,19 +153,15 @@ static inline uint32_t _check_clique(void)
 static inline void _prepare_for_receive(void)
 {
     RoundSlotProperty_t* pRS = MAC_GetRoundSlotProperties();
-
     uint32_t mai = MAC_GetMacrotickParameter();
-	uint32_t ma_psp_tsmp = TIM_GetCaptureMacrotickPSP();
-
-	uint32_t psp_du = pRS->AtTime - ma_psp_tsmp;
 
     if (pRS->SynchronizationFrame == SYN_FRAME) {
-        uint32_t est_interval = pRS->DelayCorrectionTerms + (2 + psp_du) * mai;
-        SVC_SetEstimateArivalTimeInterval(est_interval);
+        SVC_SetEstimateArivalTimeInterval(pRS->DelayCorrectionTerms +  mai);
     }
 
-    MAC_SetTime(pRS->AtTime, pRS->TransmissionDuration, pRS->SlotDuration);
+    uint32_t actual_at = pRS->AtTime + _G_ClusterCycleStartTime + _G_TDMARoundStartTime;
 
+    MAC_SetTime(actual_at, pRS->TransmissionDuration,pRS->PSPDuration, pRS->SlotDuration);
     MAC_SetSlotAcquisition(RECEIVING_FRAME);
 }
 
@@ -139,7 +170,7 @@ static inline void _prepare_for_transmit(void)
     RoundSlotProperty_t* pRS = MAC_GetRoundSlotProperties();
 	NodeProperty_t*      pNP = MAC_GetNodeProperties();
 
-    uint32_t delay = pNP->SendDelay;
+    uint32_t actual_at = pRS->AtTime + _G_ClusterCycleStartTime + _G_TDMARoundStartTime + pNP->SendDelay;
 
     /**
 	 * A sending node shall perceive itself as fully operational in its PSP, and shall
@@ -150,7 +181,7 @@ static inline void _prepare_for_transmit(void)
     CS_SetMemberBit(pRS->FlagPosition);
     PV_SetCounter(AGREED_SLOTS_COUNTER, 1);
 
-    MAC_SetTime(pRS->AtTime + delay, pRS->TransmissionDuration, pRS->SlotDuration);
+    MAC_SetTime(actual_at, pRS->TransmissionDuration,pRS->PSPDuration, pRS->SlotDuration);
     MAC_PushFrame();
     MAC_SetSlotAcquisition(SENDING_FRAME);
 
@@ -168,28 +199,21 @@ static inline uint32_t _is_data_frame()
 
 void psp_for_passive(void)
 {
-
     uint32_t res = 0;
-    RoundSlotProperty_t* pRS = MAC_GetRoundSlotProperties();
+    RoundSlotProperty_t* pRS;
 
-    MAC_UpdateSlot();
-
-/** check MEDL configuration */
-#warning "periodic checking for MEDL has not been implemented"
-
-    if (MAC_IsFirstSLotOfCluster()) {
-        _update_mode();
-    }
-    _load_slot_configuration();
+    /** check MEDL configuration */
+    #warning "periodic checking for MEDL has not been implemented"
 
     if (MAC_IsOwnNodeSlot()) {
         if (!_check_clique())
             return;
     }
 
+    pRS = MAC_GetRoundSlotProperties();
     if (MAC_IsSendSlot()) {
         if (SVC_SlotAcquirement()) {
-            if (CNI_IsModeChangeRequsted()) {
+            if (CNI_IsModeChangeRequested()) {
                 if (pRS->ModeChangePermission == MODE_CHANGE_DENY) {
                     CNI_SetSRBit(SR_MV);
                     FSM_sendEvent(FSM_EVENT_MODE_VIOLATION_ERR);
@@ -211,12 +235,9 @@ _end:
 void psp_for_active(void)
 {
     uint32_t res = 0;
-    MAC_UpdateSlot();
+    RoundSlotProperty_t* pRS;
 
-    if (MAC_IsFirstSLotOfCluster()) {
-        update_mode();
-    }
-    _load_slot_configuration();
+    _slot_properties_update();
 
     if (MAC_IsOwnNodeSlot()) {
         if (!_check_clique())
@@ -236,10 +257,10 @@ void psp_for_active(void)
         }
     }
 
-    RoundSlotProperty_t* pRS = MAC_GetRoundSlotProperties();
+    pRS = MAC_GetRoundSlotProperties();
     //check the mode request field
     if (res != 0) {
-        if (CNI_IsModeChangeRequsted()) {
+        if (CNI_IsModeChangeRequested()) {
             if (pRS->ModeChangePermission == MODE_CHANGE_DENY) {
                 CNI_SetSRBit(SR_MV);
                 FSM_sendEvent(FSM_EVENT_MODE_VIOLATION_ERR);
@@ -247,7 +268,7 @@ void psp_for_active(void)
             }
         }
     }
-    //check the whether the data is ready, if there is a data frame is to be send
+    //check whether the data is ready, if there is a data frame is to be send
     if (res != 0) {
         if (_is_data_frame()) {
             if (!MSG_CheckMsgRF(pRS->CNIAddressOffset)) {
@@ -262,4 +283,19 @@ void psp_for_active(void)
 
 void psp_for_coldstart(void)
 {
+}
+
+uint32_t  MAC_GetSlotStartMacroticks(void)
+{
+    return _G_SlotStartMacrotickTime;
+}
+uint32_t  MAC_GetSlotStartMicroticks(void)
+{
+    return _G_SlotStartMicrotickTime;
+}
+
+void MAC_SetPhaseCycleStartPoint(uint32_t CycleStartTime, uint32_t TDMAStartOffset)
+{
+    _G_ClusterCycleStartTime = CycleStartTime;
+    _G_TDMARoundStartTime    = 0;
 }

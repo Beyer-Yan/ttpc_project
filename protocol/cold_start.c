@@ -39,9 +39,25 @@ struct SubSeqRoutine SSR_coldstart =
 		},
 };
 
+/** 
+ * The execution from the statup point to the actual transmission point shall be specified in
+ * the implementation.
+ */
 void FSM_toColdStart(void)
 {
+    //inform the host that the cold start starts
+    //code executing time shall be measured from the cold-start staring time
+    //to the actual action time.
+
+    static uint32_t COLD_START_EXE_TIME_MACROTICK = 10;
+
     uint32_t tsf = CNI_GetTSF();
+
+    //timer settings and slot timing properties setting
+    TIM_SetCurMicrotick(0);
+    TIM_SetCurMacrotick(tsf - COLD_START_EXE_TIME_MACROTICK);
+    TIM_CMD(START);
+
     NodeProperty_t *pNP = MAC_GetNodeProperties();
     ScheduleParameter_t *pSP = MAC_GetScheduleParameter();
 
@@ -57,23 +73,18 @@ void FSM_toColdStart(void)
     CS_SetDMC(DMC_NO_REQ);
     CS_ClearMemberAll();
     CS_SetMemberBit(pRS->FlagPosition);
+    MAC_PrepareCSFrame();
 
     //MAC settings
     MAC_SetClusterCycleLength(MEDL_GetRoundCycleLength(mode_num));
     MAC_SetTDMACycleLength(MEDL_GetTDMACycleLength(mode_num));
     MAC_SetSlot(slot);
     MAC_SetTDMARound(0);
-
+    MAC_SetPhaseCycleStartPoint(tsf-pRS->AtTime,0);
+    MAC_SetTime(tsf+pNP->SendDelay,pRS->TransmissionDuration,pRS->PSPDuration,pRS->SlotDuration);
+    
     //SVC synchronization setting
     SVC_ClrClockSyncFIFO();
-
-    //timer settings and slot timing properties setting
-    TIM_SetLocalMicrotickValue(0);
-    TIM_SetMacrotickValue(tsf+pNP->SendDelay);
-    uint16_t real_prp  = (tsf+pNP->SendDelay+pRS->TransmissionDuration)&0xffff;
-    uint16_t slot_end  = (tsf + pRS->SlotDuration - pRS->AtTime)&0xffff;
-    TIM_SetTriggerPRP(real_prp);
-    TIM_SetTriggerUser0(slot_end);
 
     //counters setting
     PV_IncCounter(COLD_START_COUNTER);
@@ -82,10 +93,9 @@ void FSM_toColdStart(void)
     PV_DisableFreeShot();
 
     //start the real clock and transmition
-    phase_indicator = 2; //start from prp, for psp=0,tp=1,prp=2
-    MAC_PrepareCSFrame();
+    phase_indicator = 1; //start from prp, for psp=0,tp=1,prp=2
+    
     MAC_StartPhaseCirculation();
-    MAC_StartTransmit();
     MAC_SetSlotAcquisition(SENDING_FRAME);
 }
 
@@ -110,7 +120,9 @@ void FSM_doSubColdStart(void)
     } else {
         FSM_sendEvent(FSM_EVENT_COLD_START_ALLOWED);
 
-        TIM_WaitAlarm(pSP->StartupTimeout);
+        TIM_WaitAlarm(pSP->StartupTimeout,);
+
+        
         if (DRV_CheckReceived()) {
             FSM_sendEvent(FSM_EVENT_TRAFFIC_DETECT_DURING_STO);
         } else {

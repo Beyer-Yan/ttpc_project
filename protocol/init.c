@@ -53,21 +53,15 @@ static inline void _timer_init(void)
     ScheduleParameter_t* pSP = MAC_GetScheduleParameter();
     TIM_DepInit();
 
-    TIM_SetCompensateMode(COMPENSATE_MODE);
-    TIM_ChannelCMD(TIM_CH_1, DISABLE);
-    TIM_ChannelCMD(TIM_CH_2, DISABLE);
-    TIM_ChannelCMD(TIM_CH_3, DISABLE);
+    uint32_t frequency = TIM_GetLocalFrequency();
+    uint32_t macrotick = pSP->MacrotickParameter;
 
-    //for channel mode, opened default
-    TIM_SetChannelMicrotickGranule(TIM_CH_1, MIC_100_NS);
-    TIM_SetChannelMicrotickGranule(TIM_CH_2, MIC_1_US);
-    TIM_SetChannelMicrotickGranule(TIM_CH_3, MIC_100_US);
+    uint32_t freq_div = frequency/macrotick;
 
-    //for compensate mode
-    TIM_SetLocalMicrotickGranule(MIC_50_NS);
-    TIM_SetLocalMicrotickValue(0);
-
-    TIM_SetMacrotickGranule(pSP->MacrotickParameter);
+    TIM_SetStateCorrectionTerm(0);
+    TIM_SetCurMacrotick(0);
+    TIM_SetCurMicrotick(0);
+    TIM_SetFrequencyDiv(freq_div);
 }
 
 static inline void _id_init(void)
@@ -100,13 +94,14 @@ void FSM_doInit(void)
 
     _timer_init();
 
+    _pv_init();
+
     //platform init
     DMA_DepInit();
     WDG_DepInit();
     CRC_DepInit();
     DRV_DepInit();
 
-    
     SVC_RaiseSynchronousInterrupt();
     FSM_sendEvent(FSM_EVENT_INIT_OK);
 }

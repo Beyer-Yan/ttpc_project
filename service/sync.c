@@ -18,6 +18,7 @@
 #include "ttpc_mac.h"
 #include "ttpdebug.h"
 #include "protocol_data.h"
+#include "protocol.h"
 #include "virhw.h"
 
 /** @see "Time Triggered Protocol Spec", page 56*/
@@ -66,10 +67,10 @@ static int32_t _average()
 
 static inline uint32_t _alignment_err(uint32_t value)
 {
-	static uint32_t mai = MAC_GetMacrotickParameter(); /**< ma = macrotick interval */
-	static uint32_t ratio = MAC_GetRatio();
+	uint32_t mai = MAC_GetMacrotickParameter(); /**< ma = macrotick interval */
+	uint32_t ratio = MAC_GetRatio();
 
-	static uint32_t lmi = mai/ratio;    /**< lmi = local microtick interval */
+	uint32_t lmi = mai/ratio;    /**< lmi = local microtick interval */
 
 	return (value/lmi);
 }
@@ -85,12 +86,12 @@ static int32_t _alignment_err_accumulated(int32_t value)
 
 	#warning "bugs may happen here"
 
-	/** gurantee that the values below do not exceed the MAX(int32_t) */
+	/** guarantee that the values below do not exceed the MAX(int32_t) */
 
-	static int32_t mai = (int32_t)MAC_GetMacrotickParameter(); /**< ma = macrotick interval */
-	static int32_t ratio = (int32_t)MAC_GetRatio();
+	int32_t mai = (int32_t)MAC_GetMacrotickParameter(); /**< ma = macrotick interval */
+	int32_t ratio = (int32_t)MAC_GetRatio();
 
-	static int32_t lmi = mai/ratio;    /**< lmi = local microtick interval */
+	int32_t lmi = mai/ratio;    /**< lmi = local microtick interval */
 
 	TTP_ASSERT(!mai%ratio);
 
@@ -115,10 +116,10 @@ uint32_t SVC_GetAlignedEstimateArivalTimeInterval()
 	return _G_aligned_estimate_time_interval;
 }
 
-void SVC_SyncCalcOffset(uint32_t PSPTsmp, uint32_t FrameTsmp)
+void SVC_SyncCalcOffset(uint32_t FrameTsmp)
 {
-	uint32_t estimate_frame_tsmp = PSPTsmp + (uint32_t)SVC_GetAlignedEstimateArivalTimeInterval;
-	int32_t  offset = (int)(FrameTsmp - estimate_frame_tsmp);
+	uint32_t estimate_frame_tsmp = MAC_GetATMicroticks() + _G_aligned_estimate_time_interval;
+	int32_t  offset = (int32_t)FrameTsmp - (int32_t)estimate_frame_tsmp;
 
 	_stack_push(offset);
 }
@@ -140,7 +141,7 @@ uint32_t SVC_ExecSyncSchema(uint32_t Steps)
 		return 0;
 	}
 
-	MAC_AdjTime(CLK_FREQ_ADJ,csct,FIX_STEP);
+	MAC_AdjTime(CLK_PHASE_ADJ,csct);
 
 	return 1;
 }
