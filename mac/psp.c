@@ -32,8 +32,8 @@ uint32_t _G_ModeChanged = 0;
 static volatile uint32_t _G_SlotStartMacrotickTime = 0; 
 static volatile uint32_t _G_SlotStartMicrotickTime = 0;
 
-static volatile uint32_t _G_ClusterCycleStartTime  = 0;
-static volatile uint32_t _G_TDMARoundStartTime     = 0;
+static volatile uint32_t _G_ClusterCycleStartTime    = 0;
+static volatile uint32_t _G_TDMARoundStartTimeOffset = 0;
 
 /**
  * This function shall be called at the start time of a slot.
@@ -106,18 +106,18 @@ static inline void _slot_properties_update()
     res = MAC_UpdateSlot();
     if (res == FIRST_SLOT_OF_CURRENT_CLUSTER) {
         _update_mode();
-        _G_ClusterCycleStartTime = _G_SlotStartMacrotickTime;
-        _G_TDMARoundStartTime    = _G_SlotStartMacrotickTime;
+        _G_ClusterCycleStartTime    = _G_SlotStartMacrotickTime;
+        _G_TDMARoundStartTimeOffset = 0;
     }
 
     if(res==FIRST_SLOT_OF_SUCCESSOR_TDMAROUND)
     {
-        _G_TDMARoundStartTime = _G_SlotStartMacrotickTime;
+        _G_TDMARoundStartTimeOffset = _G_SlotStartMacrotickTime - _G_ClusterCycleStartTime;
     }
     _load_slot_configuration();
 
     pRS = MAC_GetRoundSlotProperties();
-    CS_SetGTF(_G_ClusterCycleStartTime + _G_TDMARoundStartTime + pRS->AtTime);
+    CS_SetGTF(_G_ClusterCycleStartTime + _G_TDMARoundStartTimeOffset + pRS->AtTime);
 }
 
 static inline uint32_t _check_clique(void)
@@ -159,7 +159,7 @@ static inline void _prepare_for_receive(void)
         SVC_SetEstimateArivalTimeInterval(pRS->DelayCorrectionTerms +  mai);
     }
 
-    uint32_t actual_at = pRS->AtTime + _G_ClusterCycleStartTime + _G_TDMARoundStartTime;
+    uint32_t actual_at = pRS->AtTime + _G_ClusterCycleStartTime + _G_TDMARoundStartTimeOffset;
 
     MAC_SetTime(actual_at, pRS->TransmissionDuration,pRS->PSPDuration, pRS->SlotDuration);
     MAC_SetSlotAcquisition(RECEIVING_FRAME);
@@ -170,7 +170,7 @@ static inline void _prepare_for_transmit(void)
     RoundSlotProperty_t* pRS = MAC_GetRoundSlotProperties();
 	NodeProperty_t*      pNP = MAC_GetNodeProperties();
 
-    uint32_t actual_at = pRS->AtTime + _G_ClusterCycleStartTime + _G_TDMARoundStartTime + pNP->SendDelay;
+    uint32_t actual_at = pRS->AtTime + _G_ClusterCycleStartTime + _G_TDMARoundStartTimeOffset + pNP->SendDelay;
 
     /**
 	 * A sending node shall perceive itself as fully operational in its PSP, and shall
@@ -184,6 +184,30 @@ static inline void _prepare_for_transmit(void)
     MAC_SetTime(actual_at, pRS->TransmissionDuration,pRS->PSPDuration, pRS->SlotDuration);
     MAC_PushFrame();
     MAC_SetSlotAcquisition(SENDING_FRAME);
+
+    if(CNI_IsModeChangeRequested())
+    {
+        uint32_t mcr = CNI_GetCurMCR();
+        uint32_t dmc;
+        switch (mcr) {
+        case MCR_MODE_1:
+            dmc = DMC_MODE_1;
+            break;
+        case MCR_MODE_2:
+            dmc = DMC_MODE_2;
+            break;
+        case MCR_MODE_3:
+            dmc = DMC_MODE_3;
+            break;
+        case MCR_MODE_CLR:
+            dmc = DMC_NO_REQ;
+            break;
+        default:
+            break;
+        }
+        CS_SetDMC(dmc);
+        CNI_ClrMCR();
+    }
 
     /** init the ack state, only if the node plans to send in this slot */
     PV_SetAckState(ACK_INIT);
@@ -199,9 +223,9 @@ static inline uint32_t _is_data_frame()
 
 void psp_for_passive(void)
 {
-    uint32_t res = 0;
     RoundSlotProperty_t* pRS;
 
+    _slot_properties_update();
     /** check MEDL configuration */
     #warning "periodic checking for MEDL has not been implemented"
 
@@ -211,30 +235,30 @@ void psp_for_passive(void)
     }
 
     pRS = MAC_GetRoundSlotProperties();
-    if (MAC_IsSendSlot()) {
-        if (SVC_SlotAcquirement()) {
-            if (CNI_IsModeChangeRequested()) {
-                if (pRS->ModeChangePermission == MODE_CHANGE_DENY) {
-                    CNI_SetSRBit(SR_MV);
-                    FSM_sendEvent(FSM_EVENT_MODE_VIOLATION_ERR);
-                    res = 0;
-                    goto _end;
-                } else {
-                    CS_SetMemberBit(pRS->FlagPosition); /**< now, membership acquired */
-                }
-            }
-            res = 1; /**< actually, the controller transmitted into activa state  */
-            FSM_sendEvent(FSM_EVENT_NODE_SLOT_ACQUIRED);
+    if (!MAC_IsSendSlot())
+        goto _end;
+    
+    if(!SVC_SlotAcquirement())
+        goto _end;
+
+    if(CNI_IsModeChangeRequested()){
+        if(pRS->ModeChangePermission == MODE_CHANGE_DENY){
+            CNI_SetSRBit(SR_MV);
+            FSM_sendEvent(FSM_EVENT_MODE_VIOLATION_ERR);
+            goto _end;
         }
     }
+     /**< now, membership acquired */
+    FSM_sendEvent(FSM_EVENT_NODE_SLOT_ACQUIRED);
+    _prepare_for_transmit();
+    return;
 
-_end:
-    res ? _prepare_for_transmit() : _prepare_for_receive();
+    _end:
+     _prepare_for_receive();
 }
 
 void psp_for_active(void)
 {
-    uint32_t res = 0;
     RoundSlotProperty_t* pRS;
 
     _slot_properties_update();
@@ -244,45 +268,90 @@ void psp_for_active(void)
             return;
     }
 
-    if (MAC_IsSendSlot()) {
+    pRS = MAC_GetRoundSlotProperties();
 
+    if (MAC_IsSendSlot()) {
         if (SVC_CheckHostLifeSign()) {
             //host life updated during active state
             FSM_sendEvent(FSM_EVENT_HOST_LIFE_UPDATED);
             //freeshot state
             PV_DisableFreeShot();
-            res = 1;
         } else {
             FSM_sendEvent(FSM_EVENT_HOST_LIFE_NOT_UPDATED);
+            CS_ClearMemberBit(pRS->FlagPosition);
+            goto _end;
         }
-    }
 
-    pRS = MAC_GetRoundSlotProperties();
-    //check the mode request field
-    if (res != 0) {
+        //check the mode request field
         if (CNI_IsModeChangeRequested()) {
             if (pRS->ModeChangePermission == MODE_CHANGE_DENY) {
                 CNI_SetSRBit(SR_MV);
+                CNI_ClrMCR();
+                CS_ClearMemberBit(pRS->FlagPosition);
                 FSM_sendEvent(FSM_EVENT_MODE_VIOLATION_ERR);
-                res = 0;
-            }
+                goto _end;
+            } 
         }
-    }
-    //check whether the data is ready, if there is a data frame is to be send
-    if (res != 0) {
+
+        //check whether the data is ready, if there is a data frame is to be send
         if (_is_data_frame()) {
             if (!MSG_CheckMsgRF(pRS->CNIAddressOffset)) {
                 CNI_SetSRBit(SR_NR);
-                res = 0;
+                CS_ClearMemberBit(pRS->FlagPosition);
+                goto _end;             
             }
         }
-    }
 
-    res ? _prepare_for_transmit() : _prepare_for_receive();
+        _prepare_for_transmit();
+        return;
+    }
+    _end:
+    _prepare_for_receive();
 }
 
 void psp_for_coldstart(void)
 {
+    RoundSlotProperty_t* pRS;
+
+    _slot_properties_update();
+
+    if (MAC_IsOwnNodeSlot()) {
+        if (_check_clique()){
+            FSM_sendEvent(FSM_EVENT_LEAST_2_CONTROLLERS_ALIVE);
+        }
+        else
+            return;
+    }
+
+    pRS = MAC_GetRoundSlotProperties();
+
+    if (MAC_IsSendSlot()) {
+        if (SVC_CheckHostLifeSign()) {
+            FSM_sendEvent(FSM_EVENT_HOST_LIFE_UPDATED);
+        } else {
+            FSM_sendEvent(FSM_EVENT_HOST_LIFE_NOT_UPDATED);
+            CS_ClearMemberBit(pRS->FlagPosition);
+            goto _end;
+        }
+
+        //check the mode request field
+        if (CNI_IsModeChangeRequested()) {
+            if (pRS->ModeChangePermission == MODE_CHANGE_DENY) {
+                CNI_SetSRBit(SR_MV);
+                CNI_ClrMCR();
+                CS_ClearMemberBit(pRS->FlagPosition);
+                FSM_sendEvent(FSM_EVENT_MODE_VIOLATION_ERR);
+                goto _end;
+            } 
+        }
+        //cstate valid now, the controller will notify the host in the next AT time
+        //by interruption.
+        CNI_SetISRBit(ISR_CV);
+        _prepare_for_transmit();//transmit a I-frame, normally.
+        return;
+    }
+     _end:
+    _prepare_for_receive();
 }
 
 uint32_t  MAC_GetSlotStartMacroticks(void)
@@ -296,6 +365,6 @@ uint32_t  MAC_GetSlotStartMicroticks(void)
 
 void MAC_SetPhaseCycleStartPoint(uint32_t CycleStartTime, uint32_t TDMAStartOffset)
 {
-    _G_ClusterCycleStartTime = CycleStartTime;
-    _G_TDMARoundStartTime    = 0;
+    _G_ClusterCycleStartTime    = CycleStartTime;
+    _G_TDMARoundStartTimeOffset = 0;
 }

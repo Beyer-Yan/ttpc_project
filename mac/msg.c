@@ -14,29 +14,29 @@
   * 
   ******************************************************************************
   */
-#include "ttpc_mac.h"
+#include "msg.h"
 #include "medl.h"
-#include "virhw.h"
+#include "xfer.h"
 #include "ttpservice.h"
 #include "protocol_data.h"
 
 #define FRAME_BUFFER_SIZE         256
-#define ETH_FRAME_HEADER_SIZE     14
+//#define ETH_FRAME_HEADER_SIZE   14
 #define TTP_FRAME_HEADER_SIZE     1
-
 
 /** 
  * 4-byte alignment for buffers below .
  * Every channel buffer of buffers below includes the
  * ethernet dst,src and type/len field 
  */
-static volatile uint8_t recv_byte_stream[2][FRAME_BUFFER_SIZE] = {{0},{0}};
-static volatile uint8_t send_byte_stream[2][FRAME_BUFFER_SIZE] = {{0},{0}};
+//static volatile uint8_t recv_byte_stream[2][FRAME_BUFFER_SIZE] = {{0},{0}};
+//static volatile uint8_t send_byte_stream[2][FRAME_BUFFER_SIZE] = {{0},{0}};
 
 /**
  * The mac_addr_t should be platform-dependent. We implement the TTPC protocol
  * based on 802.3 mac specification. So the MAC address is set in 6-bytes size.
  */
+/*
 typedef uint8_t hwaddr[6];
 
 static hwaddr src = {
@@ -46,17 +46,17 @@ static hwaddr src = {
 static hwaddr dst = {
     0xff,0xff,0xff,0xff,0xff,0xff
 };
-
+*/
 /**
  * record the th length of ttp frame assembled.
  */
-static volatile uint16_t __G_ttp_frame_length = 0;
+//static volatile uint16_t __G_ttp_frame_length = 0;
 
 
 ////////////////////////////////////////////////////////////////////////////////
 ///send frame operation                                                       //
 ////////////////////////////////////////////////////////////////////////////////
-
+/*
 static inline void __byte_copy_to_frame_buf(uint8_t* dst, uint8_t* src, int size)
 {
     uint8_t *_dst_ch0 = dst;
@@ -68,42 +68,12 @@ static inline void __byte_copy_to_frame_buf(uint8_t* dst, uint8_t* src, int size
         *_dst_ch1++ = *src++;
     }
 }
-
+*/
 // static inline void __byte_copy_to_frame_buf(uint8_t *dst,uint8_t *src,int size)
 // {
 //     __byte_copy(dst,src,size);
 //     __byte_copy(dst+256,src,size);
 // }
-
-
-
-/**
- * This function calculates the crc32 of the given buf.
- * 4-bytes-alignment is not needed for the buf address because of the inner
- * alignment logic, however, leading to the poor performance. 
- * @param  buf    the buf to be crc checked 
- * @param  length the length of the buf in unit of byte
- * @return        the 32-bit crc check code
- * @attention     4-bytes-alignment is required for the low level hardware.
- *                But the address of the buf is, maybe, not 4-byte-alignment,
- *                mostly. A 4-byte temporary variable is introduced in case
- *                it, despite the poor performance.
- */
-static uint32_t __ttp_frame_crc32_calc(uint8_t* buf,int length)
-{
-    #error "to be completed"
-}
-
-/**
- * This function resets the CRC32 computation unit
- */
-static void __ttp_frame_crc32_reset()
-{
-    /**
-     * @see void CRC_ResetData(void) in file virhw.h, line 233
-     */
-    CRC_ResetData();
-}
 
 /**
  * This function calculates the frame type to be assembled.
@@ -135,46 +105,6 @@ static inline uint32_t __calc_frame_type(void)
     }
 }
 
-// static inline uint32_t __check_frame_legality(uint32_t frame_type)
-// {
-//     RoundSlotProperty_t *pSlot;
-//     uint32_t mcr;
-
-//     mcr   = CNI_GetCurMCR();
-//     pSlot = MAC_GetRoundSlotProperties();
-
-//     if((frame_type==FRAME_N)||(frame_type==FRAME_X))
-//     {
-//         if(!MSG_CheckMsgRF(pSlot->CNIAddressOffset))
-//         {
-//             return MAC_ERS;
-//         }
-//         if(pSlot->AppDataLength==0)
-//         {
-//             return MAC_ENON_DATA;
-//         }
-//         if(pSlot->AppDataLength>MAX_FRAME_LENGTH)
-//         {
-//             return MAC_ESIZE_OVER;
-//         }
-//     }
-//     if(mcr>=MCR_MODE_CLR)
-//     {
-//         /**
-//          * @attention ensure the continuous numeric definition of MCR field,
-//          * meaning that DO NOT CHANGE THE MCR DEFINITION in ttpdef.h. IF YOU
-//          * HAVE TO CHANGE IT, REMEMBLE TO CHANGE THE IMPLEMENTATION. 
-//          */
-//         return MAC_EMODE;
-//     }
-
-//     if(pSlot->ModeChangePermission==MODE_CHANGE_DENY)
-//     {
-//         return MAC_EMODE;
-//     }
-//     return MAC_EOK;
-// }
-
 
 static uint32_t __assemble_ttp_frame(void)
 {
@@ -187,22 +117,22 @@ static uint32_t __assemble_ttp_frame(void)
     RoundSlotProperty_t* pSlot;
     c_state_t c_state;
 
-    pETH_TTP_frame *pFrame;
+    pTTP_frame *pFrame;
 
     //error detecting
     frame_type    = __calc_frame_type();
     pSlot         = MAC_GetRoundSlotProperties();
     mcr           = CNI_GetCurMCR();
 
-    CNI_ClrMCR();
+    //CNI_ClrMCR();
     
-    /**
-     * @brief If no mode change was requested the mode change field 
-     * shall be set to the value of "MCR_MODE_CLR" according to 
-     * AS6003 8.6.1, page 38/56
-     */ 
+    // /**
+    //  * @brief If no mode change was requested the mode change field 
+    //  * shall be set to the value of "MCR_MODE_CLR" according to 
+    //  * AS6003 8.6.1, page 38/56
+    //  */ 
     
-    header = ((mcr==MCR_NO_REQ?MCR_MODE_CLR:mcr)>>2)|(pSlot->FrameType&1);
+    header = ((mcr)>>2)|(pSlot->FrameType&1);
 
     /** posit the ttp_frame in the send_buffer */
     pFrame = (pTTP_frame)(&send_byte_stream[CH0][0] + ETH_FRAME_HEADER_SIZE);
@@ -270,24 +200,6 @@ static uint32_t __assemble_ttp_frame(void)
     return MAC_EOK;     
 }
 
-/**
- * This function assembles a 802.3 frame. The global __G_ttp_frame_length 
- * variable is regard as the length of client data.
- * @return             the total size of the 802.3 frame excluding
- *                     the 7-bytes PLS and 1-byte SFD.
- */
-static uint32_t __assemble_eth_frame(void)
-{
-    __byte_copy_to_frame_buf(&send_byte_stream[CH0][0],dst,6);
-
-    __byte_copy_to_frame_buf(&send_byte_stream[CH0][0]+6,src,6);
-
-    __byte_copy_to_frame_buf(&send_byte_stream[CH0][0]+12,&__G_ttp_frame_length,2);
-
-    /**< 6 bytes dst, 6 bytes src, 2 bytes type/length */
-    /** TTP_FRAME+HEADER_OFFSET */
-    return __G_ttp_frame_length + 6 + 6 + 2; 
-}
 /**
  * This function assembles cold start frame.
  * @return  [description]
@@ -387,7 +299,6 @@ uint32_t MAC_GetTransmittedFlags(void)
     switch(res)
     {
         case DRV_OK : res = MAC_EOK;      break;
-        case TXD_COL: res = MAC_ETX_COL;  break;
         case PHY_ERR: res = MAC_EPHY;     break;
         default: res = MAC_EOTHER;   break;
     }

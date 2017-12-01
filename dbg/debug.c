@@ -17,11 +17,11 @@
   * 
   ******************************************************************************
   */
-#include <ttpdebug.h>
+#include "ttpdebug.h"
+#include <stdint.h>
 #include <stdio.h>
 #include <stdarg.h>
-#include "buffer.h"
-
+#include "dbgio.h"
 /**
  *      Debug system layer structure
  * 
@@ -60,12 +60,7 @@
    +-----------+  +-----------+   +-----------+  +-----------+   
  */
 
-/**
- * @brief This function should be hardware dependent.
- * @param buf  the base address of the buffer to be transmitted.
- * @param size the size to be transmitted.
- */
-extern void real_flush(char *buf, int size);
+static int _G_Size = 0;
 
 void __Message(int priority, const char * format, ...)
 {
@@ -75,49 +70,22 @@ void __Message(int priority, const char * format, ...)
 	if (!format) {
 		return;
 	}
-
-	switch(priority)
-	{
-		case DBG_EGERG:
-		case DBG_ALERT:
-		case DBG_CRIT:
-		case DBG_WARNING:
-		case DBG_NOTICE:
-			fprintf(stdout, "%d:",priority);
-			vfprintf(stdout,format,ap);
-			//fprintf(stdout, "\n");
-			break;
-		case DBG_ERR:
-			vfprintf(stderr,format,ap);
-			break;
-    case DBG_INFO:
-      vfprintf(stdout,format,ap);
-      break;
-		default:
-			fprintf(stderr,"unk\n");
-			break;
-	}
-
+    
+    char* buffAddr = IO_GetBaseAddr();
+    
+    if(priority != DBG_INFO)
+        _G_Size += sprintf(buffAddr + _G_Size,"%d:",priority);
+    
+    _G_Size += vsnprintf(buffAddr + _G_Size,IO_BUFFER_SIZE-10,format,ap);
+    buffAddr[_G_Size++] = '\t';
+    buffAddr[_G_Size++] = '\n';
+        
 	va_end(ap);
-
 }
 
-void dbg_flush(void)
+void DBG_Flush(void)
 {
-	int size = 0;
-
-	size = get_error_space();
-	if(size>0)
-	{
-		real_flush(error_base_addr(),size);
-		error_clr();
-	}
-
-	size = get_info_space();
-	if(size>0)
-	{
-		real_flush(info_base_addr(),size);
-		info_clr();
-	}
-
+	if(_G_Size!=0)
+        IO_Flush(_G_Size);
+    _G_Size = 0;
 }

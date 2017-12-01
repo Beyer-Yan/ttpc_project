@@ -41,7 +41,7 @@ typedef enum {FALSE=0,TRUE} 		bool_t;
 	/** like standard c stddef, definition below may be not be unused */
 
 	typedef int 					ptrdiff_t;
-	typedef unsigned int 			size_t; 
+	//typedef unsigned int 			size_t; 
 	typedef unsigned short 			wchar_t;
 	
 	#define NULL 					(void*)0
@@ -1456,6 +1456,7 @@ static inline uint32_t CALC_MODE_NUM(uint32_t mode)
 								 ((PS) == PS_AWAIT)     || \
 								 ((PS) == PS_TEST)      || \
 								 ((PS) == PS_DOWNLOAD))
+#define SET_PS(ps) 				(TTP_SR = (TTP_SR&SR_PS)|(ps))
 
 #define SR_MC 					((uint32_t)0x00000010)	/**< MEDL error flag bit */
 #define SR_CC 					((uint32_t)0x00000100)	/**< Concurrency control error flag bit */
@@ -1620,7 +1621,7 @@ static inline uint32_t CALC_MODE_NUM(uint32_t mode)
 /**
  * Get the current mode change requst from the cni.
  * @return  the mode change request value
-        @arg MCR_NO_REQ     Node mode change request 
+        @arg MCR_NO_REQ     No mode change request 
         @arg MCR_MODE_1     First  successor mode requested 
         @arg MCR_MODE_2     Second successor mode requested 
         @arg MCR_MODE_3     Third  successor mode requested 
@@ -1632,10 +1633,10 @@ static inline uint32_t CNI_IsModeChangeRequested()
 {
 	uint32_t _mcr = CNI_GetCurMCR();
 
-	 return ((_mcr == MCR_MODE_1) || (_mcr == MCR_MODE_2) || (_mcr == MCR_MODE_3));
+	return ((_mcr == MCR_MODE_1) || (_mcr == MCR_MODE_2) || (_mcr == MCR_MODE_3) || _mcr == MCR_MODE_CLR);
 }
 
-#define CNI_ClrMCR() 				(TTP_CR0 = (TTP_CR0&~CR_MCR)|MCR_MODE_CLR)
+#define CNI_ClrMCR() 				(TTP_CR0 = (TTP_CR0&~CR_MCR)|MCR_NO_REQ)
 /**
  * check whether the HLFS(Host Life Sign) is valid or not. If the HLFS is not
  * valid, it will return 0. The checking operation shall be performed during
@@ -1672,6 +1673,78 @@ static inline uint32_t CNI_CheckHLFS()
  */
 /** macro definition for c_state access, getters and setters */
 
+/**
+ * C-state structure definition
+ *                                                                            
+ 15                                                                      0 
+ +-----------------------------------------------------------------------+ 
+ |                      GLOBAL TIME  BASE:16                             | 
+ +-------+-----------+---------------------------------------------------+ 
+ | DMC:2 |  MODE:3   |                      ROUND SLOT:11                | 
+ +-------+-----------+---------------------------------------------------+ 
+ |                      MEMBERSHIP FLAG 15-0                             | 
+ +-----------------------------------------------------------------------+ 
+ |                      MEMBERSHIP FLAG 31-16                            | 
+ +-----------------------------------------------------------------------+ 
+ |                      MEMBERSHIP FLAG 47-48                            | 
+ +-----------------------------------------------------------------------+ 
+ |                      MEMBERSHIP FLAG 63-48                            | 
+ +-----------------------------------------------------------------------+ 
+ */
+/**
+ * Notice the bit-incompatibility between the c-state definition below and the 
+ * the definition of the CNI from the ttpdef.h.
+ * For the CNI, 32-bits register is required, but 16-bits for AS6003. The type
+ * c_state_t si used to eliminate the bit-differences between the standard
+ * definition and the CNI definition for the convenience of CRC check.
+ */
+typedef struct ttpc_state
+{
+	uint16_t GlobalTime;
+	uint16_t ClusterPosition;
+	uint16_t Membership[4];
+}c_state_t;
+
+/**
+ * The macro fills the cs variable. PARAMETER LEGALITY WILL
+ * NOT BE CHECKED. BE SURE THAT THE CS IS A POINTER, OR 
+ * COMPILE ERROR WILL OCCUR.
+ * @param  cs a c_state_t type variable.
+ * @return    non
+ */
+#define CS_GetCState(pcs)			do{(pcs)->GlobalTime     = C_STATE_GT&0xffff;\
+                                	       (pcs)->ClusterPosition= C_STATE_CP&0xffff;\
+                                	       (pcs)->Membership[0]  = C_STATE_MV0&0xffff;\
+                                	       (pcs)->Membership[1]  = C_STATE_MV1&0xffff;\
+                                	       (pcs)->Membership[2]  = C_STATE_MV2&0xffff;\
+                                	   	   (pcs)->Membership[3]  = C_STATE_MV3&0xffff;\
+                                 	}while(0)
+
+/** Be sure the cs is a pointer. Legality will not be checked. */
+#define CS_SetCState(pcs) 			do{C_STATE_GT =(pcs)->GlobalTime&0xffff;\
+										   C_STATE_CP =(pcs)->ClusterPosition&0xffff;\
+										   C_STATE_MV0=(pcs)->Membership[0]&0xffff;\
+										   C_STATE_MV1=(pcs)->Membership[1]&0xffff;\
+										   C_STATE_MV2=(pcs)->Membership[2]&0xffff;\
+										   C_STATE_MV3=(pcs)->Membership[3]&0xffff;\
+									}while(0)
+
+/**
+ * judge whether the c-state cs is the same as local c-state. Be sure that the cs is 
+ * a pointer to the c-state structure.
+ * @return 1 cs is the same as local c-state
+ *         0 cs is not the same as local c-state
+ */
+#define CS_IsSame(pcs)              (((pcs)->GlobalTime    ==(C_STATE_GT&0xffff))  && \
+									((pcs)->ClusterPosition==(C_STATE_CP&0xffff))  && \
+									((pcs)->Membership[0]  ==(C_STATE_MV0&0xffff)) && \
+									((pcs)->Membership[1]  ==(C_STATE_MV1&0xffff)) && \
+									((pcs)->Membership[2]  ==(C_STATE_MV2&0xffff)) && \
+									((pcs)->Membership[3]  ==(C_STATE_MV3&0xffff)))
+
+#define CS_CheckCSAgreement(pcs)    (((pcs)->GlobalTime    ==(C_STATE_GT&0xffff))  && \
+                                    ((pcs)->ClusterPosition==(C_STATE_CP&0xffff)) )
+
 /** getters definitions below */
 #define CS_GetCurRoundSlot() 		(C_STATE_CP&0x07ff)
 #define CS_GetCurMode()				(C_STATE_CP&0x3800)
@@ -1697,49 +1770,6 @@ static inline uint32_t CNI_CheckHLFS()
 									}while(0)
 
 #define CS_ClearMemberBit(pos)		((*(C_STATE_BASE+((pos)/16)+2))&=~(1<<((pos)%16)))
-
-/*******************************************************************************/
-/**
- * messages operations definitions below, which are the part of CNI access
- * services
- */
-
-/**
- * the function MSG_CheckMsgRF is used to read Message-Ready-Flag of the corresponding
- * message, which is stored in the CNI, posited in address MSG_POOL_BASE + offset + 1.
- * When the controller sends a message, it must check the validity of this field, then 
- * clear it. When the controller receives a message, the Message-Ready-Flag is used 
- * for message status indicating.
- *
- * the status of frame-ready indicating. When the host ensures that the frame to 
- * be sent is OK, it shall write the particular bit pattern "0xEA" to the first
- * byte offset of the CNIAddressOffset of the corresponding slot configuration 
- * parameters, which means that the position of the application data starts from
- * the second byte. 
- * The host shall confirm the frame by writing the particular bit-pattern to the 
- * corresponding position before the controller sends the frame. if not, the
- * controller will raise the NR(Frame Not Ready) interruption and stop running.
- * The controller will clear the bit-pattern to zero after reading it out.
- */
-#define STATUS_BIT_PATTERN     			((uint8_t)0xEA)
-
-static inline uint32_t MSG_CheckMsgRF(uint32_t offset)
-{
-	uint32_t res = 0;
-
-	res = ((MSG_POOL_BASE+(offset))[0]==STATUS_BIT_PATTERN)?1:0;
-	(MSG_POOL_BASE+(offset))[0]=0;
-
-	return res;
-}
-
-#define MSG_SetStatus(offset,status) 	((MSG_POOL_BASE+(offset))[0]=(status))	
-
-//ensure that the CNI memory is a part of the memory of TTPC controller, having 
-//the same address space. This macro-function returns the base address of the message
-//field of the CNI. Notice the address type of uint8_t.
-//attention the 1 byte status or NR.
-#define MSG_GetMsgAddr(offset) 			(msg_pool+(offset)+1)		 		
 
 /**@}*/// end of group CNI_Operations
 

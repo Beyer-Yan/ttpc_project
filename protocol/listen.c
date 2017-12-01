@@ -70,24 +70,17 @@ static inline void _process_slot_parameters()
 }
 void FSM_toListen(void)
 {
-    TIM_CMD(CLEAR);
+    //TIM_CMD(CLEAR);
     MAC_StartReceive();
     MAC_SetSlot(0);
     MAC_SetTDMARound(0);
     TIM_CMD(START);
 }
 
-static uint32_t _disturb(void)
+static uint32_t _listen_disturb(void)
 {
     //disturb function shall be specified more detailed
-    if ((MAC_GetReceivedFlag(CH0) == MAC_EOK && MAC_GetReceivedFlag(CH1) == MAC_EOK))
-    {
-        return 1;
-    }
-    else
-    {
-        return 0;
-    }
+    return ((MAC_GetReceivedFlag(CH0) == MAC_EOK && MAC_GetReceivedFlag(CH1) == MAC_EOK));
 }
 
 void FSM_doListen(void)
@@ -105,7 +98,7 @@ void FSM_doListen(void)
     pNP = MAC_GetNodeProperties();
 
     //break when timeout or received a valid frame.
-    listen_res = TIM_WaitAlarm(pSP->ListenTimeout, _disturb);
+    listen_res = TIM_WaitAlarm(pSP->ListenTimeout, _listen_disturb);
 
     //received frames
     if (listen_res) {

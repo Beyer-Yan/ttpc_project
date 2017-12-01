@@ -48,17 +48,12 @@ uint32_t SVC_SlotAcquirement(void)
 
     if (CNI_CheckHLFS() || (FREE_SHOT_ENABLE == PV_GetFreeShotFlag() && mode == MODE_CS_ID)) {
         if (int_counter == pSP->MinimumIntegrationCount) {
-            if (pNP->MultiplexedMembershipFlag == MULTIPLEXED_MEMBERSHIP) {
+            if (!CS_GetMemberBit(mmp)) {
                 res = 1;
-            } else {
-                if (!CS_GetMemberBit(mmp)) {
-                    res = 1;
-                }
             }
         }
     }
     PV_DisableFreeShot();
-
 _end:
     return res;
 }

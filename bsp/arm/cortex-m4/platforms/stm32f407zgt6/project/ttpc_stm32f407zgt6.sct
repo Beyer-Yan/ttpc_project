@@ -1,0 +1,32 @@
+LR_IROM 0x08000000 0x00100000           ;1M load region
+{
+    ER_IROM_CODE 0x08000000 0x00100000  ;1M code FLASH region
+    {
+        *.o (RESET,+First)
+        *(InRoot$$Sections) 
+        .ANY (MEDL_SECTION, +Last)
+    }
+    ER_IRAM_CCM 0x10000000 0x0001000    ;64K fast speed SRAM region
+    {                                   ;for stack, heap and protocol
+        .ANY (STACK,+First)             ;related variables
+        .ANY (HEAP)
+        .ANY (PV_SECTION)
+    }
+    ER_IRAM_PT 0x20000000 0x0001C000    ;112K protocol execution region
+    {
+	.ANY (+RO)
+        .ANY (+RW +ZI)
+    }
+    ER_IRAM_DBG 0x2001C000 0x00004000   ;16K debug buffer ram region
+    {
+        .ANY (DBG_SECTION)
+    }
+    ER_DPRAM_CNI 0x68000000 0x00100000  ;1M CNI DPRAM region
+    {
+        .ANY (CNI_CNI_STATUS_SECTION)
+        .ANY (CNI_NOTIFY_SECTION)
+        .ANY (CNI_INFO_SECTION)
+        .ANY (CNI_MSG_SECTION)
+    }
+    
+}

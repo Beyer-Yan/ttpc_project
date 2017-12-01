@@ -13,32 +13,18 @@
   *
   * 
   ******************************************************************************
-  */	
- 
-#include "ttp_debug.h"
-#include "ttpdef.h"
-#include "ttpservice.h"
+  */
+  
+#include "ttpdebug.h"
+#include "led.h"
 
-void __TTP_Assert(char* txt)
+void __TTP_Assert(char* s)
 {
-	//1.close the interruption
-	//2.flush the stderr buf
-	//3.puts the txt
-	//4.puts the register file
-	//5.terminate the processor
-	
-	/** flush the old text */
-	dbg_flush();
-	SVC_CloseRootInt();
-
+    LED_On(LED_ERR);
 	/** write the error text into the error buffer */
-	INFO("-----------------------------------------\n");
-	ERROR(txt);
-	dbg_flush();
+    INFO("\r\nSYSTM ERROR");
+	ERROR(s);
+	DBG_Flush();
 
-	/** puts the register file */
-	while(1)
-	{
-		SVC_Sleep();
-	}
+	while(1);
 }

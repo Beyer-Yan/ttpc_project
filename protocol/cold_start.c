@@ -47,12 +47,13 @@ void FSM_toColdStart(void)
 {
     //inform the host that the cold start starts
     //code executing time shall be measured from the cold-start staring time
-    //to the actual action time.
+    //to the actual action time. Normally the PSP duration
 
     static uint32_t COLD_START_EXE_TIME_MACROTICK = 10;
 
     uint32_t tsf = CNI_GetTSF();
 
+    TIM_CMD(STOP);
     //timer settings and slot timing properties setting
     TIM_SetCurMicrotick(0);
     TIM_SetCurMacrotick(tsf - COLD_START_EXE_TIME_MACROTICK);
@@ -74,6 +75,7 @@ void FSM_toColdStart(void)
     CS_ClearMemberAll();
     CS_SetMemberBit(pRS->FlagPosition);
     MAC_PrepareCSFrame();
+    MAC_StopReceive();
 
     //MAC settings
     MAC_SetClusterCycleLength(MEDL_GetRoundCycleLength(mode_num));
@@ -106,10 +108,29 @@ void FSM_doColdStart(void)
 
 void FSM_toSubColdStart(void)
 {
+    TIM_CMD(STOP);
+    TIM_SetCurMacrotick(0);
+    TIM_SetCurMicrotick(0);
+    TIM_CMD(START);
+
     MAC_StopPhaseCirculation();
+    MAC_StartReceive();
 
     //reset phase_indicator
     phase_indicator = 0;
+}
+
+static uint32_t _coldstart_disturb(void)
+{
+    //disturb function shall be specified more detailed
+    if ((MAC_GetReceivedFlag(CH0) == MAC_EOK && MAC_GetReceivedFlag(CH1) == MAC_EOK))
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
 }
 
 void FSM_doSubColdStart(void)
@@ -120,9 +141,8 @@ void FSM_doSubColdStart(void)
     } else {
         FSM_sendEvent(FSM_EVENT_COLD_START_ALLOWED);
 
-        TIM_WaitAlarm(pSP->StartupTimeout,);
+        TIM_WaitAlarm(pSP->StartupTimeout,_coldstart_disturb);
 
-        
         if (DRV_CheckReceived()) {
             FSM_sendEvent(FSM_EVENT_TRAFFIC_DETECT_DURING_STO);
         } else {

@@ -233,7 +233,7 @@ static const FSM_State* const __G_transition_table[MAX_STATE_NUM][MAX_TRANSITION
  /*          */
  /* 3 COL_ST */  { S_0, S_X, S_X, S_X, S_X, S_5, S_2, S_X, S_X, S_X, S_X, S_X, S_X, S_X, S_X, S_X, S_4, S_X, S_X, S_6 },
  /*          */
- /* 4 COL_ST */  { S_0, S_X, S_X, S_X, S_X, S_X, S_X, S_X, S_X, S_X, S_X, S_X, S_X, S_X, S_X, S_X, S_X, S_2, S_3, S_X },
+ /* 4 SUB_CS */  { S_0, S_X, S_X, S_X, S_X, S_X, S_X, S_X, S_X, S_X, S_X, S_X, S_X, S_X, S_X, S_X, S_X, S_2, S_3, S_X },
  /*          */
  /* 5 ACTIVE */  { S_0, S_X, S_X, S_X, S_0, S_X, S_X, S_6, S_X, S_X, S_X, S_X, S_X, S_X, S_X, S_X, S_X, S_X, S_X, S_X },
  /*          */
@@ -248,6 +248,20 @@ static const FSM_State* const __G_transition_table[MAX_STATE_NUM][MAX_TRANSITION
  /* X ERROR  */  { S_N, S_N, S_N, S_N, S_N, S_N, S_N, S_N, S_N, S_N, S_N, S_N, S_N, S_N, S_N, S_N, S_N, S_N, S_N, S_N }
  /*          */
 };
+
+static void _set_ps(uint32_t _ps_num)
+{
+	static int _num_to_ps[10] =
+	{
+		PS_FREEZE,PS_INIT,PS_LISTEN,PS_COLDSTART,PS_COLDSTART,PS_ACTIVE,PS_PASSIVE,PS_AWAIT,PS_TEST,PS_DOWNLOAD
+	};
+
+	if(_ps_num>10)
+		return;
+	
+	uint32_t ps = _num_to_ps[_ps_num];
+	SET_PS(ps);
+}
 
 /**
  * This function calculates the transition number according to the event bit
@@ -343,7 +357,7 @@ static int __calc_transition_num(void)
 	#undef G
 
 	tbp &= trans_mask[sn];
-	tbp = tbp^(tbp-1)&tbp;
+	tbp = (tbp^(tbp-1))&tbp;
 
 	while(tbp) { tbp>>=1; tn++; }
 	tn!=-1 ? __G_event_bit_pattern &= event_clr_mask[tn] : (void)0;
@@ -409,6 +423,7 @@ static void __protocol(void)
 			if(__Gf_hook != NULL)
 			{
 				__Gf_hook(__G_cur_state->state_num);
+				_set_ps(__G_cur_state->state_num);
 			}
 		}
 	}
@@ -463,6 +478,7 @@ void FSM_start()
 	{
 		__G_cur_state  = S_FREEZE;
 		__G_start_flag = FSM_RUNNING;
+		SET_PS(PS_FREEZE);
 	}
 	__protocol();
 }

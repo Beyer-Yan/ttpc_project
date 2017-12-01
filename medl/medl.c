@@ -142,12 +142,12 @@ static void __medl_slot_extract(uint32_t mode, uint32_t round_slot)
 	__G_slot.FrameType                = (buf[5]&(1<<16))>>16;
 	__G_slot.ModeChangePermission     = (buf[5]&(1<<17))>>17;
 	__G_slot.ReintegrationAllow       = (buf[5]&(1<<18))>>18;
-	__G_slot.ClockSynchronization      = (buf[5]&(1<<19))>>19;
+	__G_slot.ClockSynchronization     = (buf[5]&(1<<19))>>19;
 	__G_slot.SynchronizationFrame     = (buf[5]&(1<<20))>>20;
 	__G_slot.AtTime                   = buf[6];
 }
 
-static uint32_t ___medl_crc32_check(void)
+static uint32_t __medl_crc32_check(void)
 {
 	uint32_t res    = 0;
 	uint32_t length = 0;
@@ -180,7 +180,7 @@ static uint32_t ___medl_crc32_check(void)
 	/** read the crc32 region of the medl */
 	res = medl_real_read((char*)&data,
 						 sizeof(uint32_t),
-						 __G_medl_header.crc_32_region_addr);
+						 __G_medl_header.crc32_region_addr);
 
 	TTP_ASSERT(res!=0);
 
@@ -259,7 +259,7 @@ void* MEDL_GetRoundSlotAddr(uint32_t ModeNum, uint32_t TDMARound, uint32_t Slot)
 		_Slot       = Slot;
 		_round_slot = _TDMARound * __G_medl_header.tdma_slots + _Slot;
 
-		__medl_slot_extract(_Mode,_round_slot);
+		__medl_slot_extract(_ModeNum,_round_slot);
 	}
 
 	return ((void*)&__G_slot);
