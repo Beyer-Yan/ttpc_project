@@ -23,21 +23,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 #include "ttpdef.h"
 
-#define MAX_FRAME_LENGTH		240
-
-/** frame type macro definitions */
-#define FRAME_N             	0
-#define FRAME_I             	1
-#define FRAME_X             	2
-
-/** for frame status field: the least significant 8-bits valid*/
-#define FRAME_CORRECT 			(uint32_t)0x00000001
-#define FRAME_TENTATIVE			(uint32_t)0x00000002
-#define FRAME_MODE_VIOLATION	(uint32_t)0x00000003
-#define FRAME_INCORRECT 		(uint32_t)0x00000004
-#define FRAME_NULL				(uint32_t)0x00000005
-#define FRAME_INVALID			(uint32_t)0x00000006
-
 typedef enum Mac_err{
 	MAC_EOK=0,				/**< No errors happens */
 	MAC_ESLOT_NUM,			/**< Current slot > MAX_SLOT_NUMBER */
@@ -62,9 +47,6 @@ typedef enum Mac_err{
 void      MAC_StartTransmit(void);
 void      MAC_StopTransmit(void);
 
-uint32_t  MAC_GetTransmittedFlags(void);
-
-
 void      MAC_StartReceive(void);
 void      MAC_StopReceive(void);
 
@@ -72,27 +54,10 @@ void      MAC_StopReceive(void);
 //  *  returning 1 for receiving frames.
 //  *  receiving nothing.
  
-// uint32_t  MAC_CheckReceived(void);
-
 /**
- * This function returns the flags of frames received.
- * @param    Channel     the channel, CH0 or CH1	
- * @return  the flags of frames received, values below:
- *           @arg MAC_ERX_NON    nothing has been received
- *           @arg MAC_ERX_INV	 invalid frames has been received
- *           @arg MAC_ERX_COL 	 collision detected when receiving
- *           @arg MAC_ERX_ECRC 	 received a frame with crc failed
- *           @arg MAC_ERX_ELT    received a frame with length error
- *           @arg MAC_EOK        reveived a good frame.
+ * @defgroup TTP_MAC_SLOT_PARAMETERS_CONTROL
  */
-uint32_t  MAC_GetReceivedFlag(uint32_t Channel);
-
-/**
- * Get the timestamps of the received frame
- * @param  channel the channel, CH0 or CH1
- * @return         the corresponding timestamps
- */
-uint32_t  MAC_GetFrameTimestamp(uint32_t channel);
+/**@{*/
 
 ////////////////////////////////////////////////////////////////////////////////
 ///slots service definitions                                                  //
@@ -211,18 +176,6 @@ RoundSlotProperty_t* MAC_LoadSlotProperties(uint32_t mode,uint32_t tdma,uint32_t
 void  	MAC_SetSlotAcquisition(uint32_t SlotAcquisition);
 uint32_t MAC_GetSlotAcquisition(void);
 
-/**
- * At the start of PRP phase, the acknowledgment algorithm will be performed. 
- * If the ack process instantiated by hardware, the ack will be perform as
- * soon as the mac receives a frame. But for software implement, the time 
- * cost for performing acknowledgment algorithm shall be taken consideration.
- * This function shall be called after the ack is performed.
- * @param   channel    the channel, CH0 or CH1   
- * @return  the frame status
- */
-uint32_t  MAC_GetFrameStatus(uint32_t channel);
-
-
 ////////////////////////////////////////////////////////////////////////////////
 ///identification function definitions                                        //
 ////////////////////////////////////////////////////////////////////////////////
@@ -324,6 +277,13 @@ uint32_t 	MAC_GetMaximumMembershipFailureCount(void);
 uint32_t 	MAC_GetMacrotickParameter(void);
 uint32_t 	MAC_GetPrecision(void);
 
+/**@}*/// end of group TTP_MAC_SLOT_PARAMETERS_CONTROL
+
+/**
+ * @defgroup TTP_MAC_ACCESS_CONTROL
+ */
+/**@{*/
+
 ////////////////////////////////////////////////////////////////////////////////
 ///mac contrl service                                                         //
 ////////////////////////////////////////////////////////////////////////////////
@@ -348,12 +308,6 @@ void      MAC_SetClusterCycleLength(uint32_t Length);
 void      MAC_SetTDMACycleLength(uint32_t Length);
 
 /**
- * Return the trigger timestamps of the slot phases, psp,at,prp. 
- * @param  Phase the psp, at, prp.
- * @return       the timestamps
- */
-
-/**
  * This function returns the ratio of Macrotick to Microtick.
  *
  * @attention The integral multiple shall be guaranteed by the hardware. If not, the hardware 
@@ -362,8 +316,8 @@ void      MAC_SetTDMACycleLength(uint32_t Length);
  * @return the ratio of Macrotick to Microtick
  */
 uint32_t  MAC_GetRatio();
-uint32_t  MAC_GetSlotStartMacroticks(void);
 
+uint32_t  MAC_GetSlotStartMacroticks(void);
 uint32_t  MAC_GetSlotStartMicroticks(void);
 uint32_t  MAC_GetATMicroticks(void);
 
@@ -379,27 +333,9 @@ uint32_t  MAC_GetATMicroticks(void);
 uint32_t  MAC_UpdateSlot(void);
 void      MAC_SetSlot(uint32_t Slot);
 void      MAC_SetTDMARound(uint32_t tdma);
-/**
- * Set the time properties of the slot.
- * @param  ActAT the actual trigger point time for TP phase
- * @param  TP    the time duration of TP phase in unit of macrotick
- * @param  SD    the slot duration time for a slot in unit of macrotick
- * @param  PSP   the psp time duration of the slot in unit if macrotick
- * @return       non
- */
-void     MAC_SetTime(uint32_t ActAT,uint32_t TP, uint32_t PSP,uint32_t SD);
 
-/**
- * Set the start time of the phase circulation, indicating the start macrotick point of the periodic
- * TDMA round.
- * @param CycleStartTime   the start macrotick time of the cluster cycle
- * @param TDMAStartOffset  the start offset of the TDMA round in the cluster cycle
- * @return                 non
- */
-void MAC_SetPhaseCycleStartPoint(uint32_t CycleStartTime, uint32_t TDMAStartOffset /* 0 always for current version */);
-
-void     MAC_StartPhaseCirculation(void);
-void     MAC_StopPhaseCirculation(void);
+void      MAC_StartPhaseCirculation(void);
+void      MAC_StopPhaseCirculation(void);
 
 /**
  * This function checks pointer of the current slot.
@@ -421,6 +357,25 @@ uint32_t MAC_CheckSlot(void);
 /** clock adjust mode options*/
 #define CLK_PHASE_ADJ           (uint16_t)0x0001
 #define CLK_FREQ_ADJ            (uint16_t)0x0002
+
+/**
+ * Set the time properties of the slot.
+ * @param  ActAT the actual trigger point time for TP phase
+ * @param  TP    the time duration of TP phase in unit of macrotick
+ * @param  SD    the slot duration time for a slot in unit of macrotick
+ * @param  PSP   the psp time duration of the slot in unit if macrotick
+ * @return       non
+ */
+void     MAC_SetTime(uint32_t ActAT,uint32_t TP, uint32_t PSP,uint32_t SD);
+
+/**
+ * Set the start time of the phase circulation, indicating the start macrotick point of the periodic
+ * TDMA round.
+ * @param CycleStartTime   the start macrotick time of the cluster cycle
+ * @param TDMAStartOffset  the start offset of the TDMA round in the cluster cycle
+ * @return                 non
+ */
+void MAC_SetPhaseCycleStartPoint(uint32_t CycleStartTime, uint32_t TDMAStartOffset /* 0 always for current version */);
 
 /**
  * Offset adjusting for local clock
@@ -449,5 +404,5 @@ void MAC_AdjTime(uint16_t AdjMode, int16_t Offset);
 		                    |           |                       		                                                        
 		              MAX TDMA CYCLES                           
  */
-
+/**@}*/// end of group TTP_MAC_ACCESS_CONTROL
 #endif 

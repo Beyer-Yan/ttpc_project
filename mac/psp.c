@@ -22,11 +22,12 @@
   */
 #include "protocol.h"
 #include "protocol_data.h"
-#include "ttpc_mac.h"
+#include "ttpmac.h"
 #include "ttpdebug.h"
 #include "ttpservice.h"
-#include "virhw.h"
+#include "clock.h"
 #include "medl.h"
+#include "msg.h"
 
 uint32_t _G_ModeChanged = 0;
 static volatile uint32_t _G_SlotStartMacrotickTime = 0; 
@@ -41,14 +42,16 @@ static volatile uint32_t _G_TDMARoundStartTimeOffset = 0;
 
 static inline void _update_time()
 {
-    _G_SlotStartMacrotickTime = TIM_GetCurMacrotick();
-    _G_SlotStartMicrotickTime = TIM_GetCurMicrotick();
+    _G_SlotStartMacrotickTime = CLOCK_GetCurMacrotick();
+    _G_SlotStartMicrotickTime = CLOCK_GetCurMicrotick();
 }
 
 static inline void _update_mode(void)
 {
     uint32_t dmc = CS_GetCurDMC();
-	uint16_t mode;
+	uint16_t mode = MODE_1;
+
+    TTP_ASSERT(IS_TTP_DMC(dmc));
 
     if (dmc != DMC_NO_REQ) {
         switch (dmc) {
@@ -182,7 +185,7 @@ static inline void _prepare_for_transmit(void)
     PV_SetCounter(AGREED_SLOTS_COUNTER, 1);
 
     MAC_SetTime(actual_at, pRS->TransmissionDuration,pRS->PSPDuration, pRS->SlotDuration);
-    MAC_PushFrame();
+    MSG_PushFrame();
     MAC_SetSlotAcquisition(SENDING_FRAME);
 
     if(CNI_IsModeChangeRequested())
@@ -203,6 +206,7 @@ static inline void _prepare_for_transmit(void)
             dmc = DMC_NO_REQ;
             break;
         default:
+            dmc = DMC_NO_REQ;
             break;
         }
         CS_SetDMC(dmc);

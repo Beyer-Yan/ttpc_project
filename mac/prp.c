@@ -17,11 +17,13 @@
 
 #include "protocol.h"
 #include "protocol_data.h"
-#include "ttpc_mac.h"
+#include "ttpmac.h"
 #include "ttpdebug.h"
-#include "virhw.h"
-
+#include "led.h"
 #include "ttpservice.h"
+#include "crc.h"
+#include "msg.h"
+#include "medl.h"
 
 /**
  * This function sets the channel activity.
@@ -65,34 +67,12 @@ static inline void _byte_copy(uint8_t* dst, uint8_t* src, int size)
  */
 static uint32_t _frame_crc32_calc(uint8_t* pdata, int size, uint32_t type)
 {
-
-    int remain = 0;
-    int quotient = 0;
-
-    //for 32-bit architecture
-    quotient = size % 4;
-    remain = size / 4;
-
-    //case of the 4-byte-alignment access
-    uint32_t tmp;
-    int i = 0;
-
-    uint32_t crc32;
-    uint32_t crc32_mask[3] = { 0xff, 0xffff, 0xffffff };
-
     uint32_t ScheduleID = MAC_GetClusterScheduleID();
 
     CRC_ResetData();
-    CRC_Calc(ScheduleID);
 
-    for (i = 0; i < quotient; i++) {
-        _byte_copy((uint8_t*)&tmp, pdata + i * 4, 4);
-        CRC_Calc(tmp);
-    }
-    if (remain != 0) {
-        _byte_copy((uint8_t*)&tmp, pdata + quotient * 4, remain);
-        CRC_Calc(tmp & crc32_mask[remain - 1]);
-    }
+    CRC_PushData((uint8_t*)&ScheduleID,4);
+    CRC_PushData(pdata,size);
 
     /**
      * check the frame type, if implicit frame is assembled, the implicit crc check
@@ -100,10 +80,10 @@ static uint32_t _frame_crc32_calc(uint8_t* pdata, int size, uint32_t type)
      */
     if (type == FRAME_TYPE_IMPLICIT) {
         c_state_t c_state;
-        MAC_GetCState(&c_state);
-        CRC_CalcBlock((uint32_t*)&c_state,sizeof(c_state));
+        CS_GetCState(&c_state);
+        CRC_PushData((uint8_t*)&c_state,sizeof(c_state));
     }
-    return CRC_GetCRC();
+    return CRC_GetResult();
 }
 
 /**
@@ -113,7 +93,7 @@ static uint32_t _frame_crc32_calc(uint8_t* pdata, int size, uint32_t type)
  * @return       0 if the crc check is not passed
  *               1 if the crc check is passed
  */
-static uint32_t _frame_crc32_check(ttp_frame_desc_t* pDesc, uint32_t type)
+static uint32_t _frame_crc32_check(TTP_ChannelFrameDesc* pDesc, uint32_t type)
 {
     uint32_t frame_crc32;
     uint32_t checked_crc32;
@@ -122,13 +102,9 @@ static uint32_t _frame_crc32_check(ttp_frame_desc_t* pDesc, uint32_t type)
 
     uint8_t* crc_pos;
 
-    crc_pos = (uint8_t*)(pDesc->pFrame) + pDesc->length - sizeof(frame_crc32);
-    pRS = MAC_GetRoundSlotProperties();
+    TTP_ASSERT(pDesc!=NULL);
 
-    _byte_copy((uint8_t*)&frame_crc32, crc_pos, sizeof(frame_crc32));
-
-    checked_crc32 = _frame_crc32_calc((uint8_t*)pDesc->pFrame, pDesc->length - sizeof(frame_crc32), type);
-    if (checked_crc32 != frame_crc32)
+    if(pDesc->status==MAC_ERX_ECRC)
         return 0;
 
     if (type == FRAME_TYPE_EXPLICIT) {
@@ -142,9 +118,22 @@ static uint32_t _frame_crc32_check(ttp_frame_desc_t* pDesc, uint32_t type)
          * c-state error of an error of an implicit c-state has to be made.
          */
         _byte_copy((uint8_t*)&c_state, pDesc->pFrame->x.cstate, sizeof(c_state));
+
         if (!CS_IsSame(&c_state))
             return 0;
+        else
+            return 1;
     }
+
+    crc_pos = (uint8_t*)(pDesc->pFrame) + pDesc->length - sizeof(frame_crc32);
+    pRS = MAC_GetRoundSlotProperties();
+
+    _byte_copy((uint8_t*)&frame_crc32, crc_pos, sizeof(frame_crc32));
+
+    checked_crc32 = _frame_crc32_calc((uint8_t*)pDesc->pFrame, pDesc->length - sizeof(frame_crc32), type);
+    if (checked_crc32 != frame_crc32)
+        return 0;
+
     return 1;
 }
 
@@ -179,34 +168,31 @@ static uint32_t _judge_time_window(uint32_t mid_axis, uint32_t value)
 
 static uint32_t _judge_valid(uint32_t* pframe_status, uint32_t channel)
 {
-
-    uint32_t rcv_res = MAC_GetReceivedFlag(channel);
-
     /** for FRAME_NULL checking */
-    if (rcv_res == MAC_ERX_NON) {
+    if (!MSG_CheckReceived(channel)) {
         *pframe_status = FRAME_NULL;
         return _FRAME_INVALID_;
     }
 
-    /** for FRMAE_INV checking */
-    if (rcv_res == MAC_ERX_INV) {
-        *pframe_status = FRAME_INVALID;
-        return _FRAME_INVALID_;
-    }
-
+    TTP_FrameDesc *pFrameDesc = MSG_GetFrameDesc();
     RoundSlotProperty_t* pRS = MAC_GetRoundSlotProperties();
-    ttp_frame_desc_t* pDesc = MAC_GetFrameDesc(channel);
+    TTP_ChannelFrameDesc *pDesc = channel==CH0?pFrameDesc->pCH0:pFrameDesc->pCH1;
 
-    uint32_t frame = pRS->FrameType == FRAME_TYPE_IMPLICIT ? FRAME_N : (!pRS->AppDataLength ? FRAME_I : FRAME_X);
+    uint32_t type = pRS->FrameType == FRAME_TYPE_IMPLICIT ? FRAME_N : (!pRS->AppDataLength ? FRAME_I : FRAME_X);
 
     //for time window ...
     uint32_t mid_axis = SVC_GetAlignedEstimateArivalTimeInterval() + MAC_GetATMicroticks();
 
+    if(pDesc->status==MAC_ERX_LTH || pDesc->status==MAC_ERX_COL){
+        *pframe_status = FRAME_INVALID;
+        return _FRAME_INVALID_;
+    }
+
     if (!_judge_time_window(mid_axis, pDesc->rcv_timestamp))
         return _FRAME_INVALID_;
 
-    int actual_frame_size;
-    switch (frame) {
+    int actual_frame_size = 0;
+    switch (type) {
     /**< 1 byte header + 16 bytes c-state + 4 bytes crc32 */
     case FRAME_I:
         actual_frame_size = 1 + 16 + 4;
@@ -219,7 +205,6 @@ static uint32_t _judge_valid(uint32_t* pframe_status, uint32_t channel)
     case FRAME_X:
         actual_frame_size = 1 + 16 + 4 + pRS->AppDataLength + 4;
         break;
-    default: break;
     }
 
     if (actual_frame_size != pDesc->length) {
@@ -227,13 +212,7 @@ static uint32_t _judge_valid(uint32_t* pframe_status, uint32_t channel)
         return _FRAME_INVALID_;
     }
 
-    //uint32_t frame_crc32;
-
-    /** copy the crc field of the frame received, guaranteeing the 4-byte-alignment access*/
-    //_byte_copy(&frame_crc32, (uint8_t*)(pDesc->pFrame)+actual_frame_size-4, 4);
-
     uint8_t header = pDesc->pFrame->hdr[0];
-    //uint32_t frame_mcr = (header & ~1) << 2;
 
     if ((header & 1) != (pRS->FrameType)) {
         *pframe_status = FRAME_INCORRECT;
@@ -247,6 +226,9 @@ static inline void _process_mcr(uint32_t mcr)
 {
     //invalid mode error is not considerated here
     uint32_t dmc = DMC_NO_REQ;
+
+    TTP_ASSERT(IS_TTP_MCR(mcr));
+
     switch (mcr) {
     case MCR_MODE_1:
         dmc = DMC_MODE_1;
@@ -261,14 +243,15 @@ static inline void _process_mcr(uint32_t mcr)
         dmc = DMC_NO_REQ;
         break;
     default:
+        dmc = DMC_NO_REQ;
         break;
     }
     CS_SetDMC(dmc);
 }
-
-static uint32_t _get_frame_status(ttp_frame_desc_t* pDesc_ch, uint32_t type)
+//The function shall be called when the frame of the corresponding channel is valid
+static uint32_t _get_valid_frame_status(TTP_ChannelFrameDesc* pDesc, uint32_t type)
 {
-    int res = _frame_crc32_check(pDesc_ch, type);
+    int res = _frame_crc32_check(pDesc, type);
     uint32_t frame_status;
 
     RoundSlotProperty_t* pRS = MAC_GetRoundSlotProperties();
@@ -278,7 +261,7 @@ static uint32_t _get_frame_status(ttp_frame_desc_t* pDesc_ch, uint32_t type)
         uint8_t frame_mcr; 
 
         frame_status = FRAME_CORRECT;
-        header = pDesc_ch->pFrame->hdr[0];
+        header = pDesc->pFrame->hdr[0];
         frame_mcr = (header & ~1) << 2;
 
         if (frame_mcr != MCR_MODE_CLR) {
@@ -310,7 +293,7 @@ void prp_for_passive(void)
 
     uint32_t slot_status;
 
-    ttp_frame_desc_t* pDesc_ch[2] = { NULL, NULL };
+    TTP_FrameDesc* pDesc;
     RoundSlotProperty_t* pRS = MAC_GetRoundSlotProperties();
     ScheduleParameter_t* pSP = MAC_GetScheduleParameter();
 
@@ -318,15 +301,14 @@ void prp_for_passive(void)
     res_ch[1] = _judge_valid(&frame_status_ch[1], CH1);
 
     CS_SetMemberBit(pRS->FlagPosition);
+    pDesc = MSG_GetFrameDesc();
 
     if ((res_ch[0] == _FRAME_INVALID_) && (res_ch[1] == _FRAME_INVALID_)) {
         CS_ClearMemberBit(pRS->FlagPosition);
     } else if (res_ch[0] == _FRAME_VALID_) {
-        pDesc_ch[0] = MAC_GetFrameDesc(CH0);
-        frame_status_ch[0] = _get_frame_status(pDesc_ch[0], pRS->FrameType);
+        frame_status_ch[0] = _get_valid_frame_status(pDesc->pCH0, pRS->FrameType);
     } else {
-        pDesc_ch[1] = MAC_GetFrameDesc(CH1);
-        frame_status_ch[1] = _get_frame_status(pDesc_ch[1], pRS->FrameType);
+        frame_status_ch[1] = _get_valid_frame_status(pDesc->pCH1, pRS->FrameType);
     }
 
     slot_status = MIN(frame_status_ch[0], frame_status_ch[1]);
@@ -340,10 +322,10 @@ void prp_for_passive(void)
     if (slot_status == FRAME_CORRECT) {
 
         /** for mode change processor */
-        ttp_frame_desc_t* pDesc_chosed;
+        TTP_ChannelFrameDesc* pDesc_chosen;
 
-        pDesc_chosed = frame_status_ch[0] == FRAME_CORRECT ? pDesc_ch[0] : pDesc_ch[1];
-        uint8_t header = pDesc_chosed->pFrame->hdr[0];
+        pDesc_chosen = frame_status_ch[0] == FRAME_CORRECT ? pDesc->pCH0 : pDesc->pCH1;
+        uint8_t header = pDesc_chosen->pFrame->hdr[0];
         uint32_t frame_mcr = (header & ~1) << 2;
 
         _process_mcr(frame_mcr);
@@ -360,14 +342,15 @@ void prp_for_passive(void)
             uint32_t tsmp_frame;
 
             if ((frame_status_ch[0] == FRAME_CORRECT) && (frame_status_ch[1] == FRAME_CORRECT)) {
-                tsmp_frame = (pDesc_ch[0]->rcv_timestamp + pDesc_ch[1]->rcv_timestamp) / 2;
+                tsmp_frame = (pDesc->pCH0->rcv_timestamp + pDesc->pCH1->rcv_timestamp) / 2;
             } else {
-                tsmp_frame = pDesc_ch[frame_status_ch[0] == FRAME_CORRECT ? 0 : 1]->rcv_timestamp;
+                tsmp_frame = frame_status_ch[0] == FRAME_CORRECT ? pDesc->pCH0->rcv_timestamp : 
+                                                                   pDesc->pCH1->rcv_timestamp;
             }
             SVC_SyncCalcOffset(tsmp_frame);
         }
-        /** the data carried by frame will not be pulled into CNI in passive state */
-        _is_data_frame() ? MAC_PullAppData(pDesc_chosed) : (void)0;
+        /** Should the data carried by frame be pulled into CNI in passive state ?? */
+        _is_data_frame() ? MSG_PullAppData(pDesc_chosen) : (void)0;
     } else {
         CS_ClearMemberBit(pRS->FlagPosition);
     }
@@ -389,7 +372,7 @@ void prp_for_passive(void)
  * @param pDesc   [description]
  * @param type    [description]
  */
-static void _ack_stage(uint32_t* check_a, uint32_t* check_b, ttp_frame_desc_t* pDesc, uint32_t type)
+static void _ack_stage(uint32_t* check_a, uint32_t* check_b, TTP_ChannelFrameDesc* pDesc, uint32_t type)
 {
     RoundSlotProperty_t* pRS = MAC_GetRoundSlotProperties();
     NodeProperty_t* pNP = MAC_GetNodeProperties();
@@ -428,7 +411,7 @@ static void _ack_stage(uint32_t* check_a, uint32_t* check_b, ttp_frame_desc_t* p
  * @param  pFunc   the pointer of the ack function.
  * @return         frame status of channel ch.
  */
-static uint32_t _ack_result(ttp_frame_desc_t* pDesc, uint32_t type, uint32_t ch, AckFunc* pFunc)
+static uint32_t _ack_result(TTP_ChannelFrameDesc* pDesc, uint32_t type, uint32_t ch, AckFunc* pFunc)
 {
     uint32_t check_a;
     uint32_t check_b;
@@ -456,6 +439,7 @@ static uint32_t _ack_result(ttp_frame_desc_t* pDesc, uint32_t type, uint32_t ch,
         frame_status = FRAME_CORRECT;
         break;
     default:
+        frame_status = FRAME_INCORRECT;
         break;
     }
 
@@ -495,17 +479,18 @@ void prp_for_active(void)
         return;
     }
 
-    uint32_t res[2];
+    uint32_t res_ch[2];
     uint32_t frame_status_ch[2];
 
-    uint32_t chosed_ch;
+    uint32_t chosen_ch;
 
     uint32_t slot_status;
 
-    ttp_frame_desc_t* pDesc_ch[2];
+    TTP_FrameDesc* pDesc;
 
-    res[0] = _judge_valid(&frame_status_ch[0], CH0);
-    res[1] = _judge_valid(&frame_status_ch[1], CH1);
+    res_ch[0] = _judge_valid(&frame_status_ch[0], CH0);
+    res_ch[1] = _judge_valid(&frame_status_ch[1], CH1);
+    chosen_ch = 0;
 
     AckFunc func[2] = {NULL,NULL};
     /**
@@ -513,49 +498,42 @@ void prp_for_active(void)
      * the membership flag of the sender to TRUE before checking the frame CRC.
      */
     CS_SetMemberBit(pRS->FlagPosition);
+    pDesc = MSG_GetFrameDesc();
 
-    pDesc_ch[0] = res[0] == _FRAME_VALID_ ? MAC_GetFrameDesc(CH0) : NULL;
-    pDesc_ch[1] = res[1] == _FRAME_VALID_ ? MAC_GetFrameDesc(CH1) : NULL;
-
-    if (ACK_FINISHED == PV_GetAckState()) {
-        //ack is finished, the node has no need to perform ack algorithm
-        if ((res[0] == _FRAME_INVALID_) && (res[1] == _FRAME_INVALID_)) {
-            CS_ClearMemberBit(pRS->FlagPosition);
-        } else {
-            frame_status_ch[0] = pDesc_ch[0] != NULL ? _get_frame_status(pDesc_ch[0], pRS->FrameType)
-                                                     : frame_status_ch[0];
-
-            frame_status_ch[1] = pDesc_ch[1] != NULL ? _get_frame_status(pDesc_ch[1], pRS->FrameType)
-                                                     : frame_status_ch[1];
-
-            chosed_ch = frame_status_ch[0] < frame_status_ch[1] ? 0 : 1;
-        }
+    if ((res_ch[0] == _FRAME_INVALID_) && (res_ch[1] == _FRAME_INVALID_)) {
+        CS_ClearMemberBit(pRS->FlagPosition);
+    } else if (res_ch[0] == _FRAME_VALID_) {
+        frame_status_ch[0] = _get_valid_frame_status(pDesc->pCH0, pRS->FrameType);
     } else {
-        if ((res[0] == _FRAME_INVALID_) && (res[1] == _FRAME_INVALID_)) {
-            CS_ClearMemberBit(pRS->FlagPosition);
-        } else {
-            uint32_t type = pRS->FrameType;
+        frame_status_ch[1] = _get_valid_frame_status(pDesc->pCH1, pRS->FrameType);
+    }
 
-            frame_status_ch[0] = pDesc_ch[0] != NULL ? _ack_result(pDesc_ch[0], type, 0, &func[0]) : frame_status_ch[0];
-            frame_status_ch[1] = pDesc_ch[1] != NULL ? _ack_result(pDesc_ch[1], type, 1, &func[1]) : frame_status_ch[1];
+    if(ACK_FINISHED != PV_GetAckState()){
+        //perform ack algorithm
+        uint32_t type = pRS->FrameType;
 
-            if (frame_status_ch[0] != frame_status_ch[1]) {
-                chosed_ch = frame_status_ch[0] < frame_status_ch[1] ? 0 : 1;
-                SVC_AckMerge(chosed_ch);
-            }
+        frame_status_ch[0] = pDesc->pCH0 != NULL ? _ack_result(pDesc->pCH0, type, 0, &func[0]) : frame_status_ch[0];
+        frame_status_ch[1] = pDesc->pCH1 != NULL ? _ack_result(pDesc->pCH1, type, 1, &func[1]) : frame_status_ch[1];
+
+        if (frame_status_ch[0] != frame_status_ch[1]) {
+            chosen_ch = frame_status_ch[0] < frame_status_ch[1] ? 0 : 1;
+            SVC_AckMerge(chosen_ch);
         }
 
-        func[chosed_ch] != NULL ? func[chosed_ch]() : (void)0;
+        func[chosen_ch] != NULL ? func[chosen_ch]() : (void)0;
     }
 
     slot_status = MIN(frame_status_ch[0], frame_status_ch[1]);
-    if (!(frame_status_ch[0] != FRAME_NULL && frame_status_ch[1] != FRAME_NULL)) {
+    if ((frame_status_ch[0] == FRAME_NULL && frame_status_ch[1] == FRAME_INVALID) ||
+        (frame_status_ch[1] == FRAME_NULL && frame_status_ch[0] == FRAME_INVALID)) {
         //@see "Time Triggered Protocol Spec, Page 72"
         slot_status = FRAME_NULL;
     }
 
     if (slot_status == FRAME_CORRECT) {
-        uint8_t header = pDesc_ch[chosed_ch]->pFrame->hdr[0];
+
+        TTP_ChannelFrameDesc *pDesc_chosen = frame_status_ch[0] == FRAME_CORRECT ? pDesc->pCH0 : pDesc->pCH1;
+        uint8_t header = pDesc_chosen->pFrame->hdr[0];
         uint32_t frame_mcr = (header & ~1) << 2;
 
         _process_mcr(frame_mcr);
@@ -565,16 +543,16 @@ void prp_for_active(void)
             uint32_t tsmp_frame;
 
             if ((frame_status_ch[0] == FRAME_CORRECT) && (frame_status_ch[1] == FRAME_CORRECT)) {
-                tsmp_frame = (pDesc_ch[0]->rcv_timestamp + pDesc_ch[1]->rcv_timestamp) / 2;
+                tsmp_frame = (pDesc->pCH0->rcv_timestamp + pDesc->pCH1->rcv_timestamp) / 2;
             } else {
-                tsmp_frame = pDesc_ch[chosed_ch]->rcv_timestamp;
+                tsmp_frame = pDesc_chosen->rcv_timestamp;
             }
             SVC_SyncCalcOffset(tsmp_frame);
         }
         /** the data carried by frame will not be pulled into CNI in passive state */
         //MSG_SetStatus(pRS->CNIAddressOffset, FRAME_CORRECT);
         if (_is_data_frame()) {
-            MAC_PullAppData(pDesc_ch[chosed_ch]);
+            MSG_PullAppData(pDesc_chosen);
         }
     }
 
@@ -598,21 +576,20 @@ void prp_for_coldstart(void)
     uint32_t res_ch[2];
     uint32_t frame_status_ch[2];
     uint32_t slot_status;
-    ttp_frame_desc_t* pDesc_ch[2];
+    TTP_FrameDesc* pDesc;
 
     res_ch[0] = _judge_valid(&frame_status_ch[0],CH0);
     res_ch[1] = _judge_valid(&frame_status_ch[1],CH1);
 
     CS_SetMemberBit(pRS->FlagPosition);
+    pDesc = MSG_GetFrameDesc();
 
     if ((res_ch[0] == _FRAME_INVALID_) && (res_ch[1] == _FRAME_INVALID_)) {
         CS_ClearMemberBit(pRS->FlagPosition);
     } else if (res_ch[0] == _FRAME_VALID_) {
-        pDesc_ch[0] = MAC_GetFrameDesc(CH0);
-        frame_status_ch[0] = _get_frame_status(pDesc_ch[0], pRS->FrameType);
+        frame_status_ch[0] = _get_valid_frame_status(pDesc->pCH0, pRS->FrameType);
     } else {
-        pDesc_ch[1] = MAC_GetFrameDesc(CH1);
-        frame_status_ch[1] = _get_frame_status(pDesc_ch[1], pRS->FrameType);
+        frame_status_ch[1] = _get_valid_frame_status(pDesc->pCH1, pRS->FrameType);
     }
 
     slot_status = MIN(frame_status_ch[0], frame_status_ch[1]);
@@ -626,10 +603,8 @@ void prp_for_coldstart(void)
     if (slot_status == FRAME_CORRECT) {
 
         /** for mode change processor */
-        ttp_frame_desc_t* pDesc_chosed;
-
-        pDesc_chosed = frame_status_ch[0] == FRAME_CORRECT ? pDesc_ch[0] : pDesc_ch[1];
-        uint8_t header = pDesc_chosed->pFrame->hdr[0];
+        TTP_ChannelFrameDesc *pDesc_chosen = frame_status_ch[0] == FRAME_CORRECT ? pDesc->pCH0 : pDesc->pCH1;
+        uint8_t header = pDesc_chosen->pFrame->hdr[0];
         uint32_t frame_mcr = (header & ~1) << 2;
 
         _process_mcr(frame_mcr);
@@ -639,9 +614,9 @@ void prp_for_coldstart(void)
             uint32_t tsmp_frame;
 
             if ((frame_status_ch[0] == FRAME_CORRECT) && (frame_status_ch[1] == FRAME_CORRECT)) {
-                tsmp_frame = (pDesc_ch[0]->rcv_timestamp + pDesc_ch[1]->rcv_timestamp) / 2;
+                tsmp_frame = (pDesc->pCH0->rcv_timestamp + pDesc->pCH1->rcv_timestamp) / 2;
             } else {
-                tsmp_frame = pDesc_ch[frame_status_ch[0] == FRAME_CORRECT ? 0 : 1]->rcv_timestamp;
+                tsmp_frame = pDesc_chosen->rcv_timestamp;
             }
             SVC_SyncCalcOffset(tsmp_frame);
         }

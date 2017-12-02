@@ -32,7 +32,7 @@ void     CRC_DepInit(void);
 void     CRC_ResetData(void);
 void     CRC_PushData(uint8_t *pBuf, uint32_t BufLength);
 
-uint32_t CRC_GetCRC(void);
+uint32_t CRC_GetResult(void);
 
 /**@}*/// end of group EXTERNAL_CRC32	
 

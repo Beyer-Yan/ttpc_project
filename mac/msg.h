@@ -18,7 +18,26 @@
 #define __NSG_H__
 
 #include "ttpdef.h"
-#include "ttpmac.h"
+
+
+#define MAX_FRAME_LENGTH		240
+#define CSTATE_LENGTH           16
+#define TTP_HEADER_LENGTH       1
+#define TTP_CRC_LENGTH          4
+
+/** frame type macro definitions */
+#define FRAME_N             	0
+#define FRAME_I             	1
+#define FRAME_X             	2
+
+/** for frame status field: the least significant 8-bits valid*/
+#define FRAME_CORRECT 			(uint32_t)0x00000001
+#define FRAME_TENTATIVE			(uint32_t)0x00000002
+#define FRAME_MODE_VIOLATION	(uint32_t)0x00000003
+#define FRAME_INCORRECT 		(uint32_t)0x00000004
+#define FRAME_NULL				(uint32_t)0x00000005
+#define FRAME_INVALID			(uint32_t)0x00000006
+
 
 typedef uint32_t crc32_t;
 typedef crc32_t  crc_t;
@@ -109,7 +128,7 @@ X-FRAME  |            |          |            |          |             |
  * frames.
  * @attention zero-size array is only supported by gnu c extension.
  */
-typedef struct TTP_frame
+typedef struct
 {
     /** ttpc header */
     uint8_t hdr[1];
@@ -138,10 +157,9 @@ typedef struct TTP_frame
         }x; 
     };
         
-}*pTTP_frame;
+}TTP_FrameStructDesc;
 
-
-typedef struct ttp_frame_desc
+typedef struct
 {
 	/** the timestamp of the received frame in uint of microtick */
 	uint32_t       rcv_timestamp;
@@ -149,10 +167,18 @@ typedef struct ttp_frame_desc
     /** total size of a TTP/C frame received, including the crc32 */
     uint32_t       length;
 
-    /** pointer to the RECV frame buffer */
-	pTTP_frame     pFrame;
+    uint32_t       status;
 
-}ttp_frame_desc_t;
+    /** pointer to the RECV frame buffer */
+	TTP_FrameStructDesc* pFrame;
+
+}TTP_ChannelFrameDesc;
+
+typedef struct
+{
+    TTP_ChannelFrameDesc *pCH0;
+    TTP_ChannelFrameDesc *pCH1;
+}TTP_FrameDesc;
 
 /**
  * The setting of the two interfaces below needs negotiating. MAC_PrepareSCFrame
@@ -166,19 +192,54 @@ MAC_err_t MSG_PrepareCSFrame(void);
 /**
  * Push the data of the frame received to the corresponding CNI address. The frame
  * shall be a data frame.
- * @param  pDesc the chosed frame description
+ * @param  pDesc the chosen frame description
  * @return         non
  */
-void      MSG_PullAppData(ttp_frame_desc_t* pDesc);
+void MSG_PullAppData(TTP_ChannelFrameDesc* pDesc);
 
 /**
  * This function fills the description of the frame received. If the frame 
- * received is incorrect or null or invalid, the function will return 0.
- * @param channel   the channel, CH0 or CH1
+ * received is  null, the function will return NULL.
  * @return          the array pointer of the frame descriptions of the corresponding
  * @attention if the frame received is not ok, the function will return NULL. 
  */
-ttp_frame_desc_t* MSG_GetFrameDesc(uint32_t Channel);
+TTP_FrameDesc* MSG_GetFrameDesc(void);
+
+/**
+ * Get the timestamps of the received frame
+ * @param  channel the channel, CH0 or CH1
+ * @return         the corresponding timestamps
+ */
+uint32_t  MSG_GetFrameTimestamp(uint32_t channel);
+
+/**
+ * This function eliminates the error code mismatch between hardware
+ * level and mac level.
+ * @return  the error code of mac level
+ *          @arg MAC_EOK
+ *          @arg MAC_EPHY
+ *          @arg MAC_EOTHER
+ */
+uint32_t  MSG_GetTransmittedFlags(void);
+
+/**
+ * This function returns the flags of frames received.
+ * @param    Channel     the channel, CH0 or CH1	
+ * @return   0 non frame, 1 received a frame
+ */
+uint32_t  MSG_CheckReceived(uint32_t Channel);
+
+// /**
+//  * At the start of PRP phase, the acknowledgment algorithm will be performed. 
+//  * If the ack process instantiated by hardware, the ack will be perform as
+//  * soon as the mac receives a frame. But for software implement, the time 
+//  * cost for performing acknowledgment algorithm shall be taken consideration.
+//  * This function shall be called after the ack is performed.
+//  * @param   channel    the channel, CH0 or CH1   
+//  * @return  the frame status
+//  */
+// uint32_t  MSG_GetFrameStatus(uint32_t channel);
+
 
 /*******************************************************************************/
 /**

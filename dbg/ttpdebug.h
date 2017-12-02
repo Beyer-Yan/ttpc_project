@@ -96,7 +96,7 @@ void DBG_Flush(void);
     #define _STR(x)             _VAL(x)
     #define _VAL(x)             #x
     #define TTP_ASSERT(exp)     ((exp)?(void)0:\
-                                __TTP_Assert(__FILE__":"_STR(__LINE__)":"#exp))//
+                                __TTP_Assert(__FILE__":"_STR(__LINE__)":"#exp))
 #endif
 
 /**@}*/// end of group TTP_assert

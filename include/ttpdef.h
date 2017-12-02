@@ -1487,6 +1487,13 @@ static inline uint32_t CALC_MODE_NUM(uint32_t mode)
 	#define MCR_MODE_2 			((uint32_t)0x00000010)	/**< Second successor mode requested */
 	#define MCR_MODE_3 			((uint32_t)0x00000018)	/**< Third  successor mode requested */
 	#define MCR_MODE_CLR		((uint32_t)0x00000020)	/**< Clear pending mode change request */
+
+#define IS_TTP_MCR(mcr)			(((mcr) == MCR_NO_REQ)    || \
+								 ((mcr) == MCR_MODE_1)      || \
+								 ((mcr) == MCR_MODE_2)    || \
+								 ((mcr) == MCR_MODE_3) || \
+								 ((mcr) == MCR_MODE_CLR))
+
 #define CR_BIST					((uint32_t)0x00000004)	/**< Built-in test enable flag */
 #define CR_CA					((uint32_t)0x00000002)	/**< Control await enable flag */
 #define CR_CO					((uint32_t)0x00000001)	/**< Controller on */
