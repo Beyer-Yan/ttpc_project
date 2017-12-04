@@ -89,7 +89,7 @@ static inline void _load_slot_configuration(void)
     uint32_t slot = MAC_GetNodeSlot();
 
     //check then load the configuration of the current slot.
-    MAC_LoadSlotProperties(mode, tdma, slot);
+    
 	if(_G_ModeChanged) {
 		uint32_t mode_num = CALC_MODE_NUM(mode);
 		uint32_t ccl = MEDL_GetRoundCycleLength(mode_num); /* cluster cycle length */
@@ -98,6 +98,7 @@ static inline void _load_slot_configuration(void)
 		MAC_SetClusterCycleLength(ccl);
 		MAC_SetTDMACycleLength(ctl);
 	}
+    MAC_LoadSlotProperties(mode, tdma, slot);
 }
 
 static inline void _slot_properties_update()
@@ -164,7 +165,7 @@ static inline void _prepare_for_receive(void)
 
     uint32_t actual_at = pRS->AtTime + _G_ClusterCycleStartTime + _G_TDMARoundStartTimeOffset;
 
-    MAC_SetTime(actual_at, pRS->TransmissionDuration,pRS->PSPDuration, pRS->SlotDuration);
+    MAC_SetSlotTime(actual_at, pRS->TransmissionDuration,pRS->PSPDuration, pRS->SlotDuration);
     MAC_SetSlotAcquisition(RECEIVING_FRAME);
 }
 
@@ -184,7 +185,7 @@ static inline void _prepare_for_transmit(void)
     CS_SetMemberBit(pRS->FlagPosition);
     PV_SetCounter(AGREED_SLOTS_COUNTER, 1);
 
-    MAC_SetTime(actual_at, pRS->TransmissionDuration,pRS->PSPDuration, pRS->SlotDuration);
+    MAC_SetSlotTime(actual_at, pRS->TransmissionDuration,pRS->PSPDuration, pRS->SlotDuration);
     MSG_PushFrame();
     MAC_SetSlotAcquisition(SENDING_FRAME);
 

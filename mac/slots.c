@@ -20,10 +20,12 @@
   */
 #include "medl.h"
 #include "protocol_data.h"
-#include "ttpc_mac.h"
+#include "ttpmac.h"
 #include "ttpdebug.h"
-#include "virhw.h"
 #include "ttpservice.h"
+#include "msg.h"
+#include "clock.h"
+#include "xfer.h"
 
 /*********************************************************************************/
 /**
@@ -54,12 +56,10 @@ static volatile uint8_t _G_SlotStatus;
 /** SENDING_FRAME or RECEIVING_FRAME */
 static volatile uint8_t _G_SlotAcquisitionFlag;
 
+/** indicate the current updating status of the slot */
 static volatile uint32_t _G_slot_pointer;
 
 /*********************************************************************************/
-/**
- * slots controll functions
- */
 
 uint32_t MAC_IsOwnNodeSlot(void)
 {
@@ -92,17 +92,6 @@ uint32_t MAC_IsSendSlot(void)
     }
 
     return ss;
-}
-
-RoundSlotProperty_t* MAC_LoadSlotProperties(uint32_t mode, uint32_t tdma,
-    uint32_t slot)
-{
-
-    uint32_t mode_num;
-
-    mode_num = CALC_MODE_NUM(mode);
-
-    return MEDL_GetRoundSlotAddr(mode_num, tdma, slot);
 }
 
 uint32_t MAC_UpdateSlot(void)
@@ -156,14 +145,6 @@ uint32_t MAC_UpdateSlot(void)
     CS_SetRoundSlot(rs);
     _G_slot_pointer = res;
     return res;
-}
-
-RoundSlotProperty_t* MAC_GetRoundSlotProperties(void)
-{
-    uint32_t mode = CS_GetCurMode();
-
-    uint32_t mode_num = CALC_MODE_NUM(mode);
-    return MEDL_GetRoundSlotAddr(mode_num, _G_TDMARound, _G_Slot);
 }
 
 uint32_t MAC_GetSlotStatus(void) { return _G_SlotStatus; }
@@ -222,63 +203,20 @@ uint32_t MAC_GetRatio() { return TIM_GetFrequencyDiv(); }
 uint32_t MAC_GetSlotAcquisition(void) { return _G_SlotAcquisitionFlag; }
 uint32_t MAC_GetRoundSlot(void) { return (_G_TDMARound * _G_TDMACycleLength + _G_Slot);}
 
-void MAC_SetTime(uint32_t ActAT, uint32_t TP,uint32_t PSP, uint32_t SD)
+uint32_t MAC_CheckSlot(void)
+{
+    return _G_slot_pointer;
+}
+
+void MAC_SetSlotTime(uint32_t ActAT, uint32_t TP,uint32_t PSP, uint32_t SD)
 {
     uint16_t real_at =  ActAT & 0xffff;
     uint16_t real_prp = real_at + TP & 0xffff;
-    uint16_t slot_end = real_at + SD & 0xffff - PSP - TP;
+    uint16_t slot_end = real_at + SD & 0xffff - PSP;
 
     TIM_SetTriggerAT(ActAT);
     TIM_SetTriggerPRP(real_prp);
     TIM_SetTriggerSlotEnd(slot_end);
 }
 
-void MAC_StartPhaseCirculation() { TIM_EnableTrigger(); }
 
-void MAC_StopPhaseCirculation(){ TIM_DisableTrigger(); }
-
-uint32_t MAC_CheckSlot(void)
-{
-    return _G_slot_pointer;
-}
-
-void MAC_AdjTime(uint16_t AdjMode, int16_t Offset)
-{
-    // AdjMode is set CLK_FREQ_ADJ forcedly
-
-    // TTP_ASSERT(Steps < MAX_STEPS);
-
-    // int32_t cor_val[MAX_STEPS] = { 0 };
-
-    // int32_t ratio = (int32_t)TIM_GetFrequencyDiv();
-
-    // int i = 0;
-    // int j = 0;
-
-    // int _step = MAX_STEPS / (FrMT + 1);
-
-    // int32_t quotient = Offset / _step;
-    // int32_t remain = Offset % _step;
-
-    // for (j = 0, i = 0; i < _step; i++, j += FrMT + 1) {
-    //     cor_val[j] = quotient;
-    // }
-
-    // int32_t tmp = ABS(remain);
-    // for (i = 0, j = 0; i < tmp; i++, j += FrMT + 1) {
-    //     cor_val[j] += remain > 0 ? 1 : -1;
-    // }
-
-    // for (i = 0; i < MAX_STEPS; i++) {
-    //     cor_val[i] += ratio;
-    // }
-
-    if(AdjMode == CLK_PHASE_ADJ)
-    {
-        TIM_SetStateCorrectionTerm(Offset);
-    }
-    else
-    {
-        //TIM_RatioAdj(cor_val);
-    }
-}

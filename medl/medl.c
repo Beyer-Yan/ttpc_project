@@ -229,7 +229,7 @@ uint32_t MEDL_Init(void)
  *            APPROACH TO DO THE SAME THING, THAT IS, TO CALL MEDL_GetSchedID AND
  *            MEDL_GetAppID.
  */
-uint32_t MEDL_GetRegionAddr(uint32_t RegionType)
+void* MEDL_GetRegionAddr(uint32_t RegionType)
 {
 	uint32_t addr;
 

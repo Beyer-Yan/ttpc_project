@@ -139,7 +139,7 @@ uint32_t  MEDL_Init(void);
  *           @arg ROLE_REGION
  * @return the region address
  */
-uint32_t  MEDL_GetRegionAddr(uint32_t RegionType);
+void*     MEDL_GetRegionAddr(uint32_t RegionType);
 uint32_t  MEDL_GetSchedID(void);
 uint32_t  MEDL_GetAppID(void);
 

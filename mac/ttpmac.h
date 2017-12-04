@@ -18,9 +18,6 @@
 #ifndef __TTPMAC_H__
 #define __TTPMAC_H__
 
-////////////////////////////////////////////////////////////////////////////////
-///message struct definitions                                                 //
-////////////////////////////////////////////////////////////////////////////////
 #include "ttpdef.h"
 
 typedef enum Mac_err{
@@ -50,19 +47,10 @@ void      MAC_StopTransmit(void);
 void      MAC_StartReceive(void);
 void      MAC_StopReceive(void);
 
-// * check whether the mac has received frame with returning 0 for receiving nothing, 
-//  *  returning 1 for receiving frames.
-//  *  receiving nothing.
- 
 /**
  * @defgroup TTP_MAC_SLOT_PARAMETERS_CONTROL
  */
 /**@{*/
-
-////////////////////////////////////////////////////////////////////////////////
-///slots service definitions                                                  //
-////////////////////////////////////////////////////////////////////////////////
-
 
 typedef struct mac_slot 
 {
@@ -115,47 +103,11 @@ typedef struct mac_slot
 #define SENDING_FRAME 					1
 #define RECEIVING_FRAME  				2
 
-#define NORMAL_SLOT							0
-#define LAST_SLOT_OF_CURRENT_TDMAROUND 		1
-#define FIRST_SLOT_OF_SUCCESSOR_TDMAROUND	2
-#define LAST_SLOT_OF_CURRENT_CLUSTER 		3
-#define FIRST_SLOT_OF_CURRENT_CLUSTER   	4
-
 /**
  * Get the round slot of the current slot.
  * @return  the round slot entry.
  */
 RoundSlotProperty_t* MAC_GetRoundSlotProperties(void);
-
-// *
-//  * This function should be called after the membership point. In the membership
-//  * point, the frame status will be confirmed, then the slot status will be validated.
-//  * The slot status is used for clique detection.		 
-//  * @return  the slot status.
- 
-// uint32_t  MAC_GetSlotStatus(void);
-/**
- * Set the status of the current slot, which is executed during acknowledgment stage.
- * @param  SlotStatus the slot status
- * @return            non
- */
-void    MAC_SetSlotStatus(uint32_t SlotStatus);
-
-/**
- * Check whether the current slot is the node own slot. These functions shall be called
- * after the slot is updated.
- *
- * The function MAC_IsOwnNodeSlot only checks the logical name part of the whole logical
- * name field, the multiplexed logical name part is not checked.
- *
- * The function MAC_IsSending slot check both the logical name part and the multiplexed
- * part of the whole logical name.
- * 
- * @return  1 if yes, 0 if not.
- */	
-uint32_t  MAC_IsOwnNodeSlot(void);
-uint32_t  MAC_IsSendSlot(void);
-uint32_t  MAC_IsFirstSLotOfCluster(void);
 
 /**
  * Load the slot configuration parameters from the MEDL.
@@ -168,14 +120,6 @@ uint32_t  MAC_IsFirstSLotOfCluster(void);
  */
 RoundSlotProperty_t* MAC_LoadSlotProperties(uint32_t mode,uint32_t tdma,uint32_t slot);
 
-/** 
- * mark whether a frame should be transmitted in this slot.
- * @param  SlotAcquisition SENDING_FRAME or RECEIVING_FRAME
- * @return                 non
- */
-void  	MAC_SetSlotAcquisition(uint32_t SlotAcquisition);
-uint32_t MAC_GetSlotAcquisition(void);
-
 ////////////////////////////////////////////////////////////////////////////////
 ///identification function definitions                                        //
 ////////////////////////////////////////////////////////////////////////////////
@@ -183,9 +127,6 @@ uint32_t MAC_GetSlotAcquisition(void);
 /**
  * Attention that SETTER functions can only be called in initialization.
  */
-
-void      MAC_SetClusterScheduleID(uint32_t ScheduleID);
-void      MAC_SetAppID(uint32_t AppID);
 uint32_t  MAC_GetClusterScheduleID(void);
 uint32_t  MAC_GetAppID(void);
 
@@ -215,7 +156,6 @@ typedef struct mac_node
 #define MULTIPLEXED_MEMBERSHIP			(uint32_t)0x00000001
 #define MONOPOLIZED_MEMBERSHIP			(uint32_t)0x00000000
 
-void 		MAC_SetNodeProperties(NodeProperty_t *NodeProperty);
 NodeProperty_t* MAC_GetNodeProperties(void);
 
 uint32_t  	MAC_IsPassiveNode(void);
@@ -264,7 +204,6 @@ typedef struct mac_schedule
 #define COMMUNICATION_RATE_10M 			(uint32_t)0x0000000A
 #define COMMUNICATION_RATE_100M 		(uint32_t)0x00000064
 
-void  		MAC_SetScheduleParameter(ScheduleParameter_t* ScheduleParameter);
 ScheduleParameter_t* MAC_GetScheduleParameter(void);
 uint32_t 	MAC_GetMinimumIntegrationCount(void);
 uint32_t 	MAC_GetMaximumColdStartEntry(void);
@@ -280,14 +219,29 @@ uint32_t 	MAC_GetPrecision(void);
 /**@}*/// end of group TTP_MAC_SLOT_PARAMETERS_CONTROL
 
 /**
- * @defgroup TTP_MAC_ACCESS_CONTROL
+ * @defgroup TTP_MAC_SLOT_CONTROL
  */
 /**@{*/
 
 ////////////////////////////////////////////////////////////////////////////////
-///mac contrl service                                                         //
+///mac slot  service                                                         //
 ////////////////////////////////////////////////////////////////////////////////
-///
+
+/**
+ * Check whether the current slot is the node own slot. These functions shall be called
+ * after the slot is updated.
+ *
+ * The function MAC_IsOwnNodeSlot only checks the logical name part of the whole logical
+ * name field, the multiplexed logical name part is not checked.
+ *
+ * The function MAC_IsSending slot check both the logical name part and the multiplexed
+ * part of the whole logical name.
+ * 
+ * @return  1 if yes, 0 if not.
+ */	
+uint32_t  MAC_IsOwnNodeSlot(void);
+uint32_t  MAC_IsSendSlot(void);
+
 /** 
  * Get the TDMA slots for the current TDMA round, which shall be the same 
  * in all TDMA round of a cluster cycle.
@@ -307,19 +261,11 @@ void      MAC_SetClusterCycleLength(uint32_t Length);
 /** set the TDMA length of the current mode */
 void      MAC_SetTDMACycleLength(uint32_t Length);
 
-/**
- * This function returns the ratio of Macrotick to Microtick.
- *
- * @attention The integral multiple shall be guaranteed by the hardware. If not, the hardware 
- * shall not be allowed allowed/downloaded the corresponding MEDL 
- * 
- * @return the ratio of Macrotick to Microtick
- */
-uint32_t  MAC_GetRatio();
-
-uint32_t  MAC_GetSlotStartMacroticks(void);
-uint32_t  MAC_GetSlotStartMicroticks(void);
-uint32_t  MAC_GetATMicroticks(void);
+#define NORMAL_SLOT							0
+#define LAST_SLOT_OF_CURRENT_TDMAROUND 		1
+#define FIRST_SLOT_OF_SUCCESSOR_TDMAROUND	2
+#define LAST_SLOT_OF_CURRENT_CLUSTER 		3
+#define FIRST_SLOT_OF_CURRENT_CLUSTER   	4
 
 /**
  * update the node slot and the TDMA round and the round slot. If the updated slot
@@ -333,9 +279,6 @@ uint32_t  MAC_GetATMicroticks(void);
 uint32_t  MAC_UpdateSlot(void);
 void      MAC_SetSlot(uint32_t Slot);
 void      MAC_SetTDMARound(uint32_t tdma);
-
-void      MAC_StartPhaseCirculation(void);
-void      MAC_StopPhaseCirculation(void);
 
 /**
  * This function checks pointer of the current slot.
@@ -352,11 +295,23 @@ void      MAC_StopPhaseCirculation(void);
  */
 uint32_t MAC_CheckSlot(void);
 
-//void     MAC_SetWindow(uint32_t MiddleAxis);
+void MAC_StartPhaseCirculation(void);
+void MAC_StopPhaseCirculation(void);
 
-/** clock adjust mode options*/
-#define CLK_PHASE_ADJ           (uint16_t)0x0001
-#define CLK_FREQ_ADJ            (uint16_t)0x0002
+/**
+ * Set the status of the current slot, which is executed during acknowledgment stage.
+ * @param  SlotStatus the slot status
+ * @return            non
+ */
+void    MAC_SetSlotStatus(uint32_t SlotStatus);
+
+/** 
+ * mark whether a frame should be transmitted in this slot.
+ * @param  SlotAcquisition SENDING_FRAME or RECEIVING_FRAME
+ * @return                 non
+ */
+void  	MAC_SetSlotAcquisition(uint32_t SlotAcquisition);
+uint32_t MAC_GetSlotAcquisition(void);
 
 /**
  * Set the time properties of the slot.
@@ -366,7 +321,29 @@ uint32_t MAC_CheckSlot(void);
  * @param  PSP   the psp time duration of the slot in unit if macrotick
  * @return       non
  */
-void     MAC_SetTime(uint32_t ActAT,uint32_t TP, uint32_t PSP,uint32_t SD);
+void     MAC_SetSlotTime(uint32_t ActAT,uint32_t TP, uint32_t PSP,uint32_t SD);
+
+uint32_t  MAC_GetSlotStartMacroticks(void);
+uint32_t  MAC_GetSlotStartMicroticks(void);
+uint32_t  MAC_GetATMicroticks(void);
+
+/**@}*/// end of group TTP_MAC_SLOT_CONTROL
+
+/***************** slot time parameters configuration interface ************************/
+
+/** clock adjust mode options*/
+#define CLK_PHASE_ADJ           (uint16_t)0x0001
+#define CLK_FREQ_ADJ            (uint16_t)0x0002
+
+/**
+ * This function returns the ratio of Macrotick to Microtick.
+ *
+ * @attention The integral multiple shall be guaranteed by the hardware. If not, the hardware 
+ * shall not be allowed allowed/downloaded the corresponding MEDL 
+ * 
+ * @return the ratio of Macrotick to Microtick
+ */
+uint32_t  MAC_GetRatio();
 
 /**
  * Set the start time of the phase circulation, indicating the start macrotick point of the periodic
