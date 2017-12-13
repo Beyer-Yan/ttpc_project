@@ -30,7 +30,7 @@
 extern uint32_t phase_indicator;
 
 /*
- * can be optimized, etc 4-bytes alignment
+ * can be optimized, ex. 4-bytes alignment
  */
 static inline void _byte_copy(uint8_t* dst, uint8_t* src, int size)
 {
@@ -201,11 +201,10 @@ void FSM_doListen(void)
         MAC_StartPhaseCirculation(); /**< start synchronization mode */
 
         CNI_SetSRBit(ISR_CV); //CSATE available
-        FSM_sendEvent(FSM_EVENT_CSTATE_FRAME_RECEIVED);
+        FSM_TransitIntoState(FSM_PASSIVE);
 
     } else {
         //Listening timeout expired, check if the cold start conditions are fullfilled.
-        FSM_sendEvent(FSM_EVENT_LISTEN_TIMEOUT_EXPIRED);
 
         if (pSP->ColdStartAllow == COLD_START_NOT_ALLOWED)
             goto _end;
@@ -214,12 +213,10 @@ void FSM_doListen(void)
         if (PV_GetCounter(COLD_START_COUNTER) > pSP->MaximumColdStartEntry)
             goto _end;
 
-        FSM_sendEvent(FSM_EVENT_COLD_START_ALLOWED);
-
         if (!CNI_CheckHLFS())
             goto _end;
 
-        FSM_sendEvent(FSM_EVENT_HOST_LIFE_UPDATED);
+        FSM_TransitIntoState(FSM_COLD_START);
     }
 
 _end:
