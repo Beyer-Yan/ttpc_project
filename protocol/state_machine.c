@@ -21,6 +21,8 @@
 #define MAX_TRANSITION_NUM 		20
 #define MAX_STATE_NUM 			11
 
+#define TEST 					100
+
 /**
  * This variable is used to record the events happened, mapping out the transition number
  * to be activated.
