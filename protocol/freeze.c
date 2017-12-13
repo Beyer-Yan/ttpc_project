@@ -14,16 +14,17 @@
   * 
   ******************************************************************************
   */
- #include "ttpc_mac.h"
+ #include "ttpmac.h"
  #include "ttpdebug.h"
  #include "protocol_data.h"
  #include "protocol.h"
- #include "virhw.h"
+ #include "clock.h"
+ #include "ttpservice.h"
 
 void FSM_toFreeze(void)
 {
-	//close the timer
-	MAC_StopPhaseCirculation();
+	//stop then clear the timer
+	CLOCK_Stop();
 
 	//clear the CO flag
 	TCN_ClrCO();
