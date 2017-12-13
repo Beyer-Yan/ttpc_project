@@ -15,8 +15,7 @@
   ******************************************************************************
   */		
 #include "medl.h"
-#include "virhw.h"
-#include "ttpc_mac.h"
+#include "ttpmac.h"
 #include "ttpdebug.h"
 
 #error "to be tested"
@@ -76,7 +75,7 @@ static void __medl_sched_extract(void)
 	__G_sched.MaximumMembershipFailureCount= (buf[0]&(0xff<<24))>>24;
 	__G_sched.MacrotickParameter           = buf[1];
 	__G_sched.Precision                    = buf[2];
-	__G_sched.CommunicationRate            = buf[3];
+	__G_sched.ArrivalTimingWindow          = buf[3];
 	
 	__G_sched.StartupTimeout               = buf[4];
 	__G_sched.ListenTimeout                = buf[5];
@@ -122,7 +121,7 @@ static void __medl_slot_extract(uint32_t mode, uint32_t round_slot)
 	uint32_t offset = __G_medl_header.slot_mode_addr[mode] + 
 	                  __G_medl_header.slot_size * round_slot;
 	/**
-	 * @attention upper program should gurantee the legality of the parameters,
+	 * @attention upper program should guarantee the legality of the parameters,
 	 * mode and round_slot.
 	 */
 	res = medl_real_read((char*)buf,
@@ -240,7 +239,7 @@ void* MEDL_GetRegionAddr(uint32_t RegionType)
 		case ID_REGION       : addr = (uint32_t)&__G_sched_id;  break;
 		default              : addr = 0;      
 	}
-	return (addr);
+	return (void*)(addr);
 }
 
 void* MEDL_GetRoundSlotAddr(uint32_t ModeNum, uint32_t TDMARound, uint32_t Slot)

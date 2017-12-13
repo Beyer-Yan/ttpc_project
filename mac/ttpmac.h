@@ -41,11 +41,7 @@ typedef enum Mac_err{
 	MAC_EOTHER				/**< Other unknown errors */
 }MAC_err_t;
 
-void      MAC_StartTransmit(void);
-void      MAC_StopTransmit(void);
-
-void      MAC_StartReceive(void);
-void      MAC_StopReceive(void);
+/******************************* parameters access interface **************************/
 
 /**
  * @defgroup TTP_MAC_SLOT_PARAMETERS_CONTROL
@@ -120,9 +116,6 @@ RoundSlotProperty_t* MAC_GetRoundSlotProperties(void);
  */
 RoundSlotProperty_t* MAC_LoadSlotProperties(uint32_t mode,uint32_t tdma,uint32_t slot);
 
-////////////////////////////////////////////////////////////////////////////////
-///identification function definitions                                        //
-////////////////////////////////////////////////////////////////////////////////
 
 /**
  * Attention that SETTER functions can only be called in initialization.
@@ -130,9 +123,6 @@ RoundSlotProperty_t* MAC_LoadSlotProperties(uint32_t mode,uint32_t tdma,uint32_t
 uint32_t  MAC_GetClusterScheduleID(void);
 uint32_t  MAC_GetAppID(void);
 
-////////////////////////////////////////////////////////////////////////////////
-///the role of node specification                                             //
-////////////////////////////////////////////////////////////////////////////////
 
 /**
  * The properties below are specified for the node at initialization phase
@@ -161,10 +151,6 @@ NodeProperty_t* MAC_GetNodeProperties(void);
 uint32_t  	MAC_IsPassiveNode(void);
 uint32_t 	MAC_IsMultiplexedMembershipNode(void);
 
-////////////////////////////////////////////////////////////////////////////////
-///schedule parameters definitions                                            //
-////////////////////////////////////////////////////////////////////////////////
-
 /**
  * the parameters below are used for the basic communication behavior of a node 
  * and are necessary to integrate or startup a cluster, which are specified at
@@ -181,7 +167,7 @@ typedef struct mac_schedule
 	uint32_t MaximumMembershipFailureCount;
 	uint32_t MacrotickParameter;
 	uint32_t Precision;
-	uint32_t CommunicationRate;
+	uint32_t ArrivalTimingWindow;
 
 	uint32_t StartupTimeout;
 	uint32_t ListenTimeout;
@@ -201,8 +187,6 @@ typedef struct mac_schedule
 #define EXTERNAL_CORRECTION_NOT_ALLOWED (uint32_t)0x00000000
 
 /** ScheduleParameter_t.CommunicationRate */
-#define COMMUNICATION_RATE_10M 			(uint32_t)0x0000000A
-#define COMMUNICATION_RATE_100M 		(uint32_t)0x00000064
 
 ScheduleParameter_t* MAC_GetScheduleParameter(void);
 uint32_t 	MAC_GetMinimumIntegrationCount(void);
@@ -216,17 +200,23 @@ uint32_t 	MAC_GetMaximumMembershipFailureCount(void);
 uint32_t 	MAC_GetMacrotickParameter(void);
 uint32_t 	MAC_GetPrecision(void);
 
+/**
+ * This function returns the ratio of Macrotick to Microtick.
+ *
+ * @attention The integral multiple shall be guaranteed by the hardware. If not, the hardware 
+ * shall not be allowed allowed/downloaded the corresponding MEDL 
+ * 
+ * @return the ratio of Macrotick to Microtick
+ */
+uint32_t  MAC_GetRatio();
+
 /**@}*/// end of group TTP_MAC_SLOT_PARAMETERS_CONTROL
 
 /**
  * @defgroup TTP_MAC_SLOT_CONTROL
  */
 /**@{*/
-
-////////////////////////////////////////////////////////////////////////////////
-///mac slot  service                                                         //
-////////////////////////////////////////////////////////////////////////////////
-
+/******************************* slot control interface **************************/
 /**
  * Check whether the current slot is the node own slot. These functions shall be called
  * after the slot is updated.
@@ -295,9 +285,6 @@ void      MAC_SetTDMARound(uint32_t tdma);
  */
 uint32_t MAC_CheckSlot(void);
 
-void MAC_StartPhaseCirculation(void);
-void MAC_StopPhaseCirculation(void);
-
 /**
  * Set the status of the current slot, which is executed during acknowledgment stage.
  * @param  SlotStatus the slot status
@@ -329,21 +316,21 @@ uint32_t  MAC_GetATMicroticks(void);
 
 /**@}*/// end of group TTP_MAC_SLOT_CONTROL
 
-/***************** slot time parameters configuration interface ************************/
+/**************************** mac control interface *********************************/
+
+void      MAC_StartTransmit(void);
+void      MAC_StopTransmit(void);
+
+void      MAC_StartReceive(void);
+void      MAC_StopReceive(void);
+
+/* The functions below works on the TDMA circulation but do not affect the the clock */
+void MAC_StartPhaseCirculation(void);
+void MAC_StopPhaseCirculation(void);
 
 /** clock adjust mode options*/
 #define CLK_PHASE_ADJ           (uint16_t)0x0001
 #define CLK_FREQ_ADJ            (uint16_t)0x0002
-
-/**
- * This function returns the ratio of Macrotick to Microtick.
- *
- * @attention The integral multiple shall be guaranteed by the hardware. If not, the hardware 
- * shall not be allowed allowed/downloaded the corresponding MEDL 
- * 
- * @return the ratio of Macrotick to Microtick
- */
-uint32_t  MAC_GetRatio();
 
 /**
  * Set the start time of the phase circulation, indicating the start macrotick point of the periodic
@@ -361,25 +348,5 @@ void MAC_SetPhaseCycleStartPoint(uint32_t CycleStartTime, uint32_t TDMAStartOffs
  */
 void MAC_AdjTime(uint16_t AdjMode, int16_t Offset);
 
-/**
- * The parameters below shall be considered at mode changing phase.
- */
-
-/**
- *                                                         
-		          TDMA ROUND BOUNDARY                           		                                                        
-		                    |           |                       
-		        +--+--+--+--|--+--+--+--|                       
-		 mode 1 |  |  |  |  |  |  |  |  |                       
-		        +--+--+--+--|--+--+--+--|                       
-		        +--+--+--+--|--+--+--+--|--+--+--+--+           
-		 mode 2 |  |  |  |  |  |  |  |  |  |  |  |  |           
-		        +--+--+--+--|--+--+--+--|--+--+--+--+           
-		        +--+--+--+--|           |                       
-		 mode x |  |  |  |  |           |    MAX CLUSTER CYCLES 
-		        +--+--+--+--|           |                       
-		                    |           |                       		                                                        
-		              MAX TDMA CYCLES                           
- */
 /**@}*/// end of group TTP_MAC_ACCESS_CONTROL
 #endif 

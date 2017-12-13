@@ -17,9 +17,8 @@
 #include "medl.h"
 #include "protocol.h"
 #include "protocol_data.h"
-#include "ttpc_mac.h"
+#include "ttpmac.h"
 #include "ttpdebug.h"
-#include "virhw.h"
 
 #include "ttpservice.h"
 
@@ -51,7 +50,6 @@ static inline void _pv_init(void)
 static inline void _timer_init(void)
 {
     ScheduleParameter_t* pSP = MAC_GetScheduleParameter();
-    TIM_DepInit();
 
     uint32_t frequency = TIM_GetLocalFrequency();
     uint32_t macrotick = pSP->MacrotickParameter;
@@ -95,12 +93,6 @@ void FSM_doInit(void)
     _timer_init();
 
     _pv_init();
-
-    //platform init
-    DMA_DepInit();
-    WDG_DepInit();
-    CRC_DepInit();
-    DRV_DepInit();
 
     SVC_RaiseAsynchronousInterrupt();
     FSM_sendEvent(FSM_EVENT_INIT_OK);

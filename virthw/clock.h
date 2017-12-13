@@ -31,7 +31,7 @@
 #ifndef __CLOCK_H__
 #define __CLOCK_H__
 
-#include "ttpdef.h"
+#include <stdint.h>
 /**
  * @defgroup TTPC_HW_Def
  */
@@ -71,6 +71,8 @@ void CLOCK_DepInit(void);
 void     CLOCK_Start(void);
 void     CLOCK_Stop(void);
 void     CLOCK_Reset(void);
+void     CLOCK_Clear(void);
+
 void     CLOCK_EnableTrigger(void);
 void     CLOCK_DisableTrigger(void);
 
@@ -121,6 +123,8 @@ void CLOCK_SetTriggerUser(uint16_t UserMacrotickValue);
  * @return 0: from waiting timeout, 1: from the disturb function 
  **/
 uint32_t CLOCK_WaitAlarm(uint32_t  Macroticks, uint32_t (*fDisturb)(void));
+
+uint32_t CLOCK_WaitMicroticks(uint32_t MicrotickValue, uint32_t (fDisturb)(void));
 
 /**@}*/// end of group TTPC_CLOCK_Def
 

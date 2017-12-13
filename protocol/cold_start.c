@@ -14,12 +14,15 @@
   * 
   ******************************************************************************
   */
-#include "ttpc_mac.h"
+#include "ttpmac.h"
 #include "protocol.h"
 #include "medl.h"
-#include "virhw.h"
+#include "clock.h"
 #include "ttpservice.h"
 #include "protocol_data.h"
+#include "xfer.h"
+#include "ttpdebug.h"
+#include "msg.h"
 
 extern void psp_for_coldstart(void);
 extern void tp(void);
@@ -51,13 +54,14 @@ void FSM_toColdStart(void)
 
     static uint32_t COLD_START_EXE_TIME_MACROTICK = 10;
 
+    //tsp indicates the AT time of this node
     uint32_t tsf = CNI_GetTSF();
 
-    TIM_CMD(STOP);
+    CLOCK_Clear(); //stop then clear the clock
     //timer settings and slot timing properties setting
-    TIM_SetCurMicrotick(0);
-    TIM_SetCurMacrotick(tsf - COLD_START_EXE_TIME_MACROTICK);
-    TIM_CMD(START);
+    CLOCK_SetCurMicrotick(0);
+    CLOCK_SetCurMacrotick(tsf - COLD_START_EXE_TIME_MACROTICK);
+    CLOCK_Start();
 
     NodeProperty_t *pNP = MAC_GetNodeProperties();
     ScheduleParameter_t *pSP = MAC_GetScheduleParameter();
@@ -74,7 +78,7 @@ void FSM_toColdStart(void)
     CS_SetDMC(DMC_NO_REQ);
     CS_ClearMemberAll();
     CS_SetMemberBit(pRS->FlagPosition);
-    MAC_PrepareCSFrame();
+    MSG_PrepareCSFrame();
     MAC_StopReceive();
 
     //MAC settings
@@ -83,7 +87,7 @@ void FSM_toColdStart(void)
     MAC_SetSlot(slot);
     MAC_SetTDMARound(0);
     MAC_SetPhaseCycleStartPoint(tsf-pRS->AtTime,0);
-    MAC_SetTime(tsf+pNP->SendDelay,pRS->TransmissionDuration,pRS->PSPDuration,pRS->SlotDuration);
+    MAC_SetSlotTime(tsf+pNP->SendDelay,pRS->TransmissionDuration,pRS->PSPDuration,pRS->SlotDuration);
     
     //SVC synchronization setting
     SVC_ClrClockSyncFIFO();
@@ -95,7 +99,7 @@ void FSM_toColdStart(void)
     PV_DisableFreeShot();
 
     //start the real clock and transmition
-    phase_indicator = 1; //start from prp, for psp=0,tp=1,prp=2
+    phase_indicator = 1; //start from TP, for psp=0,tp=1,prp=2
     
     MAC_StartPhaseCirculation();
     MAC_SetSlotAcquisition(SENDING_FRAME);
@@ -108,10 +112,8 @@ void FSM_doColdStart(void)
 
 void FSM_toSubColdStart(void)
 {
-    TIM_CMD(STOP);
-    TIM_SetCurMacrotick(0);
-    TIM_SetCurMicrotick(0);
-    TIM_CMD(START);
+    CLOCK_Clear();
+    CLOCK_Start();
 
     MAC_StopPhaseCirculation();
     MAC_StartReceive();
@@ -123,15 +125,21 @@ void FSM_toSubColdStart(void)
 static uint32_t _coldstart_disturb(void)
 {
     //disturb function shall be specified more detailed
-    if ((MAC_GetReceivedFlag(CH0) == MAC_EOK && MAC_GetReceivedFlag(CH1) == MAC_EOK))
-    {
-        return 1;
-    }
-    else
-    {
-        return 0;
-    }
+    return DRV_IsChannelActive();
 }
+
+// static uint32_t _coldstart_disturb(void)
+// {
+//     //disturb function shall be specified more detailed
+//     if ((MAC_GetReceivedFlag(CH0) == MAC_EOK && MAC_GetReceivedFlag(CH1) == MAC_EOK))
+//     {
+//         return 1;
+//     }
+//     else
+//     {
+//         return 0;
+//     }
+// }
 
 void FSM_doSubColdStart(void)
 {
@@ -141,9 +149,9 @@ void FSM_doSubColdStart(void)
     } else {
         FSM_sendEvent(FSM_EVENT_COLD_START_ALLOWED);
 
-        TIM_WaitAlarm(pSP->StartupTimeout,_coldstart_disturb);
+        uint32_t res = CLOCK_WaitAlarm(pSP->StartupTimeout,_coldstart_disturb);
 
-        if (DRV_CheckReceived()) {
+        if (res) {
             FSM_sendEvent(FSM_EVENT_TRAFFIC_DETECT_DURING_STO);
         } else {
             //check validity of host

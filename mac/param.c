@@ -114,4 +114,7 @@ uint32_t MAC_GetPrecision(void)
 
     return pSP->Precision;
 }
-
+uint32_t MAC_GetRatio()
+{ 
+    return CLOCK_GetFrequencyDiv(); 
+}

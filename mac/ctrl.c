@@ -43,14 +43,14 @@ void MAC_StopReceive(void)
 }
 
 
-void MAC_StartPhaseCirculation() { TIM_EnableTrigger(); }
+void MAC_StartPhaseCirculation()
+{ 
+     CLOCK_EnableTrigger(); 
+}
 
-void MAC_StopPhaseCirculation(){ TIM_DisableTrigger(); }
-
-
-void MAC_SetPhaseCycleStartPoint(uint32_t CycleStartTime, uint32_t TDMAStartOffset /* 0 always for current version */)
+void MAC_StopPhaseCirculation()
 {
-
+    CLOCK_DisableTrigger();
 }
 
 void MAC_AdjTime(uint16_t AdjMode, int16_t Offset)
@@ -86,7 +86,7 @@ void MAC_AdjTime(uint16_t AdjMode, int16_t Offset)
 
     if(AdjMode == CLK_PHASE_ADJ)
     {
-        TIM_SetStateCorrectionTerm(Offset);
+        CLOCK_SetStateCorrectionTerm(Offset);
     }
     else
     {

@@ -18,7 +18,6 @@
   ******************************************************************************
   */
 #include "ttpdebug.h"
-#include <stdint.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include "dbgio.h"

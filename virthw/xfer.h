@@ -22,7 +22,7 @@
 #ifndef __XFER_H__
 #define __XFER_H__
 
-#include "ttpdef.h"
+#include <stdint.h>
 
 /**
  * @defgroup Physical_transfer
@@ -75,7 +75,13 @@ void DRV_StopTransmission(void);
 void DRV_StartReception(void);
 void DRV_StopReception(void);
 
+/**
+ * This function clears the status of the receiver  
+ */
+void DRV_RxClear(void);
+
 int DRV_PushData(uint8_t* DataAddr,int size);
+void DRV_PrepareToTransmit(void);
 
 //void DRV_PrepareToTransmitOfCH0(uint8_t* BufferAddr, int length);
 //void DRV_PrepareToTransmitOfCH1(uint8_t* BufferAddr, int length);
@@ -92,6 +98,14 @@ int DRV_CheckTransmitted(void);
  * @return 1:received farmes, 0:received nothing.
  */
 int DRV_CheckReceived(int channel); 
+
+/**
+ * This function polls for a channel activity
+ * @return 1: channel is active(a frame is receiving on any one of the two channels).
+ *         0: channel is silent.
+ */
+int DRV_IsChannelActive(void);
+
 DataPacketTypeDef* DRV_PullData(void);
 
 // void DRV_SetCommRate(uint16_t Rate);

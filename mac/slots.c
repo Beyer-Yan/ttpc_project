@@ -147,7 +147,10 @@ uint32_t MAC_UpdateSlot(void)
     return res;
 }
 
-uint32_t MAC_GetSlotStatus(void) { return _G_SlotStatus; }
+uint32_t MAC_GetSlotStatus(void)
+{ 
+     return _G_SlotStatus; 
+}
 
 void MAC_SetSlotStatus(uint32_t SlotStatus)
 {
@@ -190,18 +193,45 @@ void MAC_SetSlotStatus(uint32_t SlotStatus)
 }
 
 /** setter implementation */
-void MAC_SetSlot(uint32_t Slot) { _G_Slot = Slot; }
-void MAC_SetTDMARound(uint32_t tdma) { _G_TDMARound = tdma; }
-void MAC_SetClusterCycleLength(uint32_t Length) { _G_TDMACycleLength = Length;}
-void MAC_SetTDMACycleLength(uint32_t Length) { _G_TDMACycleLength = Length; }
-void MAC_SetSlotAcquisition(uint32_t SlotAcquisition){ _G_SlotAcquisitionFlag = SlotAcquisition;}
+void MAC_SetSlot(uint32_t Slot)
+{
+     _G_Slot = Slot; 
+}
+void MAC_SetTDMARound(uint32_t tdma)
+{ 
+    _G_TDMARound = tdma;
+}
+void MAC_SetClusterCycleLength(uint32_t Length) 
+{
+    _G_TDMACycleLength = Length;
+}
+void MAC_SetTDMACycleLength(uint32_t Length) 
+{ 
+    _G_TDMACycleLength = Length; 
+}
+void MAC_SetSlotAcquisition(uint32_t SlotAcquisition)
+{ 
+    _G_SlotAcquisitionFlag = SlotAcquisition;
+}
 
 /** getter implementation */
-uint32_t MAC_GetNodeSlot(void) { return _G_Slot; }
-uint32_t MAC_GetTDMARound(void) { return _G_TDMARound; }
-uint32_t MAC_GetRatio() { return TIM_GetFrequencyDiv(); }
-uint32_t MAC_GetSlotAcquisition(void) { return _G_SlotAcquisitionFlag; }
-uint32_t MAC_GetRoundSlot(void) { return (_G_TDMARound * _G_TDMACycleLength + _G_Slot);}
+uint32_t MAC_GetNodeSlot(void) 
+{ 
+    return _G_Slot; 
+}
+uint32_t MAC_GetTDMARound(void) 
+{ 
+    return _G_TDMARound; 
+}
+
+uint32_t MAC_GetSlotAcquisition(void) 
+{ 
+    return _G_SlotAcquisitionFlag; 
+}
+uint32_t MAC_GetRoundSlot(void) 
+{ 
+    return (_G_TDMARound * _G_TDMACycleLength + _G_Slot);
+}
 
 uint32_t MAC_CheckSlot(void)
 {
@@ -214,9 +244,9 @@ void MAC_SetSlotTime(uint32_t ActAT, uint32_t TP,uint32_t PSP, uint32_t SD)
     uint16_t real_prp = real_at + TP & 0xffff;
     uint16_t slot_end = real_at + SD & 0xffff - PSP;
 
-    TIM_SetTriggerAT(ActAT);
-    TIM_SetTriggerPRP(real_prp);
-    TIM_SetTriggerSlotEnd(slot_end);
+    CLOCK_SetTriggerAT(ActAT);
+    CLOCK_SetTriggerPRP(real_prp);
+    CLOCK_SetTriggerSlotEnd(slot_end);
 }
 
 

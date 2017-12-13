@@ -32,10 +32,13 @@ void tp(void)
     _G_ATStartMicrotickTime = CLOCK_GetCurMicrotick();
     slot_acquisition = MAC_GetSlotAcquisition();
 
-    CNI_UpdateCLFS();
-
 	slot_acquisition==SENDING_FRAME ? MAC_StartTransmit() : MAC_StartReceive();
+
+    CNI_UpdateCLFS();
     slot_acquisition==SENDING_FRAME ? LED_On(LED_TX) : LED_Off(LED_TX);
+
+    //other test interface shall be specified here.
+
 	SVC_RaiseATSynchronousInterrupt();
 }
 

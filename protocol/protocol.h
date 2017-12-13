@@ -187,6 +187,8 @@ void FSM_sendEvent(uint32_t Event);
 
 uint32_t FSM_getCurState(void);
 
+uint32_t FSM_TransitIntoState(uint32_t NextState);
+
 /**
  * @defgroup Protocol_Processor
  */
