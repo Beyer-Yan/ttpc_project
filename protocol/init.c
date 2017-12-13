@@ -55,6 +55,8 @@ static inline void _clock_init(void)
     uint32_t macrotick = pSP->MacrotickParameter;
     uint32_t freq_div = (frequency/1000000)*(macrotick/1000);
 
+    freq_div ++;
+    freq_div --;
     CLOCK_SetStateCorrectionTerm(0);
     CLOCK_SetCurMacrotick(0);
     CLOCK_SetCurMicrotick(0);
