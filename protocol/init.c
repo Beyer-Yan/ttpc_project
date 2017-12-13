@@ -16,11 +16,11 @@
   */
 #include "medl.h"
 #include "protocol.h"
-#include "protocol_data.h"
 #include "ttpmac.h"
 #include "ttpdebug.h"
-
 #include "ttpservice.h"
+#include "protocol_data.h"
+#include "clock.h"
 
 static inline void _cni_init(void)
 {
@@ -47,24 +47,23 @@ static inline void _pv_init(void)
     PV_EnableFreeShot();
 }
 
-static inline void _timer_init(void)
+static inline void _clock_init(void)
 {
     ScheduleParameter_t* pSP = MAC_GetScheduleParameter();
 
-    uint32_t frequency = TIM_GetLocalFrequency();
+    uint32_t frequency = CLOCK_GetLocalFrequency();
     uint32_t macrotick = pSP->MacrotickParameter;
+    uint32_t freq_div = (frequency/1000000)*(macrotick/1000);
 
-    uint32_t freq_div = frequency/macrotick;
-
-    TIM_SetStateCorrectionTerm(0);
-    TIM_SetCurMacrotick(0);
-    TIM_SetCurMicrotick(0);
-    TIM_SetFrequencyDiv(freq_div);
+    CLOCK_SetStateCorrectionTerm(0);
+    CLOCK_SetCurMacrotick(0);
+    CLOCK_SetCurMicrotick(0);
+    CLOCK_SetFrequencyDiv(840); //use the default value 840
 }
 
 static inline void _id_init(void)
 {
-    HW_GetPlatformID((uint8_t*)TTP_ID_BASE, sizeof(ttp_id));
+    //HW_GetPlatformID((uint8_t*)TTP_ID_BASE, sizeof(ttp_id));
     TTP_IDCR = MEDL_GetSchedID();
     TTP_IDAR = MEDL_GetAppID();
 }
@@ -83,17 +82,15 @@ void FSM_doInit(void)
     if (!MEDL_Init()) {
         CNI_SetSRBit(SR_MC);
         CNI_SetISRBit(ISR_PE);
-        FSM_sendEvent(FSM_EVENT_INIT_ERR);
+        FSM_TransitIntoState(FSM_FREEZE);
 
         return;
     }
 
     _id_init();
-
-    _timer_init();
-
+    _clock_init();
     _pv_init();
 
     SVC_RaiseAsynchronousInterrupt();
-    FSM_sendEvent(FSM_EVENT_INIT_OK);
+    FSM_TransitIntoState(FSM_LISTEN);
 }
