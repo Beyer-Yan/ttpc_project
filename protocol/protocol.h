@@ -29,117 +29,26 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 /**
- * @defgroup StateMachine_Transition_Num
+ * @defgroup StateMachine_State
  */
 /**@{*/
+/** state names macro definitions*/
+#define MAX_STATE_NUM 	    11
 
-/**
- * Standard transition number that standard TTPC shall include
- */
+//state definitions
+#define FSM_FREEZE 			0
+#define FSM_INIT 			1
+#define FSM_LISTEN 			2
+#define FSM_COLD_START 		3
+#define FSM_SUB_CS 			4
+#define FSM_ACTIVE 			5
+#define FSM_PASSIVE 		6
+#define FSM_AWAIT 			7
+#define FSM_TEST  			8
+#define FSM_DOWNLOAD 		9
+#define FSM_ERROR 		    10
 
-/** LISTEN/COLD_START/SUB_COLD_START/ACTIVE/PASSIVE/INIT/AWAIT/TEST/DOWNLOAD -> FREEZE */
-#define TS1 		0 
-
-/** INIT -> LISTEN */		
-#define TS2 		1 
-
-/** LISTEN -> PASSIVE */
-#define TS3 		2
-
-/** LISTEN -> COLD_START */ 	
-#define TS4 		3 
-
-/** ACTIVE/PASSIVE -> FREEZE */
-#define TS5 		4
-
-/** COLD_START -> ACTIVE */
-#define TS6 		5
-
-/** COLD_START -> LISTEN */
-#define TS7 		6
-
-/** ACTIVE -> PASSIVE */
-#define TS8 		7
-
-/** PASSIVE -> ACTIVE */
-#define TS9 		8
-
-/** FREEZE -> TEST */
-#define TS10 		9
-
-/** INIT -> FREEZE */
-#define TS11 		10
-
- /** FREEZE -> AWAIT */
-#define TS12		11
-
-/** FREEZE -> INIT */
-#define TS13 		12
-
-/** TEST -> FREEZE */
-#define TS14 		13
-
-/** LISTEN/AWAIT -> DOWNLOAD */
-#define TS15 		14
-
-/** DOWNLOAD -> FREEZE */
-#define TS16 		15
-
-/** COLD_START -> SUB_COLD_START */
-#define TS17 		16
-
-/** SUB_COLD_START -> LISTEN */
-#define TS18 		17
-
-/** SUB_COLD_START -> COLD_START */
-#define TS19 		18
-
-/** COLD_START -> PASSIVE */
-#define TS20 		19
-
-/**@}*/// end of group StateMachine_Transition_Num
-
-/**
- * 
- * @defgroup StateMachine_Events
- */
-/**@{*/
-
-
-#define FSM_EVENT_INIT_OK							((uint32_t)0x00000001)
-#define FSM_EVENT_CSTATE_FRAME_RECEIVED				((uint32_t)0x00000002)
-#define FSM_EVENT_LISTEN_TIMEOUT_EXPIRED			((uint32_t)0x00000004)
-#define FSM_EVENT_COLD_START_ALLOWED				((uint32_t)0x00000008)
-#define FSM_EVENT_HOST_LIFE_UPDATED					((uint32_t)0x00000010)
-#define FSM_EVENT_CLIQUE_MINORITY					((uint32_t)0x00000020)
-#define FSM_EVENT_COMMUNICATION_BLACKOUT			((uint32_t)0x00000040)
-#define FSM_EVENT_SYNC_ERR							((uint32_t)0x00000080)
-#define FSM_EVENT_ACK_ERR							((uint32_t)0x00000100)
-#define FSM_EVENT_PERIODIC_MEDL_CRC_FAILED			((uint32_t)0x00000200)
-#define FSM_EVENT_CO_OFF							((uint32_t)0x00000400)
-#define FSM_EVENT_CLIQUE_MAJORITY					((uint32_t)0x00000800)
-#define FSM_EVENT_LEAST_2_CONTROLLERS_ALIVE			((uint32_t)0x00001000)
-#define FSM_EVENT_HOST_LIFE_NOT_UPDATED				((uint32_t)0x00002000)
-#define FSM_EVENT_MODE_VIOLATION_ERR				((uint32_t)0x00004000)
-#define FSM_EVENT_ACK_FAILED						((uint32_t)0x00008000)
-#define FSM_EVENT_NODE_SLOT_ACQUIRED				((uint32_t)0x00010000)
-#define FSM_EVENT_BIST_SET							((uint32_t)0x00020000)
-#define FSM_EVENT_CO_ON								((uint32_t)0x00040000)
-#define FSM_EVENT_INIT_ERR							((uint32_t)0x00080000)
-#define FSM_EVENT_CA_SET							((uint32_t)0x00100000)
-#define FSM_EVENT_BIST_CLR							((uint32_t)0x00200000)
-#define FSM_EVENT_CA_CLR							((uint32_t)0x00400000)
-#define FSM_EVENT_TEST_OK							((uint32_t)0x00800000)
-#define FSM_EVENT_FRAME_DOWNLOAD					((uint32_t)0x01000000)
-#define FSM_EVENT_DOWNLOAD_OK						((uint32_t)0x02000000)
-#define FSM_EVENT_TRAFFIC_DETECT_DURING_STO			((uint32_t)0x04000000)
-#define FSM_EVENT_MAX_COLD_START_ENTRIES_EXCEEDED	((uint32_t)0x08000000)
-#define FSM_EVENT_RSV0								((uint32_t)0x00000000)
-#define FSM_EVENT_RSV1								((uint32_t)0x00000000)
-#define FSM_EVENT_RSV2								((uint32_t)0x00000000)
-#define FSM_EVENT_RSV3								((uint32_t)0x00000000)
-
-/**@}*/// end of group StateMachine_Events
+/**@}*/// end of group StateMachine_State
 
 struct SubSeqRoutine
 {
@@ -187,7 +96,7 @@ void FSM_sendEvent(uint32_t Event);
 
 uint32_t FSM_getCurState(void);
 
-uint32_t FSM_TransitIntoState(uint32_t NextState);
+void FSM_TransitIntoState(uint32_t NextState);
 
 /**
  * @defgroup Protocol_Processor
