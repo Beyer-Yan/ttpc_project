@@ -101,8 +101,8 @@ int DRV_CheckReceived(int channel);
 
 /**
  * This function polls for a channel activity
- * @return 1: channel is active(a frame is receiving on any one of the two channels).
- *         0: channel is silent.
+ * @return !0: channel is active(a frame is receiving on any one of the two channels).
+ *          0: channel is silent.
  */
 int DRV_IsChannelActive(void);
 
