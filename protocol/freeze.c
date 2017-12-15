@@ -28,10 +28,32 @@ void FSM_toFreeze(void)
 
 	//clear the CO flag
 	TCN_ClrCO();
+    //clear the CA flag
+    TCN_ClrCA();
+    //clear the BIST flag
+    TCN_ClrBIST();
 	
 }
 
 void FSM_doFreeze(void)
 {
-	SVC_Sleep();
+    while(!(TTP_CR0&CR_CO))
+    {
+        SVC_Sleep();
+    }
+    //now the controller is on
+    if( (TTP_CR0&CR_BIST) && (TTP_CR0&CR_CO) )
+    {
+        FSM_TransitIntoState(FSM_TEST);
+        return;
+    }
+    else if( (TTP_CR0&CR_CA) && (TTP_CR0&CR_CO) )
+    {
+        FSM_TransitIntoState(FSM_AWAIT);
+        return;
+    }
+    else
+    {
+        FSM_TransitIntoState(FSM_INIT);
+    }
 }
