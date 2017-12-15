@@ -144,22 +144,23 @@ static uint32_t _coldstart_disturb(void)
 void FSM_doSubColdStart(void)
 {
     ScheduleParameter_t* pSP = MAC_GetScheduleParameter();
+
+    //max cold start entries exceed
     if (PV_GetCounter(COLD_START_COUNTER) > pSP->MaximumColdStartEntry) {
-        FSM_sendEvent(FSM_EVENT_MAX_COLD_START_ENTRIES_EXCEEDED);
-    } else {
-        FSM_sendEvent(FSM_EVENT_COLD_START_ALLOWED);
-
-        uint32_t res = CLOCK_WaitAlarm(pSP->StartupTimeout,_coldstart_disturb);
-
-        if (res) {
-            FSM_sendEvent(FSM_EVENT_TRAFFIC_DETECT_DURING_STO);
-        } else {
-            //check validity of host
-            if (CNI_CheckHLFS()) {
-                FSM_sendEvent(FSM_EVENT_HOST_LIFE_UPDATED);
-            } else {
-                FSM_sendEvent(FSM_EVENT_HOST_LIFE_NOT_UPDATED);
-            }
-        }
+        goto _end;
     }
+
+    //traffic detected during startup timeout
+    if (CLOCK_WaitAlarm(pSP->StartupTimeout,_coldstart_disturb)) {
+        goto _end;
+    } 
+    //check validity of host
+    if (CNI_CheckHLFS()) {
+        //host life updated
+        FSM_TransitIntoState(FSM_COLD_START);
+        return;
+    }
+    //host life not updated
+    _end:
+    FSM_TransitIntoState(FSM_LISTEN);
 }
