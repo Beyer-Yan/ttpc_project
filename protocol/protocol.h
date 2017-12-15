@@ -97,6 +97,7 @@ void FSM_sendEvent(uint32_t Event);
 uint32_t FSM_getCurState(void);
 
 void FSM_TransitIntoState(uint32_t NextState);
+void FSM_TransitIntoStateUrgent(uint32_t NextState);
 
 /**
  * @defgroup Protocol_Processor

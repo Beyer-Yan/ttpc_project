@@ -23,6 +23,12 @@
  */
 static  int volatile __G_cur_state = FSM_ERROR;
 
+/**
+ * This variable is used to record the urgent state, which occurs normally in interruption.
+ * ex. the controller on and the controller off signal; 
+ */
+static  int volatile __G_urgent_state = FSM_ERROR; 
+
 static int  volatile __G_state_changed = 0;
 
 /**
@@ -241,6 +247,24 @@ void FSM_TransitIntoState(uint32_t NextState)
 		_set_ps(__G_state[__G_cur_state].state_num);
 	}
 } 
+void FSM_TransitIntoStateUrgent(uint32_t NextState)
+{
+	TTP_ASSERT(NextState<10);
+	TTP_ASSERT(__G_cur_state<10);
+	if(!__PermissionTable[__G_cur_state][NextState])
+	{
+		ERROR("state transition error!");
+		ERROR("current state is %d",__G_cur_state);
+		ERROR("the next state is %d",NextState);
+		DBG_Flush();
+		while(1);
+	}
+	if(__G_cur_state!=NextState)
+	{
+		__G_urgent_state = NextState;
+	}
+		
+}
 
 /**
  * This function is used to run the state machine of the TTPC protocol. Attention that
@@ -257,6 +281,14 @@ static void __protocol(void)
 {
 	while(__G_cur_state!=FSM_ERROR)
 	{
+		//process the urgent state transition
+		if(__G_urgent_state!=FSM_ERROR)
+		{
+			__G_state_changed = 1;
+			__G_cur_state = __G_urgent_state;
+			__G_urgent_state = FSM_ERROR;
+		}
+
 		if(__G_state_changed==1)
 		{
 			if(__G_state[__G_cur_state].toState!=NULL)
