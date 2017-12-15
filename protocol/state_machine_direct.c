@@ -262,8 +262,13 @@ void FSM_TransitIntoStateUrgent(uint32_t NextState)
 	if(__G_cur_state!=NextState)
 	{
 		__G_urgent_state = NextState;
-	}
-		
+
+		if(__Gf_hook != NULL)
+		{
+			__Gf_hook(__G_state[__G_cur_state].state_num);
+			_set_ps(__G_state[__G_cur_state].state_num);
+		}
+	}	
 }
 
 /**
