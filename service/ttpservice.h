@@ -93,7 +93,7 @@ void SVC_Wait(uint32_t PhaseNumber);
 /**
  * freeze the ttp controller, set the corresponding error bits
  */
-void SVC_Freeze(void);
+//void SVC_Freeze(void);
 
 /**
  * @todo more utilities should be added here.
