@@ -15,11 +15,10 @@
   ******************************************************************************
   */	
 #include "ttpservice.h"
-#include "ttpc_mac.h"
+#include "ttpmac.h"
 #include "ttpdebug.h"
 #include "protocol_data.h"
 #include "protocol.h"
-#include "virhw.h"
 
 /** @see "Time Triggered Protocol Spec", page 56*/
 static volatile int32_t _G_pushdown_stack[4] = {0};
@@ -54,13 +53,12 @@ static int32_t _average()
 	tmp[3] =  _G_pushdown_stack[3];
 
 	/** simple bubble sort */
-
-	tmp[0] > tmp[1] ? SWAP(tmp[0], tmp[1]) : (void)0;
-	tmp[1] > tmp[2] ? SWAP(tmp[1], tmp[2]) : (void)0;
-	tmp[2] > tmp[3] ? SWAP(tmp[2], tmp[3]) : (void)0;
-	tmp[0] > tmp[1] ? SWAP(tmp[0], tmp[1]) : (void)0;
-	tmp[1] > tmp[2] ? SWAP(tmp[1], tmp[2]) : (void)0;
-	tmp[0] > tmp[1] ? SWAP(tmp[0], tmp[1]) : (void)0;
+	if(tmp[0] > tmp[1])  { SWAP(tmp[0], tmp[1]); }
+	if(tmp[1] > tmp[2])  { SWAP(tmp[1], tmp[2]); }
+	if(tmp[2] > tmp[3])  { SWAP(tmp[2], tmp[3]); }
+	if(tmp[0] > tmp[1])  { SWAP(tmp[0], tmp[1]); }
+	if(tmp[1] > tmp[2])  { SWAP(tmp[1], tmp[2]); }
+	if(tmp[0] > tmp[1])  { SWAP(tmp[0], tmp[1]); }
 
 	return (tmp[1] + tmp[2])/2;
 }
@@ -135,13 +133,8 @@ uint32_t SVC_ExecSyncSchema(uint32_t Steps)
 	int32_t aligned_pi = (int32_t)_alignment_err(precision); 
 
 	if(csct > aligned_pi/2)
-	{
-		CNI_SetSRBit(SR_SE);
-		FSM_sendEvent(FSM_EVENT_SYNC_ERR);
-		return 0;
-	}
+		return 0; //SYNC ERR
 
 	MAC_AdjTime(CLK_PHASE_ADJ,csct);
-
 	return 1;
 }

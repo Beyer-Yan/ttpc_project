@@ -37,10 +37,10 @@ struct SubSeqRoutine SSR_active =
 
 void FSM_toActive(void)
 {
-
+    //nothing to be done
 }
 
 void FSM_doActive(void)
 {
-	
+	//nothing to be done
 }

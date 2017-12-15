@@ -360,7 +360,12 @@ void prp_for_passive(void)
     MAC_SetSlotStatus(slot_status);
 
     _is_data_frame() ? MSG_SetStatus(pRS->CNIAddressOffset, slot_status) : (void)0;
-    pRS->ClockSynchronization == CLOCK_SYN_NEEDED ? SVC_ExecSyncSchema(step) : (void)0;
+    if(pRS->ClockSynchronization == CLOCK_SYN_NEEDED){
+        if(!SVC_ExecSyncSchema(step)){
+            CNI_SetSRBit(SR_SE);
+            FSM_TransitIntoState(FSM_FREEZE);
+        }
+    } 
 }
 
 /**
@@ -409,14 +414,13 @@ static void _ack_stage(uint32_t* check_a, uint32_t* check_b, TTP_ChannelFrameDes
  * @param  type    the frame type, FRAME_TYPE_IMPLICIT or FRAME_TYPE_EXPLICIT.
  * @param  ch      the channel, CH0 or CH1
  * @param  pFunc   the pointer of the ack function.
- * @return         frame status of channel ch.
+ * @return         the ack result
  */
-static uint32_t _ack_result(TTP_ChannelFrameDesc* pDesc, uint32_t type, uint32_t ch, AckFunc* pFunc)
+static uint32_t _ack_result(TTP_ChannelFrameDesc* pDesc, uint32_t type, uint32_t ch, AckFunc* pFunc, uint32_t *pframe_status)
 {
     uint32_t check_a;
     uint32_t check_b;
     uint32_t res;
-    uint32_t frame_status;
 
     RoundSlotProperty_t* pRS = MAC_GetRoundSlotProperties();
 
@@ -427,23 +431,27 @@ static uint32_t _ack_result(TTP_ChannelFrameDesc* pDesc, uint32_t type, uint32_t
 
     switch (res) {
     case 0:
-        frame_status = FRAME_INCORRECT;
+        //frame corrupted, wait for the next frame
+        *pframe_status = FRAME_INCORRECT;
         break;
     case 1:
-        frame_status = FRAME_CORRECT;
+        //a failed, but the frame received is correct
+        *pframe_status = FRAME_CORRECT;
         break;
     case 2:
-        frame_status = FRAME_TENTATIVE;
+        //tentative, need to be confirmed in 2nd successor
+        *pframe_status = FRAME_TENTATIVE;
         break;
     case 3:
-        frame_status = FRAME_CORRECT;
+        //a acked, the frame received is correct
+        *pframe_status = FRAME_CORRECT;
         break;
     default:
-        frame_status = FRAME_INCORRECT;
+        *pframe_status = FRAME_INCORRECT;
         break;
     }
 
-    if ((frame_status == FRAME_CORRECT) || (frame_status == FRAME_TENTATIVE)) {
+    if ((*pframe_status == FRAME_CORRECT) || (*pframe_status == FRAME_TENTATIVE)) {
         uint8_t header;
         uint32_t frame_mcr;
 
@@ -453,12 +461,12 @@ static uint32_t _ack_result(TTP_ChannelFrameDesc* pDesc, uint32_t type, uint32_t
         if (frame_mcr != MCR_MODE_CLR) {
             //mode changing is carried in the frame.
             if (pRS->ModeChangePermission == MODE_CHANGE_DENY) {
-                frame_status = FRAME_MODE_VIOLATION;
+                *pframe_status = FRAME_MODE_VIOLATION;
             }
         }
     }
 
-    return frame_status;
+    return res;
 }
 
 void prp_for_active(void)
@@ -511,15 +519,32 @@ void prp_for_active(void)
     if(ACK_FINISHED != PV_GetAckState()){
         //perform ack algorithm
         uint32_t type = pRS->FrameType;
+        uint32_t ack_res[2];
 
-        frame_status_ch[0] = pDesc->pCH0 != NULL ? _ack_result(pDesc->pCH0, type, 0, &func[0]) : frame_status_ch[0];
-        frame_status_ch[1] = pDesc->pCH1 != NULL ? _ack_result(pDesc->pCH1, type, 1, &func[1]) : frame_status_ch[1];
-
+        if(pDesc->pCH0->pFrame != NULL){
+            ack_res[0] = _ack_result(pDesc->pCH0, type, CH0, &func[0],&frame_status_ch[0]);
+        }
+        if(pDesc->pCH1->pFrame != NULL){
+            ack_res[1] = _ack_result(pDesc->pCH1, type, CH1, &func[1], &frame_status_ch[1]);
+        }
+       
         if (frame_status_ch[0] != frame_status_ch[1]) {
             chosen_ch = frame_status_ch[0] < frame_status_ch[1] ? 0 : 1;
             SVC_AckMerge(chosen_ch);
         }
-
+        if(ack_res[chosen_ch] == 1){
+            //ack failed
+            uint32_t max_member_fail =  MAC_GetMaximumMembershipFailureCount();
+            if(max_member_fail == PV_GetCounter(MEMBERSHIP_FAILED_COUNTER)){
+                //membership loss, the controller shall transmit into FREEZE state.
+                CNI_SetSRBit(SR_ME);
+                FSM_TransitIntoState(FSM_FREEZE);
+            }else{
+                //membership loss               
+                CNI_SetISRBit(ISR_ML);
+                FSM_TransitIntoState(FSM_PASSIVE);
+            }
+        }
         func[chosen_ch] != NULL ? func[chosen_ch]() : (void)0;
     }
 
@@ -561,7 +586,12 @@ void prp_for_active(void)
     /** for the assumption that channel 0 and channel 1 are the same */
     _is_data_frame() ? MSG_SetStatus(pRS->CNIAddressOffset, slot_status) : (void)0;
 
-    pRS->ClockSynchronization == CLOCK_SYN_NEEDED ? SVC_ExecSyncSchema(step) : (void)0;
+    if(pRS->ClockSynchronization == CLOCK_SYN_NEEDED){
+        if(!SVC_ExecSyncSchema(step)){
+            CNI_SetSRBit(SR_SE);
+            FSM_TransitIntoState(FSM_FREEZE);
+        }
+    }
 }
 
 void prp_for_coldstart(void)
@@ -628,5 +658,10 @@ void prp_for_coldstart(void)
     int32_t step = (int32_t)pRS->SlotDuration;
 
     MAC_SetSlotStatus(slot_status);
-    pRS->ClockSynchronization == CLOCK_SYN_NEEDED ? SVC_ExecSyncSchema(step) : (void)0;
+    if(pRS->ClockSynchronization == CLOCK_SYN_NEEDED){
+        if(!SVC_ExecSyncSchema(step)){
+            CNI_SetSRBit(SR_SE);
+            FSM_TransitIntoState(FSM_FREEZE);
+        }
+    }
 }

@@ -22,6 +22,7 @@
 #include "protocol_data.h"
 #include "ttpservice.h"
 #include "protocol.h"
+#include "msg.h"
 
 #define TYPE_DECISION    1
 #define TYPE_TENTATIVE   2
@@ -275,20 +276,6 @@ static void _process_FTFT(void)
     //PV_IncCounter(AGREED_SLOTS_COUNTER);
     //PV_IncCounter(FALTED_SLOTS_COUNTER);
     PV_IncCounter(MEMBERSHIP_FAILED_COUNTER); 
-
-    uint32_t max_member_fail =  MAC_GetMaximumMembershipFailureCount();
-
-    if(max_member_fail == PV_GetCounter(MEMBERSHIP_FAILED_COUNTER))
-    {
-        CNI_SetSRBit(SR_ME);
-        FSM_sendEvent(FSM_EVENT_ACK_ERR);
-    }
-    else
-    {
-        //membership loss, the controller shall transmit into FREEZE state.
-        CNI_SetISRBit(ISR_ML);
-        FSM_sendEvent(FSM_EVENT_ACK_FAILED);
-    }
 
     PV_SetAckState(ACK_FINISHED);
 }

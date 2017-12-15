@@ -61,7 +61,7 @@
 #define ABS(n)								((n)>0 ? (n) : (-(n)))
 
 /* SWAP macro definition */
-#define SWAP(a,b)                           ({ (a)=(a)^(b); (b)=(a)^(b); (a)=(a)^(b); })
+#define SWAP(a,b)                           do{ (a)=(a)^(b); (b)=(a)^(b); (a)=(a)^(b); }while(0)
 
 /************************************************************************************/
 /**
@@ -162,7 +162,12 @@ void     SVC_AckInit(void);
 
 void     SVC_AckMerge(uint32_t ch);
 
-
+/**
+ * The function does the corresponding ack process
+ * return 0: ack failed
+ *        1: ack successor
+ *        2: frame corrupted
+ */
 typedef void (*AckFunc)(void);
 
 /**

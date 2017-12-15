@@ -134,22 +134,17 @@ static inline uint32_t _check_clique(void)
 
     switch (clique_res) {
     case CLIQUE_MINORITY:
-        FSM_sendEvent(FSM_EVENT_CLIQUE_MINORITY);
         CNI_SetSRBit(SR_CE);
         break;
     case CLIQUE_NO_ACTIVITY:
-        FSM_sendEvent(FSM_EVENT_COMMUNICATION_BLACKOUT);
+
         CNI_SetSRBit(SR_CB);
         break;
     case CLIQUE_MAJORITY:
-        FSM_sendEvent(FSM_EVENT_CLIQUE_MAJORITY);
         res = 1;
     default:
         break;
     }
-
-    PV_ClrCounter(AGREED_SLOTS_COUNTER);
-    PV_ClrCounter(FAILED_SLOTS_COUNTER);
 
     return res;
 }
@@ -235,8 +230,20 @@ void psp_for_passive(void)
     #warning "periodic checking for MEDL has not been implemented"
 
     if (MAC_IsOwnNodeSlot()) {
-        if (!_check_clique())
-            return;
+        uint32_t clique_res = SVC_CliqueDetect();
+        if(clique_res == CLIQUE_MINORITY){
+            CNI_SetSRBit(SR_CE);
+            FSM_TransitIntoState(FSM_FREEZE);
+            goto _end;
+        }else if(clique_res == CLIQUE_NO_ACTIVITY){
+            CNI_SetSRBit(SR_CB);
+            FSM_TransitIntoState(FSM_FREEZE);
+            goto _end;
+        }else{
+            //majority clique
+            PV_ClrCounter(AGREED_SLOTS_COUNTER);
+            PV_ClrCounter(FAILED_SLOTS_COUNTER);
+        }
     }
 
     pRS = MAC_GetRoundSlotProperties();
@@ -249,13 +256,12 @@ void psp_for_passive(void)
     if(CNI_IsModeChangeRequested()){
         if(pRS->ModeChangePermission == MODE_CHANGE_DENY){
             CNI_SetSRBit(SR_MV);
-            FSM_sendEvent(FSM_EVENT_MODE_VIOLATION_ERR);
             goto _end;
         }
     }
      /**< now, membership acquired */
-    FSM_sendEvent(FSM_EVENT_NODE_SLOT_ACQUIRED);
     _prepare_for_transmit();
+    FSM_TransitIntoState(FSM_ACTIVE);
     return;
 
     _end:
@@ -269,8 +275,21 @@ void psp_for_active(void)
     _slot_properties_update();
 
     if (MAC_IsOwnNodeSlot()) {
-        if (!_check_clique())
-            return;
+        //clique detection
+        uint32_t clique_res = SVC_CliqueDetect();
+        if(clique_res == CLIQUE_MINORITY){
+            CNI_SetSRBit(SR_CE);
+            FSM_TransitIntoState(FSM_FREEZE);
+            goto _end;
+        }else if(clique_res == CLIQUE_NO_ACTIVITY){
+            CNI_SetSRBit(SR_CB);
+            FSM_TransitIntoState(FSM_FREEZE);
+            goto _end;
+        }else{
+            //majority clique
+            PV_ClrCounter(AGREED_SLOTS_COUNTER);
+            PV_ClrCounter(FAILED_SLOTS_COUNTER);
+        }
     }
 
     pRS = MAC_GetRoundSlotProperties();
@@ -278,11 +297,10 @@ void psp_for_active(void)
     if (MAC_IsSendSlot()) {
         if (SVC_CheckHostLifeSign()) {
             //host life updated during active state
-            FSM_sendEvent(FSM_EVENT_HOST_LIFE_UPDATED);
             //freeshot state
             PV_DisableFreeShot();
         } else {
-            FSM_sendEvent(FSM_EVENT_HOST_LIFE_NOT_UPDATED);
+            FSM_TransitIntoState(FSM_PASSIVE);
             CS_ClearMemberBit(pRS->FlagPosition);
             goto _end;
         }
@@ -293,7 +311,7 @@ void psp_for_active(void)
                 CNI_SetSRBit(SR_MV);
                 CNI_ClrMCR();
                 CS_ClearMemberBit(pRS->FlagPosition);
-                FSM_sendEvent(FSM_EVENT_MODE_VIOLATION_ERR);
+                FSM_TransitIntoState(FSM_PASSIVE);
                 goto _end;
             } 
         }
@@ -321,22 +339,35 @@ void psp_for_coldstart(void)
     _slot_properties_update();
 
     if (MAC_IsOwnNodeSlot()) {
-        if (_check_clique()){
-            FSM_sendEvent(FSM_EVENT_LEAST_2_CONTROLLERS_ALIVE);
-        }
-        else
+        uint32_t clique_res = SVC_CliqueDetect();
+        if(clique_res == CLIQUE_MINORITY){
+            FSM_TransitIntoState(FSM_LISTEN);
             return;
+        }else if(clique_res == CLIQUE_NO_ACTIVITY){
+            FSM_TransitIntoState(FSM_SUB_CS);
+            return;
+        }else{
+            //majority clique
+            PV_ClrCounter(AGREED_SLOTS_COUNTER);
+            PV_ClrCounter(FAILED_SLOTS_COUNTER);
+
+            //cstate valid now, the controller will notify the host in the next AT time
+            //by interruption.
+            CNI_SetISRBit(ISR_CV);
+        }
     }
 
+    //the node is in passive or active now, because of the delay of the FSM,
+    //the state will be changed in the next transition
     pRS = MAC_GetRoundSlotProperties();
 
     if (MAC_IsSendSlot()) {
-        if (SVC_CheckHostLifeSign()) {
-            FSM_sendEvent(FSM_EVENT_HOST_LIFE_UPDATED);
-        } else {
-            FSM_sendEvent(FSM_EVENT_HOST_LIFE_NOT_UPDATED);
+        if (!SVC_CheckHostLifeSign()) {
+            //passive state now
             CS_ClearMemberBit(pRS->FlagPosition);
-            goto _end;
+            FSM_TransitIntoState(FSM_PASSIVE);
+            _prepare_for_receive();
+            return;
         }
 
         //check the mode request field
@@ -345,18 +376,15 @@ void psp_for_coldstart(void)
                 CNI_SetSRBit(SR_MV);
                 CNI_ClrMCR();
                 CS_ClearMemberBit(pRS->FlagPosition);
-                FSM_sendEvent(FSM_EVENT_MODE_VIOLATION_ERR);
-                goto _end;
+                FSM_TransitIntoState(FSM_PASSIVE);
+                _prepare_for_receive();
+                return;
             } 
         }
-        //cstate valid now, the controller will notify the host in the next AT time
-        //by interruption.
-        CNI_SetISRBit(ISR_CV);
         _prepare_for_transmit();//transmit a I-frame, normally.
+        FSM_TransitIntoState(FSM_ACTIVE);
         return;
     }
-     _end:
-    _prepare_for_receive();
 }
 
 uint32_t  MAC_GetSlotStartMacroticks(void)
