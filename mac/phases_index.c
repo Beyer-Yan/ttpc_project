@@ -20,6 +20,6 @@
 
 
 /**
- * 
+ * 0 for PSP, 1 for TP, 2 for PRP
  */
 volatile uint32_t phase_indicator = 0;

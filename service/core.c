@@ -18,6 +18,7 @@
 #include "cpu.h"
 #include "protocol.h"
 #include "ttpdef.h"
+#include "clock.h"
 
 void SVC_RaiseATSynchronousInterrupt(void)
 {
@@ -39,7 +40,11 @@ void SVC_Sleep(void)
     CPU_Sleep();
 }
 
-void SVC_Wait(uint32_t PhaseNumber);
+void SVC_Wait(uint32_t PhaseNumber)
+{
+    static uint32_t _phaseToTrigger[3] = {CLOCK_TRIGGER_END,CLOCK_TRIGGER_AT,CLOCK_TRIGGER_PRP};
+    CLOCK_WaitTrigger(_phaseToTrigger[PhaseNumber]);
+}
 
 /** interrupt line shall be specified, diffrent from the awake line */
 static void __ExternalEventHandler(void)
