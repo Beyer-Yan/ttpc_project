@@ -85,8 +85,8 @@ static inline void _load_slot_configuration(void)
 	 * the c-state mode.
 	 */
     uint32_t mode = CS_GetCurMode();
-    uint32_t tdma = MAC_GetTDMARound();
-    uint32_t slot = MAC_GetNodeSlot();
+    //uint32_t tdma = MAC_GetTDMARound();
+    uint32_t round_slot = MAC_GetRoundSlot();
 
     //check then load the configuration of the current slot.
     
@@ -98,7 +98,7 @@ static inline void _load_slot_configuration(void)
 		MAC_SetClusterCycleLength(ccl);
 		MAC_SetTDMACycleLength(ctl);
 	}
-    MAC_LoadSlotProperties(mode, tdma, slot);
+    MAC_LoadSlotProperties(mode, round_slot);
 }
 
 static inline void _slot_properties_update()

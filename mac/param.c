@@ -20,7 +20,6 @@
 #include "ttpmac.h"
 #include "clock.h"
 #include "medl.h"
-#include "xfer.h"
 #include "ttpdebug.h"
 
 /*********************** slot parameters configuration *************************/
@@ -28,22 +27,18 @@
 RoundSlotProperty_t* MAC_GetRoundSlotProperties(void)
 {
     uint32_t mode = CS_GetCurMode();
-    uint32_t tdma = MAC_GetTDMARound();
-    uint32_t slot = MAC_GetNodeSlot();
+    uint32_t slot = MAC_GetRoundSlot();
 
     uint32_t mode_num = CALC_MODE_NUM(mode);
-    return MEDL_GetRoundSlotAddr(mode_num, tdma, slot);
+    return MEDL_GetRoundSlotAddr(mode_num, slot);
 }
 
-RoundSlotProperty_t* MAC_LoadSlotProperties(uint32_t mode, uint32_t tdma, uint32_t slot)
+RoundSlotProperty_t* MAC_LoadSlotProperties(uint32_t mode, uint32_t RoundSlot)
 {
-    uint32_t mode_num;
+    uint32_t mode_num = CALC_MODE_NUM(mode);
 
-    mode_num = CALC_MODE_NUM(mode);
-
-    return MEDL_GetRoundSlotAddr(mode_num, tdma, slot);
+    return MEDL_GetRoundSlotAddr(mode_num,RoundSlot);
 }
-
 
 /*********************** ID parameters access  *************************/
 
@@ -60,7 +55,7 @@ uint32_t  MAC_GetAppID(void)
 
 NodeProperty_t* MAC_GetNodeProperties(void)
 {
-    return MEDL_GetRegionAddr(ROLE_REGION);
+    return MEDL_GetRoleAddr();
 }
 
 uint32_t MAC_IsPassiveNode(void)
@@ -83,7 +78,7 @@ uint32_t MAC_IsMultiplexedMembershipNode(void)
 /*********************** scheduler parameters access  *************************/
 ScheduleParameter_t* MAC_GetScheduleParameter(void)
 {
-    return MEDL_GetRegionAddr(SCHEDULE_REGION);
+    return MEDL_GetScheduleAddr();
 }
 uint32_t MAC_GetMinimumIntegrationCount(void)
 {

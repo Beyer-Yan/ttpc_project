@@ -108,21 +108,18 @@ RoundSlotProperty_t* MAC_GetRoundSlotProperties(void);
 /**
  * Load the slot configuration parameters from the MEDL.
  * @param  mode the current mode
- * @param  tdma the current TDMA round
- * @param  slot the current slot
+ * @param  RoundSlot the current slot
  * @return      the slot configuration parameters entry.
- * @attention   ensure that the tdma and the slot are updated at the start of PSP before
+ * @attention   ensure that and the slot are updated at the start of PSP before
  *              calling this function.
  */
-RoundSlotProperty_t* MAC_LoadSlotProperties(uint32_t mode,uint32_t tdma,uint32_t slot);
-
+RoundSlotProperty_t* MAC_LoadSlotProperties(uint32_t mode,uint32_t RoundSlot);
 
 /**
  * Attention that SETTER functions can only be called in initialization.
  */
 uint32_t  MAC_GetClusterScheduleID(void);
 uint32_t  MAC_GetAppID(void);
-
 
 /**
  * The properties below are specified for the node at initialization phase
