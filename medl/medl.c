@@ -17,10 +17,14 @@
 #include "medl.h"
 #include "ttpmac.h"
 #include "ttpdebug.h"
+#include "crc.h"
 
 #error "to be tested"
 
 static volatile medl_header_t       __G_medl_header;
+static volatile mode_discriptor_t   __G_mode_discriptor;
+
+static uint8_t*                     __G_medl_base_addr;
 
 /**
  * variables below are used to buffer the frequently-used parameters.
@@ -35,155 +39,132 @@ static volatile uint32_t            __G_app_id;
 
 /**
  * this function is declared in the low-level hardware-relative file and is used to 
- * read the specified number bytes from the specific MEDL memory region into the buf.
- * @param  buf    the buffer region
- * @param  size   the size to read
- * @param  offset the address offset relative  to the base address of the medl region
+ * get the base address of the specific MEDL memory region.
  * @return      @arg 0  reading failed due to hardware fault
  *              @arg 1  reading success
  * @attention   little endian memory mode is required.
  */
-extern int medl_real_read(char *buf, int size, int offset);
+extern uint8_t* medl_get_base_addr(void);
 //extern void* get_medl_base_addr(void);
 
-static void __medl_header_extract(void)
+static void _byte_copy(volatile void* dst, const void* src,int size)
 {
-	int res = 0;
+	volatile uint8_t* _d = (volatile uint8_t*)dst;
+	const uint8_t*    _s = (const uint8_t*)src;
 
-	/** read header from the 0 address relative the base addr */
-	res = medl_real_read((char*)&__G_medl_header, MEDL_HEADER_SIZE, 0);
-
-	TTP_ASSERT(res!=0);
+	while(size-->0)
+	{
+		_d[size] = _s[size];
+	}
 }
 
+static  void __medl_header_extract(void)
+{
+	/** read header from the 0 address relative the base addr */
+	_byte_copy(&__G_medl_header, __G_medl_base_addr, MEDL_HEADER_SIZE);
+}
 static void __medl_sched_extract(void)
 {
-	uint32_t buf[10] = {0};
-	uint32_t res     = 0;
+	uint8_t *buf = __G_medl_base_addr + __G_medl_header.sched_region_addr; //28 bytes
 
-	res = medl_real_read((char*)buf,
-						 __G_medl_header.sched_region_size,
-						 __G_medl_header.sched_region_addr);
+	__G_sched.ColdStartAllow               =  buf[0]&0x01;
+	__G_sched.ColdStartIntegrationAllow    = (buf[0]&0x02)>>1;
+	__G_sched.ExternalRateCorrectionAllow  = (buf[0]&0x04)>>2;
+	__G_sched.MinimumIntegrationCount      = buf[1];
+	__G_sched.MaximumColdStartEntry        = buf[2];
+	__G_sched.MaximumMembershipFailureCount= buf[3];
 
-	TTP_ASSERT(res!=0);
-
-	__G_sched.ColdStartAllow               = (buf[0]&(1<<0))>>0;
-	__G_sched.ColdStartIntegrationAllow    = (buf[0]&(1<<1))>>1;
-	__G_sched.ExternalRateCorrectionAllow  = (buf[0]&(1<<2))>>2;
-	__G_sched.MinimumIntegrationCount      = (buf[0]&(0xff<<8))>>8;
-	__G_sched.MaximumColdStartEntry        = (buf[0]&(0xff<<16))>>16;
-	__G_sched.MaximumMembershipFailureCount= (buf[0]&(0xff<<24))>>24;
-	__G_sched.MacrotickParameter           = buf[1];
-	__G_sched.Precision                    = buf[2];
-	__G_sched.ArrivalTimingWindow          = buf[3];
-	
-	__G_sched.StartupTimeout               = buf[4];
-	__G_sched.ListenTimeout                = buf[5];
-	__G_sched.ColdStartTimeout             = buf[6];
+	_byte_copy(&__G_sched.MacrotickParameter, buf + 4, 4);
+	_byte_copy(&__G_sched.Precision, buf + 8, 4);
+	_byte_copy(&__G_sched.ArrivalTimingWindow, buf + 12,4);
+	_byte_copy(&__G_sched.StartupTimeout, buf + 16,4);
+	_byte_copy(&__G_sched.ListenTimeout, buf + 20,4);
+	_byte_copy(&__G_sched.ColdStartTimeout, buf + 24,4);
 }
 
 static void __medl_role_extract(void)
 {
-	uint32_t buf[10] = {0};
-	uint32_t res     = 0;
+	uint8_t* buf = __G_medl_base_addr + __G_medl_header.role_region_addr;
 
-	res = medl_real_read((char*)buf,
-						 __G_medl_header.role_region_size,
-						 __G_medl_header.role_region_addr);
+	_byte_copy(&__G_role.LogicalNameSlotPosition, buf,2);
+	__G_role.LogicalNameSlotPosition &= 0x0000ffff;
 
-	TTP_ASSERT(res!=0);
-	__G_role.LogicalNameSlotPosition       = (buf[0]&(0xffff<<16))>>16;
-	__G_role.LogicalNameMultiplexedID 	   = (buf[0]&0xffff);
-	__G_role.PassiveFlag               	   = (buf[1]&(1<<0))>>0;				
-	__G_role.MultiplexedMembershipFlag 	   = (buf[1]&(1<<1))>>1;
-	__G_role.FlagPosition              	   = (buf[1]&(0xff<<8))>>8;				
-	__G_role.SendDelay                 	   = buf[2];	
+	_byte_copy(&__G_role.LogicalNameMultiplexedID, buf+2,2);
+	__G_role.LogicalNameMultiplexedID &= 0x0000ffff;
+
+	__G_role.PassiveFlag               	   = buf[4]&0x01;				
+	__G_role.MultiplexedMembershipFlag 	   = (buf[4]&0x02)>>1;
+	__G_role.FlagPosition              	   = buf[5];		
+
+	_byte_copy(&__G_role.SendDelay, buf+6,2);
 }
 
 static void __medl_id_extract(void)
 {
-	uint32_t buf[10] = {0};
-	uint32_t res     = 0;
+	uint8_t *buf = __G_medl_base_addr + __G_medl_header.id_region_addr;
 
-	res = medl_real_read((char*)buf,
-						 __G_medl_header.id_region_size,
-						 __G_medl_header.id_region_addr);
-
-	TTP_ASSERT(res!=0);
-	__G_sched_id = buf[0];
-	__G_app_id   = buf[1];
+	_byte_copy(&__G_sched_id, buf, 4);
+	_byte_copy(&__G_app_id, buf+4, 4);
 }
 
-static void __medl_slot_extract(uint32_t mode, uint32_t round_slot)
+static void __medl_mode_extract(uint32_t mode)
 {
-	uint32_t buf[10] = {0};
-	uint32_t res = 0;
-	uint32_t offset = __G_medl_header.slot_mode_addr[mode] + 
-	                  __G_medl_header.slot_size * round_slot;
+	uint8_t* buf = __G_medl_base_addr + __G_medl_header.mode_region_addr+MODE_DSCR_SIZE*mode;
+	_byte_copy(&__G_mode_discriptor,buf,MODE_DSCR_SIZE);
+}
+
+static inline void _slot_property_extract(uint8_t* buf)
+{
 	/**
 	 * @attention upper program should guarantee the legality of the parameters,
 	 * mode and round_slot.
 	 */
-	res = medl_real_read((char*)buf,
-						 __G_medl_header.slot_size,
-						 offset);
-						 
-	TTP_ASSERT(res!=0);
-	__G_slot.LogicalSenderSlot        = (buf[0]&(0xffff<<16))>>16;
-	__G_slot.LogicalSenderMultiplexID = (buf[0]&0xffff);
-	__G_slot.SlotDuration             = buf[1];	
-	__G_slot.PSPDuration              = buf[2]&0xffff;
-	__G_slot.TransmissionDuration     = buf[2]>>16;
-	__G_slot.DelayCorrectionTerms     = buf[3];	
-	__G_slot.CNIAddressOffset         = buf[4];	
-	__G_slot.AppDataLength            = (buf[5]&0xff);
-	__G_slot.FlagPosition             = (buf[5]&(0xff<<8))>>8;	
-	__G_slot.FrameType                = (buf[5]&(1<<16))>>16;
-	__G_slot.ModeChangePermission     = (buf[5]&(1<<17))>>17;
-	__G_slot.ReintegrationAllow       = (buf[5]&(1<<18))>>18;
-	__G_slot.ClockSynchronization     = (buf[5]&(1<<19))>>19;
-	__G_slot.SynchronizationFrame     = (buf[5]&(1<<20))>>20;
-	__G_slot.AtTime                   = buf[6];
+	_byte_copy(&__G_slot.LogicalSenderSlot, buf,2);
+	__G_slot.LogicalSenderSlot &= 0x0000ffff;
+
+	_byte_copy(&__G_slot.LogicalSenderMultiplexID, buf+2,2);
+	__G_slot.LogicalSenderMultiplexID &= 0x0000ffff;
+
+	_byte_copy(&__G_slot.SlotDuration, buf+4,2);
+	__G_slot.SlotDuration &= 0x0000ffff;
+
+	__G_slot.PSPDuration              = buf[6];
+	__G_slot.TransmissionDuration     = buf[7];
+
+	_byte_copy(&__G_slot.DelayCorrectionTerms, buf+8,2);
+	__G_slot.DelayCorrectionTerms &= 0x0000ffff;
+
+	__G_slot.AppDataLength            = buf[10];
+	_byte_copy(&__G_slot.CNIAddressOffset, buf+12,2);
+	
+	__G_slot.FlagPosition             = buf[16];	
+	__G_slot.FrameType                = buf[17]&0x01;
+	__G_slot.ModeChangePermission     = (buf[17]&0x02)>>1;
+	__G_slot.ReintegrationAllow       = (buf[17]&0x04)>>2;
+	__G_slot.ClockSynchronization     = (buf[17]&0x08)>>3;
+	__G_slot.SynchronizationFrame     = (buf[17]&0x10)>>4;
+	
+	_byte_copy(&__G_slot.AtTime, buf+18,2);
+	__G_slot.AtTime  &= 0x0000ffff;
+}
+
+/** be sure that the current mode is updated */
+static inline uint8_t* __medl_get_slot_entry(uint32_t mode, uint32_t round_slot)
+{
+	return __G_medl_base_addr + __G_mode_discriptor.mode_addr + SLOT_SIZE*round_slot;
 }
 
 static uint32_t __medl_crc32_check(void)
 {
-	uint32_t res    = 0;
-	uint32_t length = 0;
-	uint32_t remain = 0;
-
 	uint32_t crc32_tmp;
+	uint32_t crc_origion;
 
-	uint32_t data;
+	_byte_copy(&crc_origion,__G_medl_base_addr+__G_medl_header.crc32_region_addr,4);
+	CRC_ResetData();
+	CRC_PushData(__G_medl_base_addr,__G_medl_header.total_size-4);
+	crc32_tmp = CRC_GetResult();
 
-	int i = 0;
-
-	/** remove the last 4 bytes crc32 code */
-	remain = (MEDL_HEADER_SIZE-4)%4;
-
-	if(remain!=0)
-	{
-		/** medl region shall be 4 bytes aligned */
-		return 0;
-	}
-
-	length = (MEDL_HEADER_SIZE-4)/4;
-	for(;i<length;i++)
-	{
-		res = medl_real_read((char*)&data,sizeof(uint32_t),i*sizeof(uint32_t));
-		TTP_ASSERT(res!=0);
-
-		crc32_tmp = CRC_CalcBlock(&data,1);
-	}
-
-	/** read the crc32 region of the medl */
-	res = medl_real_read((char*)&data,
-						 sizeof(uint32_t),
-						 __G_medl_header.crc32_region_addr);
-
-	TTP_ASSERT(res!=0);
-
-	return (res=(data==crc32_tmp));
+	return crc_origion==crc32_tmp;
 }
 
 /**
@@ -195,70 +176,59 @@ uint32_t MEDL_Init(void)
 {
 	uint32_t res = 0;
 
+	__G_medl_base_addr = medl_get_base_addr();
+	TTP_ASSERT(__G_medl_base_addr!=NULL);
+
 	__medl_header_extract();
+	//res = __medl_crc32_check();
+	//if(res==0){
+	//	return res;
+	//}
 
-	res = __medl_crc32_check();
-
-	if(res==0)
-	{
-		return res;
-	}
-
-	/**
-	 * buffer the frequently-used parameters.
-	 */
-	
-	/** The schedule parameter is unchangable when power on */
+	/** buffer the frequently-used parameters. */
+	/** The schedule parameter will be permanant when power on */
 	__medl_sched_extract();
-
-	/** The role parameter of a node is still unchangable when power on */
+	/** The role parameter of a node will be permanant when power on */
 	__medl_role_extract();
-
 	__medl_id_extract();
- 	
+
+	/** pre-extract the first mode, cold start mode*/
+	__medl_mode_extract(0);
+
+	//pre-extract the slot property of the node own.
+	uint32_t _slot = __G_role.LogicalNameSlotPosition;
+	uint8_t* buf = __medl_get_slot_entry(0,_slot);
+	_slot_property_extract(buf);
+
  	return res;
 }
 
-/**
- * This function will return the corresbonding region by returning its address.
- * So, correct pointer casting should be performed when this function is called.
- * @param RegionType the region type
- * @return the address of the corresbonding region
- * @attention DO NOT GET THE ID REGION USING THIS FUNCTION BECAUSE YOU HAVE BETTER
- *            APPROACH TO DO THE SAME THING, THAT IS, TO CALL MEDL_GetSchedID AND
- *            MEDL_GetAppID.
- */
-void* MEDL_GetRegionAddr(uint32_t RegionType)
+void* MEDL_GetRoleAddr(void)
 {
-	uint32_t addr;
-
-	switch(RegionType)
-	{
-		case SCHEDULE_REGION : addr = (uint32_t)&__G_sched; 	break;
-		case ROLE_REGION     : addr = (uint32_t)&__G_role;  	break;
-		case ID_REGION       : addr = (uint32_t)&__G_sched_id;  break;
-		default              : addr = 0;      
-	}
-	return (void*)(addr);
+	return (void*)&__G_role;
 }
 
-void* MEDL_GetRoundSlotAddr(uint32_t ModeNum, uint32_t TDMARound, uint32_t Slot)
+void* MEDL_GetScheduleAddr(void)
 {
-	static uint32_t _ModeNum   = -1;
-	static uint32_t _TDMARound = -1;
-	static uint32_t _Slot      = -1;
-	uint32_t _round_slot;
+	return (void*)&__G_sched;
+}
+
+void* MEDL_GetRoundSlotAddr(uint32_t ModeNum, uint32_t RoundSlot)
+{
+	static uint32_t _modeNum   = 0xffffffff;
+	static uint32_t _slot      = 0xffffffff;
 	/**
 	 * Only in the first time are the slot properties extracted.
 	 */
-	if((_ModeNum!=ModeNum)||(_TDMARound!=TDMARound)||(_Slot!=Slot))
-	{
-		_ModeNum    = ModeNum;
-		_TDMARound  = TDMARound;
-		_Slot       = Slot;
-		_round_slot = _TDMARound * __G_medl_header.tdma_slots + _Slot;
-
-		__medl_slot_extract(_ModeNum,_round_slot);
+	if(_modeNum!=ModeNum){
+		_modeNum = ModeNum;
+		_slot    = RoundSlot;
+		__medl_mode_extract(_modeNum);
+		_slot_property_extract(__medl_get_slot_entry(_modeNum,_slot));
+	}else if(_slot!=RoundSlot){
+		_slot    = RoundSlot;
+		uint8_t* buf = __medl_get_slot_entry(_modeNum,_slot);
+		_slot_property_extract(buf);
 	}
 
 	return ((void*)&__G_slot);
@@ -276,14 +246,16 @@ uint32_t MEDL_GetAppID(void)
 
 uint32_t MEDL_GetRoundCycleLength(uint32_t ModeNum)
 {
-	return __G_medl_header.slot_mode_size[ModeNum];
+	uint16_t len;
+	uint8_t* buf = __G_medl_base_addr + __G_medl_header.mode_region_addr + MODE_DSCR_SIZE*ModeNum;
+	_byte_copy(&len,buf+4,2);
+	return len;
 }
 
 uint32_t MEDL_GetTDMACycleLength(uint32_t ModeNum)
 {
-	/**
-	 * the parameter ModeNum is not used here temporarily. We assume that 
-	 * the TDMA slots of all modes are the same.
-	 */
-	return __G_medl_header.tdma_slots;
+	uint16_t len;
+	uint8_t* buf = __G_medl_base_addr + __G_medl_header.mode_region_addr + MODE_DSCR_SIZE*ModeNum;
+	_byte_copy(&len,buf+6,2);
+	return len;
 }

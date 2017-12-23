@@ -19,14 +19,17 @@
 
 #include "ttpdef.h"
      
-#define MODE_NUM            3
-
 /**
  * The header is part of the medl, meaning that the real addr offset of the medl
  * IS the MEDL_BASE_ADDR + MEDL_HEADER_SIZE. Every address offset of the region of
  * the medl is relative to the MEDL_BASE_ADDR, inlcuding the medl header. 
  */
-#define MEDL_HEADER_SIZE    64    /**< 64 bytes */  
+#define MEDL_HEADER_SIZE    28    /**< 28 bytes */
+#define SCHED_REGION_SIZE   28
+#define ROLE_REGION_SIZE    8
+#define ID_REGION_SIZE      8  
+#define MODE_DSCR_SIZE      8
+#define SLOT_SIZE           20    
 
 /**
  *                                                                                 
@@ -78,74 +81,52 @@
  */
 typedef struct medl_header 
 {
-  /** the schedule addr offset relative to the medl base */
-	uint32_t		sched_region_addr;
-	uint32_t 		sched_region_size;
+    uint32_t    total_size;
+    /** the schedule addr offset relative to the medl base */
+	uint32_t	sched_region_addr;
 
-  /** the role addr offset relative to the medl base */
-	uint32_t		role_region_addr;
-	uint32_t 		role_region_size;
+    /** the role addr offset relative to the medl base */
+	uint32_t	role_region_addr;
 
-  /** the id addr offset relative to the medl base */
-	uint32_t		id_region_addr;
-	uint32_t 		id_region_size;
+    /** the id addr offset relative to the medl base */
+	uint32_t	id_region_addr;
 
-  /** the slot addr offset relative to the medl base */
-  uint32_t    slot_region_addr;
-  uint32_t    slot_region_size;
+    /** the slot addr offset relative to the medl base */
+    uint32_t    mode_region_addr;
+    uint32_t    mode_region_num;
 
-  /**
-   * the memory address of the slot-mode-data structure. 
-   * Each mode has its own address of the corresponding slot-
-   * mode-data structure.
-   */
-  uint32_t    slot_mode_addr[MODE_NUM];
-  /**
-   * The numbers of slots for the corresponding mode. The size may
-   * differ for different modes.
-   */ 
-  uint32_t    slot_mode_size[MODE_NUM];
-
-  /**
-   * The slot number of every TDMA round
-   */
-  uint32_t    tdma_slots;
-
-  /**
-   * The size of every slot  configuration data;
-   */
-  uint32_t    slot_size;
-
-  /** the crc32 position of the medl region, 32 bits of course. */
-  uint32_t    crc32_region_addr;
+    /** the crc32 position of the medl region, 32 bits of course. */
+    uint32_t    crc32_region_addr;
 
 }medl_header_t; 
 
+typedef struct mode_discriptor
+{
+    uint32_t mode_addr;
+    uint32_t round_slots;
+    uint32_t tdma_slots;
+
+}mode_discriptor_t;
 
 /** region type definition */
 #define SCHEDULE_REGION       (uint32_t)0x00000001
 #define ROLE_REGION           (uint32_t)0x00000002
 #define ID_REGION             (uint32_t)0x00000003
+#define MODE_REGION           (uint32_t)0x00000004
 
 /**
  * This function will be called when power on
  */
 uint32_t  MEDL_Init(void);
 
-/**
- * Get the corresbonding region address
- * @param  RegionType the region
- *           @arg SCHEDULE_REGION
- *           @arg ROLE_REGION
- * @return the region address
- */
-void*     MEDL_GetRegionAddr(uint32_t RegionType);
 uint32_t  MEDL_GetSchedID(void);
 uint32_t  MEDL_GetAppID(void);
 
 uint32_t  MEDL_GetRoundCycleLength(uint32_t ModeNum);
 uint32_t  MEDL_GetTDMACycleLength(uint32_t ModeNum);
 
-void* 	  MEDL_GetRoundSlotAddr(uint32_t ModeNum, uint32_t TDMARound, uint32_t Slot);
+void* MEDL_GetRoleAddr(void);
+void* MEDL_GetScheduleAddr(void);
+void* MEDL_GetRoundSlotAddr(uint32_t ModeNum, uint32_t RoundSlot);
 
 #endif 
