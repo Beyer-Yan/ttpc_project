@@ -59,11 +59,6 @@ static inline void _byte_copy(uint8_t* dst, uint8_t* src, int size)
  * @param  size    the size of the valid data of the frame received
  * @param  type    the frame type, FRAME_TYPE_IMPLICIT or FRAME_TYPE_EXPLICIT
  * @return         the crc32 calculated
- * @attention      4-byte alignment is needed while calculating the crc32. So, if a
- *                 pdata with no 4-byte-alignment is passed into the function, it will
- *                 be casted into a 4-byte-alignment pointer by introducing an extra
- *                 temperory 4-byte-alignment variable, which will reduce system
- *                 performance.
  */
 static uint32_t _frame_crc32_calc(uint8_t* pdata, int size, uint32_t type)
 {
@@ -372,10 +367,10 @@ void prp_for_passive(void)
  * The function performs the ack stages and fills the check_a and check_b according to
  * the corresponding ack state.
  * 
- * @param check_a [description]
- * @param check_b [description]
- * @param pDesc   [description]
- * @param type    [description]
+ * @param check_a I_a or II_a to be filled
+ * @param check_b I_b or II_B to be filled
+ * @param pDesc   the pointer of frame descriptor
+ * @param type    the frame type, implicit or explicit
  */
 static void _ack_stage(uint32_t* check_a, uint32_t* check_b, TTP_ChannelFrameDesc* pDesc, uint32_t type)
 {

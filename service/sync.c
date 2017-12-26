@@ -126,7 +126,7 @@ uint32_t SVC_ExecSyncSchema(uint32_t Steps)
 {
 	int32_t avg  = _average();
 	int16_t erc  = (int16_t)CNI_GetERC();
-	int32_t csct = avg + _alignment_err_accumulated(erc);
+	//int32_t csct = avg + _alignment_err_accumulated(erc);
 
 	uint32_t precision = MAC_GetPrecision();
 

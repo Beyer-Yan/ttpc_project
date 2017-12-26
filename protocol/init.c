@@ -53,14 +53,12 @@ static inline void _clock_init(void)
 
     uint32_t frequency = CLOCK_GetLocalFrequency();
     uint32_t macrotick = pSP->MacrotickParameter;
-    uint32_t freq_div = (frequency/1000000)*(macrotick/1000);
+    uint32_t freq_div = (frequency)*(macrotick)/1000;
 
-    freq_div ++;
-    freq_div --;
     CLOCK_SetStateCorrectionTerm(0);
     CLOCK_SetCurMacrotick(0);
     CLOCK_SetCurMicrotick(0);
-    CLOCK_SetFrequencyDiv(840); //use the default value 840
+    CLOCK_SetFrequencyDiv(freq_div); //840， normally
 }
 
 static inline void _id_init(void)

@@ -104,7 +104,7 @@ void FSM_doListen(void)
     //break when timeout or received a valid frame.
     uint32_t freq_div = CLOCK_GetFrequencyDiv(); 
     uint32_t frequency = CLOCK_GetLocalFrequency();
-    uint32_t ATW = pSP->ArrivalTimingWindow/frequency + 1;
+    uint32_t ATW = pSP->ArrivalTimingWindow*frequency/1000 + 1;
 
     if (CLOCK_WaitAlarm(pSP->ListenTimeout, _listen_disturb)) {
 
