@@ -19,6 +19,7 @@
 #include "ttpdebug.h"
 #include "protocol_data.h"
 #include "protocol.h"
+#include "clock.h"
 
 /** @see "Time Triggered Protocol Spec", page 56*/
 static volatile int32_t _G_pushdown_stack[4] = {0};
@@ -65,24 +66,20 @@ static int32_t _average()
 
 static inline uint32_t _alignment_err(uint32_t value)
 {
-	uint32_t mai = MAC_GetMacrotickParameter(); /**< ma = macrotick interval */
-	uint32_t ratio = MAC_GetRatio();
+	uint32_t lmi = CLOCK_GetLocalFrequency(); //unit Mhz
 
-	uint32_t lmi = mai/ratio;    /**< lmi = local microtick interval */
-
-	return (value/lmi);
+	return value*lmi/1000;
 }
 
 /** This function calculates the aligned result of the given value */
-static int32_t _alignment_err_accumulated(int32_t value)
+#warning "some errors happen in the current implementation"
+static int32_t _alignment_err_accumulated_bugs(int32_t value)
 {
 	/** alignment error */
 	static int32_t err = 0;
 
 	/** error correction term */
 	static int32_t theta = 0;
-
-	#warning "bugs may happen here"
 
 	/** guarantee that the values below do not exceed the MAX(int32_t) */
 
@@ -91,13 +88,28 @@ static int32_t _alignment_err_accumulated(int32_t value)
 
 	int32_t lmi = mai/ratio;    /**< lmi = local microtick interval */
 
-	TTP_ASSERT(!mai%ratio);
+	//TTP_ASSERT(!mai%ratio);
 
 	err   = (value%lmi + err)%lmi;
 	theta = (value%lmi + err)/lmi;
 
 	return	value/lmi + theta;
+}
 
+static int32_t _alignment_err_accumulated(int32_t value)
+{
+	int32_t lmi = (int32_t)CLOCK_GetLocalFrequency(); //unit Mhz
+
+	/** alignment error */
+	static int32_t err = 0;
+
+	/** error correction term */
+	static int32_t theta = 0;
+
+	err   = (value*lmi%1000 + err)%1000;
+	theta = (value*lmi/1000 + err)/1000; 
+
+	return value*lmi/1000; 
 }
 
 void SVC_SetEstimateArivalTime(uint32_t EstimateTimeInterval)
@@ -126,13 +138,13 @@ uint32_t SVC_ExecSyncSchema(uint32_t Steps)
 {
 	int32_t avg  = _average();
 	int16_t erc  = (int16_t)CNI_GetERC();
-	//int32_t csct = avg + _alignment_err_accumulated(erc);
+	int32_t csct = avg + _alignment_err_accumulated(erc);
 
 	uint32_t precision = MAC_GetPrecision();
 
-	int32_t aligned_pi = (int32_t)_alignment_err(precision); 
+	uint32_t aligned_pi = _alignment_err(precision); 
 
-	if(csct > aligned_pi/2)
+	if(ABS(csct) > aligned_pi/2)
 		return 0; //SYNC ERR
 
 	MAC_AdjTime(CLK_PHASE_ADJ,csct);

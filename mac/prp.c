@@ -140,11 +140,11 @@ static uint32_t _frame_crc32_check(TTP_ChannelFrameDesc* pDesc, uint32_t type)
  */
 static uint32_t _judge_time_window(uint32_t mid_axis, uint32_t value)
 {
-    uint32_t mai = MAC_GetMacrotickParameter();
+    //uint32_t mai = MAC_GetMacrotickParameter();
     uint32_t ratio = MAC_GetRatio();
 
-    uint32_t win_left = mid_axis - 1 * mai / ratio;
-    uint32_t win_right = mid_axis + 1 * mai / ratio;
+    uint32_t win_left = mid_axis -  ratio;
+    uint32_t win_right = mid_axis + ratio;
 
     uint32_t res = 0;
 

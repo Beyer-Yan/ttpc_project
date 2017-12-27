@@ -39,8 +39,8 @@ uint8_t PV_data[20] __SECTION("PV_SECTION") = {0};
 /** MEDL example region */
 /*****************************************************************************/
 static const uint8_t _medl_example_data[1024*4] __SECTION("MEDL_SECTION") =
-{0}; 
-
+{0};
+ 
 //attention that the parameters legality shall be verified, but to be done.
 int medl_real_read(char *buf, int size, int offset)
 {
