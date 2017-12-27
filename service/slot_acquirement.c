@@ -16,10 +16,9 @@
   */
 
 #include "protocol_data.h"
-#include "ttpc_mac.h"
+#include "ttpmac.h"
 #include "ttpdebug.h"
 #include "ttpservice.h"
-#include "virhw.h"
 
 uint32_t SVC_SlotAcquirement(void)
 {
