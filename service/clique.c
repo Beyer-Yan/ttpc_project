@@ -15,9 +15,8 @@
   ******************************************************************************
   */
 
-#include "ttpc_mac.h"
-#include "ttpcdebug.h"
-#include "virhw.h"
+#include "ttpmac.h"
+#include "ttpdebug.h"
 #include "protocol_data.h"
 #include "ttpservice.h"
 

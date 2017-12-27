@@ -71,7 +71,7 @@ static inline void _process_slot_parameters()
     MAC_SetSlot(slot);
 
     //check then load the configuration of the current slot.
-    MAC_LoadSlotProperties(CS_GetCurMode(), tdma, slot);
+    MAC_LoadSlotProperties(CS_GetCurMode(), rs);
 }
 void FSM_toListen(void)
 {
