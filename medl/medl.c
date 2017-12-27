@@ -40,12 +40,10 @@ static volatile uint32_t            __G_app_id;
 /**
  * this function is declared in the low-level hardware-relative file and is used to 
  * get the base address of the specific MEDL memory region.
- * @return      @arg 0  reading failed due to hardware fault
- *              @arg 1  reading success
+ * @return      non
  * @attention   little endian memory mode is required.
  */
 extern uint8_t* medl_get_base_addr(void);
-//extern void* get_medl_base_addr(void);
 
 static void _byte_copy(volatile void* dst, const void* src,int size)
 {
@@ -54,18 +52,18 @@ static void _byte_copy(volatile void* dst, const void* src,int size)
 
 	while(size-->0)
 	{
-		_d[size] = _s[size];
+		*_d++ = *_s++;
 	}
 }
 
-static  void __medl_header_extract(void)
+static inline void __medl_header_extract(void)
 {
 	/** read header from the 0 address relative the base addr */
 	_byte_copy(&__G_medl_header, __G_medl_base_addr, MEDL_HEADER_SIZE);
 }
 static void __medl_sched_extract(void)
 {
-	uint8_t *buf = __G_medl_base_addr + __G_medl_header.sched_region_addr; //28 bytes
+	uint8_t *buf = __G_medl_base_addr + SCHED_REGION_OFFSET; //28 bytes
 
 	__G_sched.ColdStartAllow               =  buf[0]&0x01;
 	__G_sched.ColdStartIntegrationAllow    = (buf[0]&0x02)>>1;
@@ -84,7 +82,7 @@ static void __medl_sched_extract(void)
 
 static void __medl_role_extract(void)
 {
-	uint8_t* buf = __G_medl_base_addr + __G_medl_header.role_region_addr;
+	uint8_t* buf = __G_medl_base_addr + ROLE_REGION_OFFSET;
 
 	_byte_copy(&__G_role.LogicalNameSlotPosition, buf,2);
 	__G_role.LogicalNameSlotPosition &= 0x0000ffff;
@@ -101,7 +99,7 @@ static void __medl_role_extract(void)
 
 static void __medl_id_extract(void)
 {
-	uint8_t *buf = __G_medl_base_addr + __G_medl_header.id_region_addr;
+	uint8_t *buf = __G_medl_base_addr + ID_REGION_OFFSET;
 
 	_byte_copy(&__G_sched_id, buf, 4);
 	_byte_copy(&__G_app_id, buf+4, 4);
@@ -109,7 +107,7 @@ static void __medl_id_extract(void)
 
 static void __medl_mode_extract(uint32_t mode)
 {
-	uint8_t* buf = __G_medl_base_addr + __G_medl_header.mode_region_addr+MODE_DSCR_SIZE*mode;
+	uint8_t* buf = __G_medl_base_addr + MODE_DSCR_OFFSET + MODE_DSCR_SIZE*mode;
 	_byte_copy(&__G_mode_discriptor,buf,MODE_DSCR_SIZE);
 }
 
@@ -159,7 +157,7 @@ static uint32_t __medl_crc32_check(void)
 	uint32_t crc32_tmp;
 	uint32_t crc_origion;
 
-	_byte_copy(&crc_origion,__G_medl_base_addr+__G_medl_header.crc32_region_addr,4);
+	_byte_copy(&crc_origion,__G_medl_base_addr+__G_medl_header.total_size-4,4);
 	CRC_ResetData();
 	CRC_PushData(__G_medl_base_addr,__G_medl_header.total_size-4);
 	crc32_tmp = CRC_GetResult();
@@ -174,7 +172,7 @@ static uint32_t __medl_crc32_check(void)
  */
 uint32_t MEDL_Init(void)
 {
-	uint32_t res = 0;
+	uint32_t res = 1;
 
 	__G_medl_base_addr = medl_get_base_addr();
 	TTP_ASSERT(__G_medl_base_addr!=NULL);
@@ -193,11 +191,11 @@ uint32_t MEDL_Init(void)
 	__medl_id_extract();
 
 	/** pre-extract the first mode, cold start mode*/
-	__medl_mode_extract(0);
+	__medl_mode_extract(MODE_CS_ID);
 
 	//pre-extract the slot property of the node own.
 	uint32_t _slot = __G_role.LogicalNameSlotPosition;
-	uint8_t* buf = __medl_get_slot_entry(0,_slot);
+	uint8_t* buf = __medl_get_slot_entry(MODE_CS_ID,_slot);
 	_slot_property_extract(buf);
 
  	return res;
@@ -247,7 +245,7 @@ uint32_t MEDL_GetAppID(void)
 uint32_t MEDL_GetRoundCycleLength(uint32_t ModeNum)
 {
 	uint16_t len;
-	uint8_t* buf = __G_medl_base_addr + __G_medl_header.mode_region_addr + MODE_DSCR_SIZE*ModeNum;
+	uint8_t* buf = __G_medl_base_addr + MODE_DSCR_OFFSET + MODE_DSCR_SIZE*ModeNum;
 	_byte_copy(&len,buf+4,2);
 	return len;
 }
@@ -255,7 +253,7 @@ uint32_t MEDL_GetRoundCycleLength(uint32_t ModeNum)
 uint32_t MEDL_GetTDMACycleLength(uint32_t ModeNum)
 {
 	uint16_t len;
-	uint8_t* buf = __G_medl_base_addr + __G_medl_header.mode_region_addr + MODE_DSCR_SIZE*ModeNum;
+	uint8_t* buf = __G_medl_base_addr + MODE_DSCR_OFFSET + MODE_DSCR_SIZE*ModeNum;
 	_byte_copy(&len,buf+6,2);
 	return len;
 }

@@ -24,12 +24,17 @@
  * IS the MEDL_BASE_ADDR + MEDL_HEADER_SIZE. Every address offset of the region of
  * the medl is relative to the MEDL_BASE_ADDR, inlcuding the medl header. 
  */
-#define MEDL_HEADER_SIZE    28    /**< 28 bytes */
+#define MEDL_HEADER_SIZE    8    /**< 8 bytes */
 #define SCHED_REGION_SIZE   28
 #define ROLE_REGION_SIZE    8
 #define ID_REGION_SIZE      8  
 #define MODE_DSCR_SIZE      8
-#define SLOT_SIZE           20    
+#define SLOT_SIZE           20 
+
+#define SCHED_REGION_OFFSET 8
+#define ROLE_REGION_OFFSET  36
+#define ID_REGION_OFFSET    44
+#define MODE_DSCR_OFFSET    52
 
 /**
  *                                                                                 
@@ -81,23 +86,10 @@
  */
 typedef struct medl_header 
 {
-    uint32_t    total_size;
-    /** the schedule addr offset relative to the medl base */
-	uint32_t	sched_region_addr;
+    uint32_t total_size;
 
-    /** the role addr offset relative to the medl base */
-	uint32_t	role_region_addr;
-
-    /** the id addr offset relative to the medl base */
-	uint32_t	id_region_addr;
-
-    /** the slot addr offset relative to the medl base */
-    uint32_t    mode_region_addr;
-    uint32_t    mode_region_num;
-
-    /** the crc32 position of the medl region, 32 bits of course. */
-    uint32_t    crc32_region_addr;
-
+    /** the number of the mode, normally three */
+    uint32_t mode_region_num;
 }medl_header_t; 
 
 typedef struct mode_discriptor

@@ -48,7 +48,7 @@
  */
 static inline void _byte_copy(uint8_t* dst, uint8_t* src, int size)
 {
-    while (size--) {
+    while (size-->0) {
         *dst++ = *src++;
     }
 }
