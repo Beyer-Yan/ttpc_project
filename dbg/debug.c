@@ -18,6 +18,7 @@
   ******************************************************************************
   */
 #include "ttpdebug.h"
+#include <stdint.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include "dbgio.h"
@@ -73,10 +74,10 @@ void __Message(int priority, const char * format, ...)
     char* buffAddr = IO_GetBaseAddr();
     
     if(priority != DBG_INFO)
-        _G_Size += sprintf(buffAddr + _G_Size,"%d:",priority);
+        _G_Size += snprintf(buffAddr + _G_Size,IO_BUFFER_SIZE-_G_Size,"%d:",priority);
     
-    _G_Size += vsnprintf(buffAddr + _G_Size,IO_BUFFER_SIZE-10,format,ap);
-    buffAddr[_G_Size++] = '\t';
+    _G_Size += vsnprintf(buffAddr + _G_Size,IO_BUFFER_SIZE-_G_Size,format,ap);
+    buffAddr[_G_Size++] = '\r';
     buffAddr[_G_Size++] = '\n';
         
 	va_end(ap);

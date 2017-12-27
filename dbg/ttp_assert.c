@@ -28,3 +28,14 @@ void __TTP_Assert(char* s)
 
 	while(1);
 }
+
+void __TTP_Tguard(char* s)
+{
+    LED_On(LED_ERR);
+	/** write the error text into the error buffer */
+    INFO("\r\nTIMING ERROR");
+	ERROR(s);
+	DBG_Flush();
+
+	while(1);
+}

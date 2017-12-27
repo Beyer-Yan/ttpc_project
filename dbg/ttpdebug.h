@@ -37,7 +37,6 @@
 #define DBG_CRIT				3
 #define DBG_ERR					4
 #define DBG_WARNING				5
- 
 #define DBG_NOTICE				6
 #define DBG_INFO				7
 
@@ -91,12 +90,16 @@ void DBG_Flush(void);
 
 #ifndef TTP_DEBUG
     #define TTP_ASSERT(exp)     ((void)0)
+    #define TTP_TGUARD(exp)     ((void)0)
 #else
     extern void __TTP_Assert(char*);
+    extern void __TTP_Tguard(char*);
     #define _STR(x)             _VAL(x)
     #define _VAL(x)             #x
     #define TTP_ASSERT(exp)     ((exp)?(void)0:\
                                 __TTP_Assert(__FILE__":"_STR(__LINE__)":"#exp))
+    #define TTP_TGUARD(exp)     ((exp)?(void)0:\
+                                __TTP_Tguard(__FILE__":"_STR(__LINE__)":"#exp))
 #endif
 
 /**@}*/// end of group TTP_assert

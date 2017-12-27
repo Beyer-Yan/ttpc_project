@@ -11,8 +11,8 @@
   *
   * @desc
   * This file aims to support the buffers that debug subsystem will use. The debug 
-  * buffer is specified with some ring buffer regions that be assigned to different 
-  * priorities and the contents of debug buffer are transmitted to the host asynchronously.
+  * buffer is specified with some ring bufer regions that be assigned to different 
+  * priorities and the contents of debug buffer are transimitted to the host asynchronously.
   * In a round slot of TTPC timing, special time area is designed for printing the debug 
   * contents to the host. So, in the design of the MEDL, the corresbonding time should be 
   * take in consideration in order that the TTPC controller has enough time to print all 
@@ -26,7 +26,7 @@
 
 /**
  * The buffer will use the default buffer region as the debug buffer. The debug buffer is specified
- * in a paiticular memory region. All the interface of Seq will aceess the data of the specified region.
+ * in a paiticular memory region. All the interface of IO will aceess the data of the specified region.
  * That is, all the memory space of the debug buffer is allocated statically.
  */
 /**

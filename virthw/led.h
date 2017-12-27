@@ -30,6 +30,8 @@
 /** Exported functions */
 void LED_On(int ledKind);
 void LED_Off(int ledKind);
+void LED_Toggle(int ledKind);
+
 void LED_Twinkle(int ledKind);
 
 void LED_DepInit(void);
