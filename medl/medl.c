@@ -63,7 +63,7 @@ static inline void __medl_header_extract(void)
 }
 static void __medl_sched_extract(void)
 {
-	uint8_t *buf = __G_medl_base_addr + SCHED_REGION_OFFSET; //28 bytes
+	const uint8_t *buf = __G_medl_base_addr + SCHED_REGION_OFFSET; //28 bytes
 
 	__G_sched.ColdStartAllow               =  buf[0]&0x01;
 	__G_sched.ColdStartIntegrationAllow    = (buf[0]&0x02)>>1;
@@ -82,7 +82,7 @@ static void __medl_sched_extract(void)
 
 static void __medl_role_extract(void)
 {
-	uint8_t* buf = __G_medl_base_addr + ROLE_REGION_OFFSET;
+	const uint8_t* buf = __G_medl_base_addr + ROLE_REGION_OFFSET;
 
 	_byte_copy(&__G_role.LogicalNameSlotPosition, buf,2);
 	__G_role.LogicalNameSlotPosition &= 0x0000ffff;
@@ -99,7 +99,7 @@ static void __medl_role_extract(void)
 
 static void __medl_id_extract(void)
 {
-	uint8_t *buf = __G_medl_base_addr + ID_REGION_OFFSET;
+	const uint8_t *buf = __G_medl_base_addr + ID_REGION_OFFSET;
 
 	_byte_copy(&__G_sched_id, buf, 4);
 	_byte_copy(&__G_app_id, buf+4, 4);
@@ -107,11 +107,11 @@ static void __medl_id_extract(void)
 
 static void __medl_mode_extract(uint32_t mode)
 {
-	uint8_t* buf = __G_medl_base_addr + MODE_DSCR_OFFSET + MODE_DSCR_SIZE*mode;
+	const uint8_t* buf = __G_medl_base_addr + MODE_DSCR_OFFSET + MODE_DSCR_SIZE*mode;
 	_byte_copy(&__G_mode_discriptor,buf,MODE_DSCR_SIZE);
 }
 
-static inline void _slot_property_extract(uint8_t* buf)
+static inline void _slot_property_extract(const uint8_t* buf)
 {
 	/**
 	 * @attention upper program should guarantee the legality of the parameters,
@@ -147,7 +147,7 @@ static inline void _slot_property_extract(uint8_t* buf)
 }
 
 /** be sure that the current mode is updated */
-static inline uint8_t* __medl_get_slot_entry(uint32_t mode, uint32_t round_slot)
+static inline const uint8_t* __medl_get_slot_entry(uint32_t mode, uint32_t round_slot)
 {
 	return __G_medl_base_addr + __G_mode_discriptor.mode_addr + SLOT_SIZE*round_slot;
 }
@@ -195,7 +195,7 @@ uint32_t MEDL_Init(void)
 
 	//pre-extract the slot property of the node own.
 	uint32_t _slot = __G_role.LogicalNameSlotPosition;
-	uint8_t* buf = __medl_get_slot_entry(MODE_CS_ID,_slot);
+	const uint8_t* buf = __medl_get_slot_entry(MODE_CS_ID,_slot);
 	_slot_property_extract(buf);
 
  	return res;
@@ -225,7 +225,7 @@ void* MEDL_GetRoundSlotAddr(uint32_t ModeNum, uint32_t RoundSlot)
 		_slot_property_extract(__medl_get_slot_entry(_modeNum,_slot));
 	}else if(_slot!=RoundSlot){
 		_slot    = RoundSlot;
-		uint8_t* buf = __medl_get_slot_entry(_modeNum,_slot);
+		const uint8_t* buf = __medl_get_slot_entry(_modeNum,_slot);
 		_slot_property_extract(buf);
 	}
 
@@ -245,7 +245,7 @@ uint32_t MEDL_GetAppID(void)
 uint32_t MEDL_GetRoundCycleLength(uint32_t ModeNum)
 {
 	uint16_t len;
-	uint8_t* buf = __G_medl_base_addr + MODE_DSCR_OFFSET + MODE_DSCR_SIZE*ModeNum;
+	const uint8_t* buf = __G_medl_base_addr + MODE_DSCR_OFFSET + MODE_DSCR_SIZE*ModeNum;
 	_byte_copy(&len,buf+4,2);
 	return len;
 }
@@ -253,7 +253,7 @@ uint32_t MEDL_GetRoundCycleLength(uint32_t ModeNum)
 uint32_t MEDL_GetTDMACycleLength(uint32_t ModeNum)
 {
 	uint16_t len;
-	uint8_t* buf = __G_medl_base_addr + MODE_DSCR_OFFSET + MODE_DSCR_SIZE*ModeNum;
+	const uint8_t* buf = __G_medl_base_addr + MODE_DSCR_OFFSET + MODE_DSCR_SIZE*ModeNum;
 	_byte_copy(&len,buf+6,2);
 	return len;
 }
