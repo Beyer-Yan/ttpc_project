@@ -18,6 +18,7 @@
 #define __NSG_H__
 
 #include "ttpdef.h"
+#include "ttpmac.h"
 
 
 #define MAX_FRAME_LENGTH		240

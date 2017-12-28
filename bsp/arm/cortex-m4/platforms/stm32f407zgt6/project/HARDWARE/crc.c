@@ -18,7 +18,7 @@ void CRC_ResetData(void)
     _G_Idx = 0;
     _G_BufferedData = 0xFFFFFFFF;
 }
-void CRC_PushData(uint8_t *pBuf, uint32_t BufLength)
+void CRC_PushData(const uint8_t *pBuf, uint32_t BufLength)
 {
     int i = 0;
     while(BufLength--)

@@ -289,7 +289,7 @@ void DRV_RxClear(void)
     DMARxDscrTab1.Status = 0;
 }
 
-int DRV_PushData(uint8_t* DataAddr, int size)
+int DRV_PushData(const uint8_t* DataAddr, int size)
 {
     int i = Tx_CurPointer;
     while(size--)

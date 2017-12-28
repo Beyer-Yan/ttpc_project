@@ -80,7 +80,7 @@ void DRV_StopReception(void);
  */
 void DRV_RxClear(void);
 
-int DRV_PushData(uint8_t* DataAddr,int size);
+int DRV_PushData(const uint8_t* DataAddr,int size);
 void DRV_PrepareToTransmit(void);
 
 //void DRV_PrepareToTransmitOfCH0(uint8_t* BufferAddr, int length);
