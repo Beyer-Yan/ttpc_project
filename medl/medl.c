@@ -43,7 +43,7 @@ static volatile uint32_t            __G_app_id;
  * @return      non
  * @attention   little endian memory mode is required.
  */
-extern uint8_t* medl_get_base_addr(void);
+extern const uint8_t* medl_get_base_addr(void);
 
 static void _byte_copy(volatile void* dst, const void* src,int size)
 {
