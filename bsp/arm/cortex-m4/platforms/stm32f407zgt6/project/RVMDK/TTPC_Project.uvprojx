@@ -359,7 +359,7 @@
             <wLevel>2</wLevel>
             <uThumb>0</uThumb>
             <uSurpInc>0</uSurpInc>
-            <uC99>0</uC99>
+            <uC99>1</uC99>
             <useXO>0</useXO>
             <VariousControls>
               <MiscControls></MiscControls>
@@ -423,15 +423,20 @@
               <FileType>1</FileType>
               <FilePath>..\STARTUP\system_stm32f4xx.c</FilePath>
             </File>
+            <File>
+              <FileName>startup_stm32f40_41xxx.s</FileName>
+              <FileType>2</FileType>
+              <FilePath>..\STARTUP\startup_stm32f40_41xxx.s</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
           <GroupName>CPU</GroupName>
           <Files>
             <File>
-              <FileName>startup_stm32f40_41xxx.s</FileName>
-              <FileType>2</FileType>
-              <FilePath>..\CPU\startup_stm32f40_41xxx.s</FilePath>
+              <FileName>cpu.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\CPU\cpu.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -442,11 +447,6 @@
               <FileName>mem.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\LAYOUT\mem.c</FilePath>
-            </File>
-            <File>
-              <FileName>ttpc_stm32f407zgt6.sct</FileName>
-              <FileType>2</FileType>
-              <FilePath>..\LAYOUT\ttpc_stm32f407zgt6.sct</FilePath>
             </File>
           </Files>
         </Group>
@@ -462,11 +462,6 @@
               <FileName>crc.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\HARDWARE\crc.c</FilePath>
-            </File>
-            <File>
-              <FileName>key.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\HARDWARE\key.c</FilePath>
             </File>
             <File>
               <FileName>led.c</FileName>
@@ -494,9 +489,9 @@
           <GroupName>MEDL</GroupName>
           <Files>
             <File>
-              <FileName>medl_node0.c</FileName>
+              <FileName>medl_data.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\MEDL\medl_node0.c</FilePath>
+              <FilePath>..\MEDL\medl_data.c</FilePath>
             </File>
           </Files>
         </Group>

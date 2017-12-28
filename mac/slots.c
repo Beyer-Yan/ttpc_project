@@ -159,8 +159,7 @@ void MAC_SetSlotStatus(uint32_t SlotStatus)
     switch (SlotStatus) {
     case FRAME_CORRECT:
         PV_IncCounter(AGREED_SLOTS_COUNTER);
-        tentative ? PV_IncCounter(FAILED_SLOTS_COUNTER) : (void)0;
-        tentative ? tentative = 0 : (void)0;
+        if(tentative) { PV_IncCounter(FAILED_SLOTS_COUNTER); tentative = 0; }
         break;
 
     case FRAME_TENTATIVE:
@@ -171,8 +170,7 @@ void MAC_SetSlotStatus(uint32_t SlotStatus)
 #warning "Formal verification needed to be performed"
         // treated as a correct frame ??
         PV_IncCounter(AGREED_SLOTS_COUNTER);
-        tentative ? PV_IncCounter(FAILED_SLOTS_COUNTER) : (void)0;
-        tentative ? tentative = 0 : (void)0;
+        if(tentative) { PV_IncCounter(FAILED_SLOTS_COUNTER); tentative = 0; }
         break;
 
     case FRAME_INCORRECT:

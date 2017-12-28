@@ -124,6 +124,8 @@ X-FRAME  |            |          |            |          |             |
  * frames.
  * @attention zero-size array is only supported by gnu c extension.
  */
+ 
+#pragma anon_unions
 typedef struct
 {
     /** ttpc header */
@@ -137,8 +139,9 @@ typedef struct
             /**
              * flexible array is supported by iso-c99 and above, but 
              * at least one fixed-memory variable is needed.
+             * at least 1 byte data needed
              */
-            uint8_t payload[0];
+            uint8_t payload[1];
         }n;
         struct
         {
@@ -149,7 +152,7 @@ typedef struct
         {
             uint8_t cstate[12]; 
             uint8_t crc32_0[4];
-            uint8_t payload[0];
+            uint8_t payload[1];
         }x; 
     };
         

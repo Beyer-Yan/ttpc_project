@@ -93,7 +93,7 @@ static uint32_t _frame_crc32_check(TTP_ChannelFrameDesc* pDesc, uint32_t type)
     uint32_t frame_crc32;
     uint32_t checked_crc32;
     c_state_t c_state;
-    RoundSlotProperty_t* pRS;
+    RoundSlotProperty_t *pRS;
 
     uint8_t* crc_pos;
 
@@ -354,7 +354,7 @@ void prp_for_passive(void)
 
     MAC_SetSlotStatus(slot_status);
 
-    _is_data_frame() ? MSG_SetStatus(pRS->CNIAddressOffset, slot_status) : (void)0;
+    if(_is_data_frame()) { MSG_SetStatus(pRS->CNIAddressOffset, slot_status); }
     if(pRS->ClockSynchronization == CLOCK_SYN_NEEDED){
         if(!SVC_ExecSyncSchema(step)){
             CNI_SetSRBit(SR_SE);
@@ -579,7 +579,7 @@ void prp_for_active(void)
     int32_t step = (int32_t)pRS->SlotDuration;
 
     /** for the assumption that channel 0 and channel 1 are the same */
-    _is_data_frame() ? MSG_SetStatus(pRS->CNIAddressOffset, slot_status) : (void)0;
+    if(_is_data_frame()) { MSG_SetStatus(pRS->CNIAddressOffset, slot_status); }
 
     if(pRS->ClockSynchronization == CLOCK_SYN_NEEDED){
         if(!SVC_ExecSyncSchema(step)){

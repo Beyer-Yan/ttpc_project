@@ -19,7 +19,7 @@
 #include "ttpdebug.h"
 #include "crc.h"
 
-#error "to be tested"
+//#error "to be tested"
 
 static volatile medl_header_t       __G_medl_header;
 static volatile mode_discriptor_t   __G_mode_discriptor;
@@ -174,7 +174,7 @@ uint32_t MEDL_Init(void)
 {
 	uint32_t res = 1;
 
-	__G_medl_base_addr = medl_get_base_addr();
+	__G_medl_base_addr = (uint8_t*)medl_get_base_addr();
 	TTP_ASSERT(__G_medl_base_addr!=NULL);
 
 	__medl_header_extract();

@@ -138,7 +138,7 @@ void     SVC_SyncCalcOffset(uint32_t FrameTsmp);
  * be performed.
  */
 void     SVC_SetEstimateArivalTimeInterval(uint32_t EstimateTimeInterval);
-uint32_t SVC_GetAlignedEstimateArivalTimeInterval();
+uint32_t SVC_GetAlignedEstimateArivalTimeInterval(void);
 
 /**
  * This function clears the value of the correction term.

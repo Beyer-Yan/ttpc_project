@@ -319,7 +319,7 @@ static void __protocol(void)
 	}
 } 
 
-inline void __machine_reset()
+static inline void __machine_reset()
 {
 	//__Gf_hook 		= NULL;
 	__G_start_flag  = FSM_STOPPED;  

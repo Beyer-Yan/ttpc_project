@@ -25,193 +25,138 @@ E:\zfas_project\material\TTPC_project\bsp\arm\cortex-m4\platforms\stm32f407zgt6\
 Project File Date:  12/28/2017
 
 <h2>Output:</h2>
-Build target 'STM32F407ZG_TTPC'
+Rebuild target 'STM32F407ZG_TTPC'
+compiling main.c...
+..\..\..\..\..\..\..\virthw\crc.h(25): warning:  #1215-D: #warning directive: "Incompatible CRC bits with AS6003 "
+  #warning "Incompatible CRC bits with AS6003 "
+..\STARTUP\main.c: 1 warning, 0 errors
+compiling stm32f4xx_it.c...
+compiling system_stm32f4xx.c...
 assembling startup_stm32f40_41xxx.s...
+compiling cpu.c...
+compiling mem.c...
+compiling clock.c...
+compiling crc.c...
+..\..\..\..\..\..\..\virthw\crc.h(25): warning:  #1215-D: #warning directive: "Incompatible CRC bits with AS6003 "
+  #warning "Incompatible CRC bits with AS6003 "
+..\HARDWARE\crc.c: 1 warning, 0 errors
+compiling led.c...
+compiling lsens.c...
+compiling usart.c...
+compiling xfer.c...
+..\HARDWARE\xfer.c(42): warning:  #177-D: variable "Rx_Buff1" was declared but never referenced
+      static uint8_t Rx_Buff1[ETH_RX_BUF_SIZE];
+..\HARDWARE\xfer.c(44): warning:  #550-D: variable "Tx_Buff1" was set but never used
+      static uint8_t Tx_Buff1[ETH_TX_BUF_SIZE];
+..\HARDWARE\xfer.c: 2 warnings, 0 errors
 compiling medl_data.c...
-..\MEDL\medl_data.c(16): error:  #22: invalid hexadecimal number
-..\MEDL\medl_data.c(16): error:  #253: expected a ","
-..\MEDL\medl_data.c(16): error:  #22: invalid hexadecimal number
-..\MEDL\medl_data.c(16): error:  #253: expected a ","
-..\MEDL\medl_data.c(19): error:  #22: invalid hexadecimal number
-..\MEDL\medl_data.c(19): error:  #253: expected a ","
-..\MEDL\medl_data.c(19): error:  #22: invalid hexadecimal number
-..\MEDL\medl_data.c(19): error:  #253: expected a ","
-..\MEDL\medl_data.c(21): error:  #22: invalid hexadecimal number
-..\MEDL\medl_data.c(21): error:  #253: expected a ","
-..\MEDL\medl_data.c(21): error:  #22: invalid hexadecimal number
-..\MEDL\medl_data.c(21): error:  #253: expected a ","
-..\MEDL\medl_data.c(24): error:  #22: invalid hexadecimal number
-..\MEDL\medl_data.c(24): error:  #253: expected a ","
-..\MEDL\medl_data.c(24): error:  #22: invalid hexadecimal number
-..\MEDL\medl_data.c(24): error:  #253: expected a ","
-..\MEDL\medl_data.c(26): error:  #22: invalid hexadecimal number
-..\MEDL\medl_data.c(26): error:  #253: expected a ","
-..\MEDL\medl_data.c(26): error:  #22: invalid hexadecimal number
-..\MEDL\medl_data.c(26): error:  #253: expected a ","
-..\MEDL\medl_data.c(29): error:  #22: invalid hexadecimal number
-..\MEDL\medl_data.c(29): error:  #253: expected a ","
-..\MEDL\medl_data.c(29): error:  #22: invalid hexadecimal number
-..\MEDL\medl_data.c(29): error:  #253: expected a ","
-..\MEDL\medl_data.c(31): error:  #22: invalid hexadecimal number
-..\MEDL\medl_data.c(31): error:  #253: expected a ","
-..\MEDL\medl_data.c(31): error:  #22: invalid hexadecimal number
-..\MEDL\medl_data.c(31): error:  #253: expected a ","
-..\MEDL\medl_data.c(34): error:  #22: invalid hexadecimal number
-..\MEDL\medl_data.c(34): error:  #253: expected a ","
-..\MEDL\medl_data.c: 0 warnings, 30 errors
-compiling msg.c...
-..\..\..\..\..\..\..\mac\msg.h(141): error:  #94-D: the size of an array must be greater than zero
-              uint8_t payload[0];
-..\..\..\..\..\..\..\mac\msg.h(152): error:  #94-D: the size of an array must be greater than zero
-              uint8_t payload[0];
-..\..\..\..\..\..\..\mac\msg.h(154): error:  #3092: anonymous unions are only supported in --gnu mode, or when enabled with #pragma anon_unions
-      };
-..\..\..\..\..\..\..\mac\msg.h(185): error:  #20: identifier "MAC_err_t" is undefined
-  MAC_err_t MSG_PushFrame(void);
-..\..\..\..\..\..\..\mac\msg.h(186): error:  #20: identifier "MAC_err_t" is undefined
-  MAC_err_t MSG_PrepareCSFrame(void);
-..\..\..\..\..\..\..\mac\msg.h(283): warning:  #1-D: last line of file ends without a newline
-  #endif // !__MSG_H__
-..\..\..\..\..\..\..\service\ttpservice.h(141): warning:  #1295-D: Deprecated declaration SVC_GetAlignedEstimateArivalTimeInterval - give arg types
-  uint32_t SVC_GetAlignedEstimateArivalTimeInterval();
-..\..\..\..\..\..\..\virthw\crc.h(25): warning:  #1215-D: #warning directive: "Incompatible CRC bits with AS6003 "
-  #warning "Incompatible CRC bits with AS6003 "
-..\..\..\..\..\..\..\mac\msg.c: 3 warnings, 5 errors
-compiling prp.c...
-..\..\..\..\..\..\..\protocol\protocol.h(135): warning:  #1-D: last line of file ends without a newline
-  #endif
-..\..\..\..\..\..\..\service\ttpservice.h(141): warning:  #1295-D: Deprecated declaration SVC_GetAlignedEstimateArivalTimeInterval - give arg types
-  uint32_t SVC_GetAlignedEstimateArivalTimeInterval();
-..\..\..\..\..\..\..\virthw\crc.h(25): warning:  #1215-D: #warning directive: "Incompatible CRC bits with AS6003 "
-  #warning "Incompatible CRC bits with AS6003 "
-..\..\..\..\..\..\..\mac\msg.h(141): error:  #94-D: the size of an array must be greater than zero
-              uint8_t payload[0];
-..\..\..\..\..\..\..\mac\msg.h(152): error:  #94-D: the size of an array must be greater than zero
-              uint8_t payload[0];
-..\..\..\..\..\..\..\mac\msg.h(154): error:  #3092: anonymous unions are only supported in --gnu mode, or when enabled with #pragma anon_unions
-      };
-..\..\..\..\..\..\..\mac\msg.h(283): warning:  #1-D: last line of file ends without a newline
-  #endif // !__MSG_H__
-..\..\..\..\..\..\..\mac\prp.c(96): warning:  #550-D: variable "pRS" was set but never used
-      RoundSlotProperty_t* pRS;
-..\..\..\..\..\..\..\mac\prp.c(357): error:  #32: expression must have arithmetic type
-      _is_data_frame() ? MSG_SetStatus(pRS->CNIAddressOffset, slot_status) : (void)0;
-..\..\..\..\..\..\..\mac\prp.c(582): error:  #32: expression must have arithmetic type
-      _is_data_frame() ? MSG_SetStatus(pRS->CNIAddressOffset, slot_status) : (void)0;
-..\..\..\..\..\..\..\mac\prp.c(662): warning:  #1-D: last line of file ends without a newline
+compiling misc.c...
+compiling stm32f4x7_eth.c...
+compiling stm32f4xx_adc.c...
+compiling stm32f4xx_crc.c...
+compiling stm32f4xx_dma.c...
+compiling stm32f4xx_usart.c...
+compiling stm32f4xx_gpio.c...
+compiling stm32f4xx_iwdg.c...
+compiling stm32f4xx_rcc.c...
+compiling stm32f4xx_syscfg.c...
+compiling stm32f4xx_tim.c...
+compiling stm32f4xx_fsmc.c...
+compiling debug.c...
+compiling ttp_assert.c...
+compiling ctrl.c...
+..\..\..\..\..\..\..\mac\ctrl.c(95): warning:  #1-D: last line of file ends without a newline
   }
-..\..\..\..\..\..\..\mac\prp.c: 6 warnings, 5 errors
+..\..\..\..\..\..\..\mac\ctrl.c: 1 warning, 0 errors
+compiling msg.c...
+..\..\..\..\..\..\..\mac\msg.h(188): error:  #20: identifier "MAC_err_t" is undefined
+  MAC_err_t MSG_PushFrame(void);
+..\..\..\..\..\..\..\mac\msg.h(189): error:  #20: identifier "MAC_err_t" is undefined
+  MAC_err_t MSG_PrepareCSFrame(void);
+..\..\..\..\..\..\..\virthw\crc.h(25): warning:  #1215-D: #warning directive: "Incompatible CRC bits with AS6003 "
+  #warning "Incompatible CRC bits with AS6003 "
+..\..\..\..\..\..\..\mac\msg.c: 1 warning, 2 errors
+compiling param.c...
+compiling phases_index.c...
+..\..\..\..\..\..\..\mac\phases_index.c(25): warning:  #1-D: last line of file ends without a newline
+  volatile uint32_t phase_indicator = 0;
+..\..\..\..\..\..\..\mac\phases_index.c: 1 warning, 0 errors
+compiling prp.c...
+..\..\..\..\..\..\..\virthw\crc.h(25): warning:  #1215-D: #warning directive: "Incompatible CRC bits with AS6003 "
+  #warning "Incompatible CRC bits with AS6003 "
+..\..\..\..\..\..\..\mac\prp.c(96): warning:  #550-D: variable "pRS" was set but never used
+      RoundSlotProperty_t *pRS;
+..\..\..\..\..\..\..\mac\prp.c: 2 warnings, 0 errors
 compiling psp.c...
-..\..\..\..\..\..\..\protocol\protocol.h(135): warning:  #1-D: last line of file ends without a newline
-  #endif
-..\..\..\..\..\..\..\service\ttpservice.h(141): warning:  #1295-D: Deprecated declaration SVC_GetAlignedEstimateArivalTimeInterval - give arg types
-  uint32_t SVC_GetAlignedEstimateArivalTimeInterval();
-..\..\..\..\..\..\..\mac\msg.h(141): error:  #94-D: the size of an array must be greater than zero
-              uint8_t payload[0];
-..\..\..\..\..\..\..\mac\msg.h(152): error:  #94-D: the size of an array must be greater than zero
-              uint8_t payload[0];
-..\..\..\..\..\..\..\mac\msg.h(154): error:  #3092: anonymous unions are only supported in --gnu mode, or when enabled with #pragma anon_unions
-      };
-..\..\..\..\..\..\..\mac\msg.h(283): warning:  #1-D: last line of file ends without a newline
-  #endif // !__MSG_H__
 ..\..\..\..\..\..\..\mac\psp.c(230): warning:  #1215-D: #warning directive: "periodic checking for MEDL has not been implemented"
       #warning "periodic checking for MEDL has not been implemented"
-..\..\..\..\..\..\..\mac\psp.c(403): warning:  #1-D: last line of file ends without a newline
-  }
 ..\..\..\..\..\..\..\mac\psp.c(127): warning:  #177-D: function "_check_clique" was declared but never referenced
   static inline uint32_t _check_clique(void)
-..\..\..\..\..\..\..\mac\psp.c: 6 warnings, 3 errors
+..\..\..\..\..\..\..\mac\psp.c: 2 warnings, 0 errors
 compiling slots.c...
-..\..\..\..\..\..\..\service\ttpservice.h(141): warning:  #1295-D: Deprecated declaration SVC_GetAlignedEstimateArivalTimeInterval - give arg types
-  uint32_t SVC_GetAlignedEstimateArivalTimeInterval();
-..\..\..\..\..\..\..\mac\msg.h(141): error:  #94-D: the size of an array must be greater than zero
-              uint8_t payload[0];
-..\..\..\..\..\..\..\mac\msg.h(152): error:  #94-D: the size of an array must be greater than zero
-              uint8_t payload[0];
-..\..\..\..\..\..\..\mac\msg.h(154): error:  #3092: anonymous unions are only supported in --gnu mode, or when enabled with #pragma anon_unions
-      };
-..\..\..\..\..\..\..\mac\msg.h(283): warning:  #1-D: last line of file ends without a newline
-  #endif // !__MSG_H__
-..\..\..\..\..\..\..\mac\slots.c(162): error:  #32: expression must have arithmetic type
-          tentative ? PV_IncCounter(FAILED_SLOTS_COUNTER) : (void)0;
-..\..\..\..\..\..\..\mac\slots.c(163): error:  #32: expression must have arithmetic type
-          tentative ? tentative = 0 : (void)0;
-..\..\..\..\..\..\..\mac\slots.c(171): warning:  #1215-D: #warning directive: "Formal verification needed to be performed"
+..\..\..\..\..\..\..\mac\slots.c(170): warning:  #1215-D: #warning directive: "Formal verification needed to be performed"
   #warning "Formal verification needed to be performed"
-..\..\..\..\..\..\..\mac\slots.c(174): error:  #32: expression must have arithmetic type
-          tentative ? PV_IncCounter(FAILED_SLOTS_COUNTER) : (void)0;
-..\..\..\..\..\..\..\mac\slots.c(175): error:  #32: expression must have arithmetic type
-          tentative ? tentative = 0 : (void)0;
-..\..\..\..\..\..\..\mac\slots.c: 3 warnings, 7 errors
+..\..\..\..\..\..\..\mac\slots.c: 1 warning, 0 errors
+compiling tp.c...
+..\..\..\..\..\..\..\mac\tp.c(48): warning:  #1-D: last line of file ends without a newline
+  }
+..\..\..\..\..\..\..\mac\tp.c: 1 warning, 0 errors
 compiling medl.c...
 ..\..\..\..\..\..\..\virthw\crc.h(25): warning:  #1215-D: #warning directive: "Incompatible CRC bits with AS6003 "
   #warning "Incompatible CRC bits with AS6003 "
-..\..\..\..\..\..\..\medl\medl.c(22): error:  #35: #error directive: "to be tested"
-  #error "to be tested"
-..\..\..\..\..\..\..\medl\medl.c: 1 warning, 1 error
-compiling cold_start.c...
-..\..\..\..\..\..\..\protocol\protocol.h(135): warning:  #1-D: last line of file ends without a newline
-  #endif
-..\..\..\..\..\..\..\service\ttpservice.h(141): warning:  #1295-D: Deprecated declaration SVC_GetAlignedEstimateArivalTimeInterval - give arg types
-  uint32_t SVC_GetAlignedEstimateArivalTimeInterval();
-..\..\..\..\..\..\..\mac\msg.h(141): error:  #94-D: the size of an array must be greater than zero
-              uint8_t payload[0];
-..\..\..\..\..\..\..\mac\msg.h(152): error:  #94-D: the size of an array must be greater than zero
-              uint8_t payload[0];
-..\..\..\..\..\..\..\mac\msg.h(154): error:  #3092: anonymous unions are only supported in --gnu mode, or when enabled with #pragma anon_unions
-      };
-..\..\..\..\..\..\..\mac\msg.h(283): warning:  #1-D: last line of file ends without a newline
-  #endif // !__MSG_H__
-..\..\..\..\..\..\..\protocol\cold_start.c(72): error:  #140: too many arguments in function call
-      RoundSlotProperty_t *pRS = MAC_LoadSlotProperties(mode_num,0,slot);
-..\..\..\..\..\..\..\protocol\cold_start.c: 3 warnings, 4 errors
-compiling listen.c...
-..\..\..\..\..\..\..\protocol\protocol.h(135): warning:  #1-D: last line of file ends without a newline
-  #endif
-..\..\..\..\..\..\..\service\ttpservice.h(141): warning:  #1295-D: Deprecated declaration SVC_GetAlignedEstimateArivalTimeInterval - give arg types
-  uint32_t SVC_GetAlignedEstimateArivalTimeInterval();
-..\..\..\..\..\..\..\mac\msg.h(141): error:  #94-D: the size of an array must be greater than zero
-              uint8_t payload[0];
-..\..\..\..\..\..\..\mac\msg.h(152): error:  #94-D: the size of an array must be greater than zero
-              uint8_t payload[0];
-..\..\..\..\..\..\..\mac\msg.h(154): error:  #3092: anonymous unions are only supported in --gnu mode, or when enabled with #pragma anon_unions
-      };
-..\..\..\..\..\..\..\mac\msg.h(283): warning:  #1-D: last line of file ends without a newline
-  #endif // !__MSG_H__
-..\..\..\..\..\..\..\protocol\listen.c(225): warning:  #1-D: last line of file ends without a newline
+..\..\..\..\..\..\..\medl\medl.c(155): warning:  #177-D: function "__medl_crc32_check" was declared but never referenced
+  static uint32_t __medl_crc32_check(void)
+..\..\..\..\..\..\..\medl\medl.c: 2 warnings, 0 errors
+compiling active.c...
+..\..\..\..\..\..\..\protocol\active.c(46): warning:  #1-D: last line of file ends without a newline
   }
+..\..\..\..\..\..\..\protocol\active.c: 1 warning, 0 errors
+compiling await.c...
+compiling cold_start.c...
+compiling download.c...
+compiling freeze.c...
+..\..\..\..\..\..\..\protocol\freeze.c(59): warning:  #1-D: last line of file ends without a newline
+  }
+..\..\..\..\..\..\..\protocol\freeze.c: 1 warning, 0 errors
+compiling init.c...
+..\..\..\..\..\..\..\protocol\init.c(96): warning:  #1-D: last line of file ends without a newline
+  }
+..\..\..\..\..\..\..\protocol\init.c: 1 warning, 0 errors
+compiling listen.c...
 ..\..\..\..\..\..\..\protocol\listen.c(94): warning:  #550-D: variable "pNP" was set but never used
       NodeProperty_t* pNP;
-..\..\..\..\..\..\..\protocol\listen.c: 5 warnings, 3 errors
-compiling state_machine_direct.c...
-..\..\..\..\..\..\..\service\ttpservice.h(141): warning:  #1295-D: Deprecated declaration SVC_GetAlignedEstimateArivalTimeInterval - give arg types
-  uint32_t SVC_GetAlignedEstimateArivalTimeInterval();
-..\..\..\..\..\..\..\protocol\protocol.h(135): warning:  #1-D: last line of file ends without a newline
-  #endif
-..\..\..\..\..\..\..\protocol\state_machine_direct.c(393): warning:  #1-D: last line of file ends without a newline
+..\..\..\..\..\..\..\protocol\listen.c: 1 warning, 0 errors
+compiling passive.c...
+..\..\..\..\..\..\..\protocol\passive.c(46): warning:  #1-D: last line of file ends without a newline
   }
-..\..\..\..\..\..\..\protocol\state_machine_direct.c(326): error:  #1059-D: an entity with internal linkage cannot be referenced within an inline function with external linkage
-        __G_cur_state   = FSM_ERROR;
-..\..\..\..\..\..\..\protocol\state_machine_direct.c(325): error:  #1059-D: an entity with internal linkage cannot be referenced within an inline function with external linkage
-        __G_start_flag  = FSM_STOPPED;  
-..\..\..\..\..\..\..\protocol\state_machine_direct.c: 3 warnings, 2 errors
+..\..\..\..\..\..\..\protocol\passive.c: 1 warning, 0 errors
+compiling state_machine_direct.c...
+compiling test.c...
 compiling ack.c...
-..\..\..\..\..\..\..\service\ttpservice.h(141): warning:  #1295-D: Deprecated declaration SVC_GetAlignedEstimateArivalTimeInterval - give arg types
-  uint32_t SVC_GetAlignedEstimateArivalTimeInterval();
-..\..\..\..\..\..\..\protocol\protocol.h(135): warning:  #1-D: last line of file ends without a newline
-  #endif
-..\..\..\..\..\..\..\mac\msg.h(141): error:  #94-D: the size of an array must be greater than zero
-              uint8_t payload[0];
-..\..\..\..\..\..\..\mac\msg.h(152): error:  #94-D: the size of an array must be greater than zero
-              uint8_t payload[0];
-..\..\..\..\..\..\..\mac\msg.h(154): error:  #3092: anonymous unions are only supported in --gnu mode, or when enabled with #pragma anon_unions
-      };
-..\..\..\..\..\..\..\mac\msg.h(283): warning:  #1-D: last line of file ends without a newline
-  #endif // !__MSG_H__
 ..\..\..\..\..\..\..\service\ack.c(293): warning:  #177-D: variable "first_successor_addr" was declared but never referenced
       uint32_t first_successor_addr = PV_GetFSAddr();
-..\..\..\..\..\..\..\service\ack.c: 4 warnings, 3 errors
-".\Objects\TTPC_Project.axf" - 63 Error(s), 34 Warning(s).
+..\..\..\..\..\..\..\service\ack.c: 1 warning, 0 errors
+compiling clique.c...
+compiling core.c...
+..\..\..\..\..\..\..\service\core.c(65): warning:  #223-D: function "CPU_RegisterInterruptHandler" declared implicitly
+      CPU_RegisterInterruptHandler(__ExternalEventHandler);
+..\..\..\..\..\..\..\service\core.c(67): warning:  #1-D: last line of file ends without a newline
+  }
+..\..\..\..\..\..\..\service\core.c: 2 warnings, 0 errors
+compiling integrate.c...
+compiling slot_acquirement.c...
+..\..\..\..\..\..\..\service\slot_acquirement.c(58): warning:  #1-D: last line of file ends without a newline
+  }
+..\..\..\..\..\..\..\service\slot_acquirement.c: 1 warning, 0 errors
+compiling sync.c...
+..\..\..\..\..\..\..\service\sync.c(75): warning:  #1215-D: #warning directive: "some errors happen in the current implementation"
+  #warning "some errors happen in the current implementation"
+..\..\..\..\..\..\..\service\sync.c(107): warning:  #550-D: variable "theta" was set but never used
+        static int32_t theta = 0;
+..\..\..\..\..\..\..\service\sync.c(76): warning:  #177-D: function "_alignment_err_accumulated_bugs" was declared but never referenced
+  static int32_t _alignment_err_accumulated_bugs(int32_t value)
+..\..\..\..\..\..\..\service\sync.c: 3 warnings, 0 errors
+".\Objects\TTPC_Project.axf" - 2 Error(s), 27 Warning(s).
 
 <h2>Collection of Component include folders:</h2>
   E:\zfas_project\material\TTPC_project\bsp\arm\cortex-m4\platforms\stm32f407zgt6\project\RVMDK\RTE
