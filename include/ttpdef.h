@@ -21,9 +21,8 @@
 /** basic types definition */
 
 /** The most platforms will support stdint.h. Maybe,the definition below is not needed. */
-#define USE_STDINC
-
-#define __CC_ARM
+//#define USE_STDINC
+//#define __CC_ARM
 
 typedef enum {FALSE=0,TRUE} 		bool_t;
 
