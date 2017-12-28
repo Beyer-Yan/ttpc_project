@@ -106,7 +106,7 @@ static inline void CLOCK_SetTrigger(uint32_t at,uint32_t prp,uint32_t end)
     CLOCK_SetTriggerAT(at);
     CLOCK_SetTriggerPRP(prp);
     CLOCK_SetTriggerSlotEnd(end);
-};
+}
 
 void CLOCK_WaitTrigger(uint32_t ClockTrigger);
 

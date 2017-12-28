@@ -205,7 +205,7 @@ uint32_t 	MAC_GetPrecision(void);
  * 
  * @return the ratio of Macrotick to Microtick
  */
-uint32_t  MAC_GetRatio();
+uint32_t  MAC_GetRatio(void);
 
 /**@}*/// end of group TTP_MAC_SLOT_PARAMETERS_CONTROL
 

@@ -57,9 +57,6 @@ typedef crc32_t  crc_t;
  * ,then the TTPC controller reads it and clears it. If the specific bit-pattern is 
  * not written by the host, the TTPC controller will raise a NR(Frame Not Ready)
  * interruption then freeze.
- */
-
-/**
  *                                                                             
  /                          /                        /                   / 
  |-------slot 0-------------|------- slot 1--------- |----- slot 3-------| 
@@ -78,7 +75,6 @@ typedef crc32_t  crc_t;
 
 #warning "incompatible header bits with AS6003"
 
-/**                                            
   *    3                  1        0            
   *    +------------------/--------+            
   *    |                  |        |            

@@ -2,5 +2,5 @@
 .vscode/*
 .vs/*
 .gitignore
-./bsp/arm/cortex-m4/platforms/stm32f407zgt6/project/RVMDK/*
+bsp/arm/cortex-m4/platforms/stm32f407zgt6/project/RVMDK/*
 count.sh

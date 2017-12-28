@@ -245,6 +245,7 @@ static inline uint32_t _status_adapter(uint32_t drv_status)
         case DRV_INV : res = MAC_ERX_INV;   break;
         default : res = MAC_EOTHER;    break;
     }
+    return res;
 }
 
 TTP_FrameDesc* MSG_GetFrameDesc(void)

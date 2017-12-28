@@ -1,4 +1,3 @@
-#include "sys.h"
 #include "led.h"
 #include "lsens.h"
 #include "clock.h"
