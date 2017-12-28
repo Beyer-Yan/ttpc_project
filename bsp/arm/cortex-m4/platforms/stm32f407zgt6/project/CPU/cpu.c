@@ -1,3 +1,20 @@
+/**
+ ******************************************************************************
+ * @file    	cpu.c
+ * @author  	Beyer
+ * @email   	sinfare@foxmail.com
+ * @version 	v1.0.0
+ * @date    	20170331
+ * @brief   	the implementation of the cpu.h interfaces
+ ******************************************************************************
+ * @attention
+ *   
+ * @log
+ *   
+ *
+ ******************************************************************************
+ */
+
 #include <misc.h>
 #include "cpu.h"
 #include "core_cmFunc.h"

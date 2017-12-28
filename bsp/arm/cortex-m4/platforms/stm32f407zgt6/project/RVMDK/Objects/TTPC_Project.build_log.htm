@@ -26,23 +26,29 @@ Project File Date:  12/28/2017
 
 <h2>Output:</h2>
 Build target 'STM32F407ZG_TTPC'
-compiling sync.c...
-..\..\..\..\..\..\..\service\sync.c(75): warning:  #1215-D: #warning directive: "some errors happen in the current implementation"
-  #warning "some errors happen in the current implementation"
-..\..\..\..\..\..\..\service\sync.c(76): warning:  #177-D: function "_alignment_err_accumulated_bugs" was declared but never referenced
-  static int32_t _alignment_err_accumulated_bugs(int32_t value)
-..\..\..\..\..\..\..\service\sync.c: 2 warnings, 0 errors
+compiling await.c...
+..\..\..\..\..\..\..\protocol\await.c(22): warning:  #1215-D: #warning directive: "to be done"
+      #warning "to be done"
+..\..\..\..\..\..\..\protocol\await.c(27): warning:  #1215-D: #warning directive: "to be done"
+      #warning "to be done"
+..\..\..\..\..\..\..\protocol\await.c: 2 warnings, 0 errors
+compiling download.c...
+..\..\..\..\..\..\..\protocol\download.c(22): warning:  #1215-D: #warning directive: "to be done"
+      #warning "to be done"
+..\..\..\..\..\..\..\protocol\download.c(27): warning:  #1215-D: #warning directive: "to be done"
+      #warning "to be done"
+..\..\..\..\..\..\..\protocol\download.c: 2 warnings, 0 errors
+compiling test.c...
+..\..\..\..\..\..\..\protocol\test.c(21): warning:  #1215-D: #warning directive: "to be done"
+      #warning "to be done"
+..\..\..\..\..\..\..\protocol\test.c(26): warning:  #1215-D: #warning directive: "to be done"
+      #warning "to be done"
+..\..\..\..\..\..\..\protocol\test.c: 2 warnings, 0 errors
 linking...
-.\Objects\TTPC_Project.axf: Error: L6218E: Undefined symbol FSM_doAwait (referred from state_machine_direct.o).
-.\Objects\TTPC_Project.axf: Error: L6218E: Undefined symbol FSM_doDownload (referred from state_machine_direct.o).
-.\Objects\TTPC_Project.axf: Error: L6218E: Undefined symbol FSM_doTest (referred from state_machine_direct.o).
-.\Objects\TTPC_Project.axf: Error: L6218E: Undefined symbol FSM_toAwait (referred from state_machine_direct.o).
-.\Objects\TTPC_Project.axf: Error: L6218E: Undefined symbol FSM_toDownload (referred from state_machine_direct.o).
-.\Objects\TTPC_Project.axf: Error: L6218E: Undefined symbol FSM_toTest (referred from state_machine_direct.o).
 .\Objects\TTPC_Project.axf: Error: L6218E: Undefined symbol CPU_RegisterInterruptHandler (referred from core.o).
 Not enough information to list image symbols.
-Finished: 1 information, 0 warning and 7 error messages.
-".\Objects\TTPC_Project.axf" - 7 Error(s), 2 Warning(s).
+Finished: 1 information, 0 warning and 1 error messages.
+".\Objects\TTPC_Project.axf" - 1 Error(s), 6 Warning(s).
 
 <h2>Collection of Component include folders:</h2>
   E:\zfas_project\material\TTPC_project\bsp\arm\cortex-m4\platforms\stm32f407zgt6\project\RVMDK\RTE
