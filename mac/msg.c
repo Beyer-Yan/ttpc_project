@@ -157,7 +157,7 @@ static uint32_t __assemble_ttp_frame(void)
  * This function assembles cold start frame.
  * @return  [description]
  */
-MAC_err_t MSG_PrepareSCFrame(void)
+MAC_err_t MSG_PrepareCSFrame(void)
 {
     uint8_t header;
     uint32_t crc32;

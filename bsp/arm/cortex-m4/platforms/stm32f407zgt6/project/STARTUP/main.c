@@ -7,27 +7,7 @@
 #include <stdarg.h>
 #include "crc.h"
 #include "xfer.h"
-
-#define PRINTF(fmt,...) _print_now(fmt,##__VA_ARGS__)
-
-char data[46] = {1,2,3,4,5,6,7,8,9,10,'h','e','l','l','w','o','r','l','d'};
-
-void _print_now(const char* format,...)
-{
-    va_list ap;
-    va_start(ap,format);
-    
-    if(!format)
-        return;
-    INFO(format,ap);
-    DBG_Flush();
-    va_end(ap);
-}
-
-void MAC_StartTransmit(void)
-{
-    DRV_StartTransmission();
-}
+#include "ttpmac.h"
 
 //max speed is 849 microticks for the transission of the min ethernat packet
 
@@ -42,9 +22,6 @@ int main(void)
     DRV_DepInit();
     
     CLOCK_Start();
-    
-    //PRINTF("test start");
-    //CLOCK_WaitAlarm(100,0); 
     
     uint32_t i = 0;
     

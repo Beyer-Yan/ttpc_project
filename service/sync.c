@@ -109,10 +109,10 @@ static int32_t _alignment_err_accumulated(int32_t value)
 	err   = (value*lmi%1000 + err)%1000;
 	theta = (value*lmi/1000 + err)/1000; 
 
-	return value*lmi/1000; 
+	return value*lmi/1000 + theta; 
 }
 
-void SVC_SetEstimateArivalTime(uint32_t EstimateTimeInterval)
+void SVC_SetEstimateArivalTimeInterval(uint32_t EstimateTimeInterval)
 {
 	/** value too large */
 	TTP_ASSERT(!(EstimateTimeInterval&0x80000000));
