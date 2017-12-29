@@ -86,15 +86,15 @@ typedef struct FSM_State
 }FSM_State;
 
 /** send a event or events to state machine */
-void FSM_start(void);
+void FSM_Start(void);
 
 /** DO NOT CALL THIS FUNCTION IN AN ISR !! */
-void FSM_reset(void);
+void FSM_Reset(void);
 
-void FSM_setHook(void (*hook)(uint32_t ps));
-void FSM_sendEvent(uint32_t Event);
+void FSM_SetHook(void (*hook)(uint32_t ps));
+void FSM_SendEvent(uint32_t Event);
 
-uint32_t FSM_getCurState(void);
+uint32_t FSM_GetCurState(void);
 
 void FSM_TransitIntoState(uint32_t NextState);
 void FSM_TransitIntoStateUrgent(uint32_t NextState);

@@ -340,7 +340,7 @@ static inline void __machine_reset()
  * 	bit 1 standing for the permanent event and bit 0 standing for the transient
  * 	event.
  */
-void FSM_sendEvent(uint32_t Event)
+void FSM_SendEvent(uint32_t Event)
 {
 	//NULL for this version
 }
@@ -349,7 +349,7 @@ void FSM_sendEvent(uint32_t Event)
  * start the state machine. This function shall never be returned normally.
  */
 
-void FSM_start()
+void FSM_Start()
 {
 	/** init the current state to be FREEZE */
 	//__machine_reset();
@@ -368,7 +368,7 @@ void FSM_start()
  * reset the state machine, mainly the pointers of the hook function and the 
  * current state variable.
  */
-void FSM_reset()
+void FSM_Reset()
 {
 	__machine_reset();
 }
@@ -378,7 +378,7 @@ void FSM_reset()
  * checked. You shall ensure the correctness of the parameter when calling
  * the function.
  */
-void FSM_setHook(void (*hook)(uint32_t ps)) 
+void FSM_SetHook(void (*hook)(uint32_t ps)) 
 {
 	__Gf_hook = hook;
 }
@@ -387,7 +387,7 @@ void FSM_setHook(void (*hook)(uint32_t ps))
  * return the state number of the current state
  * @return the current state number.
  */
-uint32_t FSM_getCurState()
+uint32_t FSM_GetCurState()
 {
 	return __G_state[__G_cur_state].state_num;
 }

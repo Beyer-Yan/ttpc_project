@@ -32,8 +32,8 @@ int main(void)
     
     PRINT("protocol start");
 
-    FSM_reset();
-    FSM_start();
+    FSM_Reset();
+    FSM_Start();
     
     //never come here
     PRINT("protocol error");
