@@ -80,6 +80,8 @@ void DBG_Flush(void);
 
 #define INFO(x, ...)   			message(DBG_INFO, x, ##__VA_ARGS__)
 
+#define PRINT(x, ...)           {INFO(x,##__VA_ARGS__); DBG_Flush();}
+
 /* end name group DEBUG level function definition */
 /**@}*/
 

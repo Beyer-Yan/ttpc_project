@@ -31,7 +31,7 @@ void CPU_Sleep(void);
  *  ex. the controller on event, or disrupted when the FSM is running, 
  *  ex. the controller on event.
  */
-//void CPU_RegisterInterruptHandler(void (*func)(void));
+void CPU_RegisterInterruptHandler(void (*func)(void));
 
 #endif // !__INTERRUPT__H__
 

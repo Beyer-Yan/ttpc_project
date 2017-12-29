@@ -38,6 +38,10 @@ void CPU_Sleep(void)
     __WFI();
 }
 
+void CPU_RegisterInterruptHandler(void (*func)(void))
+{
+    
+}
 
 
 
