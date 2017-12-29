@@ -8,6 +8,8 @@
 #include "xfer.h"
 #include "protocol.h"
 
+#include "host.h"
+
 //max speed is 849 microticks for the transission of the min ethernat packet
 
 static inline void __board_init(void)
@@ -20,13 +22,15 @@ static inline void __board_init(void)
 	CLOCK_DepInit();   
     CRC_DepInit();
     DRV_DepInit();
+
+    HOST_Init();
 }    
 
 int main(void)
 { 
     __board_init();
     PRINT("protocol start");
-    
+
     FSM_reset();
     FSM_start();
     
