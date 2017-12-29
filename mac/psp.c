@@ -28,6 +28,7 @@
 #include "clock.h"
 #include "medl.h"
 #include "msg.h"
+#include "xfer.h"
 
 uint32_t _G_ModeChanged = 0;
 static volatile uint32_t _G_SlotStartMacrotickTime = 0; 
@@ -208,7 +209,7 @@ static inline void _prepare_for_transmit(void)
         CS_SetDMC(dmc);
         CNI_ClrMCR();
     }
-
+    DRV_PrepareToTransmit();
     /** init the ack state, only if the node plans to send in this slot */
     PV_SetAckState(ACK_INIT);
 }

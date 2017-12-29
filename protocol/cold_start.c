@@ -78,7 +78,9 @@ void FSM_toColdStart(void)
     CS_SetDMC(DMC_NO_REQ);
     CS_ClearMemberAll();
     CS_SetMemberBit(pRS->FlagPosition);
+    
     MSG_PrepareCSFrame();
+    DRV_PrepareToTransmit();
     MAC_StopReceive();
 
     //MAC settings
