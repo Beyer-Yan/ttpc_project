@@ -15,6 +15,9 @@
   ******************************************************************************
   */
 
+#include "ttpdef.h"
+
 void HOST_Init(void);
 
 void HOST_Alive(void);
+void HOST_PrepareData(void);

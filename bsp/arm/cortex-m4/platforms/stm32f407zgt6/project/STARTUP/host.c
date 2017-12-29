@@ -14,8 +14,21 @@
  *
  ******************************************************************************
  */
-#include "ttpdef.h"
 #include "host.h"
+#include "ttpmac.h"
+#include "lsens.h"
+#include "msg.h"
+
+static inline void _byte_copy(volatile void* dst, const void* src,int size)
+{
+	volatile uint8_t* _d = (volatile uint8_t*)dst;
+	const uint8_t*    _s = (const uint8_t*)src;
+
+	while(size-->0)
+	{
+		*_d++ = *_s++;
+	}
+}
 
 void HOST_Init(void)
 {
@@ -26,4 +39,13 @@ void HOST_Init(void)
 void HOST_Alive(void)
 {
     TTP_HLSR = 1;
+}
+
+void HOST_PrepareData(void)
+{
+    RoundSlotProperty_t *pRS = MAC_GetRoundSlotProperties();
+    uint16_t val = Lsens_GetVal();
+    uint8_t* addr = MSG_GetMsgAddr(pRS->CNIAddressOffset);
+    
+    _byte_copy(addr,&val,2);
 }

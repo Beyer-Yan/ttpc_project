@@ -45,7 +45,7 @@ static volatile uint32_t            __G_app_id;
  */
 extern const uint8_t* medl_get_base_addr(void);
 
-static void _byte_copy(volatile void* dst, const void* src,int size)
+static inline void _byte_copy(volatile void* dst, const void* src,int size)
 {
 	volatile uint8_t* _d = (volatile uint8_t*)dst;
 	const uint8_t*    _s = (const uint8_t*)src;
