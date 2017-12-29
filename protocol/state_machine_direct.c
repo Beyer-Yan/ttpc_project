@@ -294,7 +294,7 @@ static void __protocol(void)
 			__G_urgent_state = FSM_ERROR;
 		}
 
-		if(__G_state_changed==1)
+		if(__G_state_changed==1) 
 		{
 			if(__G_state[__G_cur_state].toState!=NULL)
 			{

@@ -93,7 +93,6 @@ static uint32_t _frame_crc32_check(TTP_ChannelFrameDesc* pDesc, uint32_t type)
     uint32_t frame_crc32;
     uint32_t checked_crc32;
     c_state_t c_state;
-    RoundSlotProperty_t *pRS;
 
     uint8_t* crc_pos;
 
@@ -121,7 +120,7 @@ static uint32_t _frame_crc32_check(TTP_ChannelFrameDesc* pDesc, uint32_t type)
     }
 
     crc_pos = (uint8_t*)(pDesc->pFrame) + pDesc->length - sizeof(frame_crc32);
-    pRS = MAC_GetRoundSlotProperties();
+    //pRS = MAC_GetRoundSlotProperties();
 
     _byte_copy((uint8_t*)&frame_crc32, crc_pos, sizeof(frame_crc32));
 

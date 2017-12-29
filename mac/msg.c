@@ -202,6 +202,7 @@ MAC_err_t MSG_PrepareCSFrame(void)
 MAC_err_t MSG_PushFrame(void)
 {
     __assemble_ttp_frame();
+    return MAC_EOK;
 }
 
 void MSG_PullAppData(TTP_ChannelFrameDesc* pDesc)
