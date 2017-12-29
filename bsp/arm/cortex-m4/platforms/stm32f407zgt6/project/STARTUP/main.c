@@ -29,6 +29,7 @@ static inline void __board_init(void)
 int main(void)
 { 
     __board_init();
+    
     PRINT("protocol start");
 
     FSM_reset();
