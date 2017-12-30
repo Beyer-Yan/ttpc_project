@@ -117,10 +117,10 @@ static inline void _slot_property_extract(const uint8_t* buf)
 	 * @attention upper program should guarantee the legality of the parameters,
 	 * mode and round_slot.
 	 */
-	_byte_copy(&__G_slot.LogicalSenderSlot, buf,2);
+	_byte_copy(&__G_slot.LogicalSenderMultiplexID, buf,2);
 	__G_slot.LogicalSenderSlot &= 0x0000ffff;
 
-	_byte_copy(&__G_slot.LogicalSenderMultiplexID, buf+2,2);
+	_byte_copy(&__G_slot.LogicalSenderSlot, buf+2,2);
 	__G_slot.LogicalSenderMultiplexID &= 0x0000ffff;
 
 	_byte_copy(&__G_slot.SlotDuration, buf+4,2);

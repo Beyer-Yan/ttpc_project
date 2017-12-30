@@ -50,8 +50,8 @@ typedef enum Mac_err{
 
 typedef struct mac_slot 
 {
-	uint32_t LogicalSenderSlot;
 	uint32_t LogicalSenderMultiplexID;
+	uint32_t LogicalSenderSlot;
 
 	uint32_t SlotDuration;				/**< in unit of macroticks */
 	uint32_t PSPDuration;               /**< in unit of macroticks */
