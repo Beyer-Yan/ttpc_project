@@ -48,9 +48,9 @@ void LED_Off(int ledKind)
     {
        GPIO_SetBits(GPIOF,LED_ERR_PIN); 
     }
-    else
+    else if(ledKind==LED_TX)
     {
-        //todo
+        GPIO_SetBits(GPIOF,LED_SYNC_PIN);;//todo
     }
 }
 
@@ -66,7 +66,7 @@ void LED_Toggle(int ledKind)
     }
     else if(ledKind==LED_TX)
     {
-        GPIO_ResetBits(GPIOF,LED_SYNC_PIN);;//todo
+        GPIO_ToggleBits(GPIOF,LED_SYNC_PIN);;//todo
     }
 }
 
