@@ -30,7 +30,7 @@ static inline void __board_init(void)
 
 void _hook_debug(uint32_t ps_num)
 {
-    PRINT("transite into state %s",_ps[ps_num]);
+    INFO("transite into state %s",_ps[ps_num]);
 }
 
 int main(void)

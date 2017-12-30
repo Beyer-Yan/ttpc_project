@@ -105,6 +105,8 @@ void FSM_doListen(void)
     uint32_t freq_div = CLOCK_GetFrequencyDiv(); 
     uint32_t frequency = CLOCK_GetLocalFrequency();
     uint32_t ATW = pSP->ArrivalTimingWindow*frequency/1000 + 1;
+    
+    PRINT("Trying to listen");
 
     if (CLOCK_WaitAlarm(pSP->ListenTimeout, _listen_disturb)) {
 
@@ -206,14 +208,16 @@ void FSM_doListen(void)
 
     } else {
         //Listening timeout expired, check if the cold start conditions are fullfilled.
-
+        INFO("Listen failed, trying to cold-start");
+        
         if (pSP->ColdStartAllow == COLD_START_NOT_ALLOWED)
             goto _end;
         if (pSP->MaximumColdStartEntry == 0)
             goto _end;
-        if (PV_GetCounter(COLD_START_COUNTER) > pSP->MaximumColdStartEntry)
+        if (PV_GetCounter(COLD_START_COUNTER) >= pSP->MaximumColdStartEntry){
+            INFO("Cold start times exausted!!");
             goto _end;
-
+        }
         if (!SVC_CheckHostLifeSign())
             goto _end;
 

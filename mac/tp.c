@@ -35,7 +35,10 @@ void tp(void)
 	slot_acquisition==SENDING_FRAME ? MAC_StartTransmit() : MAC_StartReceive();
 
     CNI_UpdateCLFS();
-    slot_acquisition==SENDING_FRAME ? LED_On(LED_TX) : LED_Off(LED_TX);
+    if(slot_acquisition==SENDING_FRAME)
+        LED_On(LED_TX);
+    else
+        LED_Off(LED_TX);
 
     //other test interface shall be specified here.
 

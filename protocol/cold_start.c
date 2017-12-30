@@ -148,7 +148,7 @@ void FSM_doSubColdStart(void)
     ScheduleParameter_t* pSP = MAC_GetScheduleParameter();
 
     //max cold start entries exceed
-    if (PV_GetCounter(COLD_START_COUNTER) > pSP->MaximumColdStartEntry) {
+    if (PV_GetCounter(COLD_START_COUNTER) >= pSP->MaximumColdStartEntry) {
         goto _end;
     }
 

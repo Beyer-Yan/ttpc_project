@@ -386,6 +386,7 @@ void psp_for_coldstart(void)
         FSM_TransitIntoState(FSM_ACTIVE);
         return;
     }
+    _prepare_for_receive();
 }
 
 uint32_t  MAC_GetSlotStartMacroticks(void)
