@@ -204,7 +204,7 @@ void MAC_SetTDMARound(uint32_t tdma)
 }
 void MAC_SetClusterCycleLength(uint32_t Length) 
 {
-    _G_TDMACycleLength = Length;
+    _G_ClusterCycleLength = Length;
 }
 void MAC_SetTDMACycleLength(uint32_t Length) 
 { 
