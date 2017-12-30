@@ -214,7 +214,7 @@ void FSM_doListen(void)
         if (PV_GetCounter(COLD_START_COUNTER) > pSP->MaximumColdStartEntry)
             goto _end;
 
-        if (!CNI_CheckHLFS())
+        if (!SVC_CheckHostLifeSign())
             goto _end;
 
         FSM_TransitIntoState(FSM_COLD_START);

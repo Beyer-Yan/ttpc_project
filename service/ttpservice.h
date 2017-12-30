@@ -237,7 +237,9 @@ uint32_t SVC_CliqueDetect(void);
  */
 static inline uint32_t SVC_CheckHostLifeSign(void)
 {
-    return CNI_CheckHLFS();
+    //for test
+    return 1;
+    //return CNI_CheckHLFS();
 }
 
 /**

@@ -157,7 +157,7 @@ void FSM_doSubColdStart(void)
         goto _end;
     } 
     //check validity of host
-    if (CNI_CheckHLFS()) {
+    if (SVC_CheckHostLifeSign()) {
         //host life updated
         FSM_TransitIntoState(FSM_COLD_START);
         return;

@@ -45,7 +45,7 @@ uint32_t SVC_SlotAcquirement(void)
     if (pRS->ReintegrationAllow == REINTEGRATION_NOT_ALLOWED)
         goto _end;
 
-    if (CNI_CheckHLFS() || (FREE_SHOT_ENABLE == PV_GetFreeShotFlag() && mode == MODE_CS_ID)) {
+    if (SVC_CheckHostLifeSign() || (FREE_SHOT_ENABLE == PV_GetFreeShotFlag() && mode == MODE_CS_ID)) {
         if (int_counter == pSP->MinimumIntegrationCount) {
             if (!CS_GetMemberBit(mmp)) {
                 res = 1;
