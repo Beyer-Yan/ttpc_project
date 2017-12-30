@@ -70,6 +70,7 @@ void FSM_toColdStart(void)
 
     uint32_t mode_num = CALC_MODE_NUM(MODE_CS_ID);
     RoundSlotProperty_t *pRS = MAC_LoadSlotProperties(mode_num,slot);
+    TTP_ASSERT(pRS!=NULL);
     
     //CS initing and settings
     CS_SetGTF(tsf);

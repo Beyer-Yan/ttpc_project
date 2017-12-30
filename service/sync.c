@@ -146,7 +146,8 @@ uint32_t SVC_ExecSyncSchema(uint32_t Steps)
 
 	if(ABS(csct) > aligned_pi/2)
 		return 0; //SYNC ERR
-
-	MAC_AdjTime(CLK_PHASE_ADJ,csct);
+    if(csct!=0)
+        MAC_AdjTime(CLK_PHASE_ADJ,csct);
+    
 	return 1;
 }

@@ -53,9 +53,14 @@ static inline int _compare_cstate(uint8_t* cstate0, uint8_t* cstate1)
     return res;
 }
 
-static inline void _process_slot_parameters()
+static inline int _process_slot_parameters()
 {
-    uint32_t mode_num = CALC_MODE_NUM(CS_GetCurMode());
+    uint32_t mode = CS_GetCurMode();
+    uint32_t mode_num = CALC_MODE_NUM(mode);
+    uint32_t rs = CS_GetCurRoundSlot();
+
+    if(MAC_LoadSlotProperties(mode, rs)==NULL)
+        return 0;
 
     uint32_t ccl = MEDL_GetRoundCycleLength(mode_num); /* cluster cycle length */
     uint32_t ctl = MEDL_GetTDMACycleLength(mode_num); /* TDMA cycle length */
@@ -63,7 +68,6 @@ static inline void _process_slot_parameters()
     MAC_SetClusterCycleLength(ccl);
     MAC_SetTDMACycleLength(ctl);
 
-    uint32_t rs = CS_GetCurRoundSlot();
     uint32_t tdma = rs / ctl;
     uint32_t slot = rs % ctl;
 
@@ -71,8 +75,9 @@ static inline void _process_slot_parameters()
     MAC_SetSlot(slot);
 
     //check then load the configuration of the current slot.
-    MAC_LoadSlotProperties(CS_GetCurMode(), rs);
+    return 1;
 }
+
 void FSM_toListen(void)
 {
     //TIM_CMD(CLEAR);
@@ -163,7 +168,8 @@ void FSM_doListen(void)
         // now the frame received is taken into consideration
         CS_SetCState(&cstate);
         //set current slot parameter according the sender's c-state
-        _process_slot_parameters();
+        if(!_process_slot_parameters())
+            goto _end;
 
         pRS = MAC_GetRoundSlotProperties();
 
@@ -208,14 +214,13 @@ void FSM_doListen(void)
 
     } else {
         //Listening timeout expired, check if the cold start conditions are fullfilled.
-        INFO("Listen failed, trying to cold-start");
+        INFO("Listen time expired");
         
         if (pSP->ColdStartAllow == COLD_START_NOT_ALLOWED)
             goto _end;
         if (pSP->MaximumColdStartEntry == 0)
             goto _end;
         if (PV_GetCounter(COLD_START_COUNTER) >= pSP->MaximumColdStartEntry){
-            INFO("Cold start times exausted!!");
             goto _end;
         }
         if (!SVC_CheckHostLifeSign())

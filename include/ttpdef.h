@@ -1418,6 +1418,9 @@ extern uint8_t msg_pool[MSG_POOL_LENGTH];
 								 ((MODE) == MODE_3)  || \
 								 ((MODE) == MODE_CLR))
 
+#define CALC_MODE_NUM(mode)      (((mode)&CS_CP_MODE)>>11)        
+
+/*
 static inline uint32_t CALC_MODE_NUM(uint32_t mode)
 {
 	uint32_t _mode_num;
@@ -1432,6 +1435,7 @@ static inline uint32_t CALC_MODE_NUM(uint32_t mode)
 
 	return _mode_num;
 }
+*/
 
 /** for register TTP_SR */
 
