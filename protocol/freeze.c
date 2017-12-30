@@ -20,6 +20,7 @@
  #include "protocol.h"
  #include "clock.h"
  #include "ttpservice.h"
+ #include "host.h"
 
 void FSM_toFreeze(void)
 {
@@ -37,6 +38,7 @@ void FSM_toFreeze(void)
 
 void FSM_doFreeze(void)
 {
+    TTP_CR0 |= CR_CO; //just for test;
     while(!(TTP_CR0&CR_CO))
     {
         SVC_Sleep();

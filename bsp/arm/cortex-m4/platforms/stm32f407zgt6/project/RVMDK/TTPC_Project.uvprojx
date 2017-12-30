@@ -209,7 +209,7 @@
             <AdsLsun>1</AdsLsun>
             <AdsLven>1</AdsLven>
             <AdsLsxf>1</AdsLsxf>
-            <RvctClst>0</RvctClst>
+            <RvctClst>1</RvctClst>
             <GenPPlst>0</GenPPlst>
             <AdsCpuType>"Cortex-M4"</AdsCpuType>
             <RvctDeviceName></RvctDeviceName>
@@ -386,7 +386,7 @@
             </VariousControls>
           </Aads>
           <LDads>
-            <umfTarg>1</umfTarg>
+            <umfTarg>0</umfTarg>
             <Ropi>0</Ropi>
             <Rwpi>0</Rwpi>
             <noStLib>0</noStLib>
@@ -395,7 +395,7 @@
             <TextAddressRange>0x08000000</TextAddressRange>
             <DataAddressRange>0x20000000</DataAddressRange>
             <pXoBase></pXoBase>
-            <ScatterFile></ScatterFile>
+            <ScatterFile>..\LAYOUT\ttpc_stm32f407zgt6.sct</ScatterFile>
             <IncludeLibs></IncludeLibs>
             <IncludeLibsPath></IncludeLibsPath>
             <Misc></Misc>
@@ -427,6 +427,11 @@
               <FileName>startup_stm32f40_41xxx.s</FileName>
               <FileType>2</FileType>
               <FilePath>..\STARTUP\startup_stm32f40_41xxx.s</FilePath>
+            </File>
+            <File>
+              <FileName>host.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\STARTUP\host.c</FilePath>
             </File>
           </Files>
         </Group>

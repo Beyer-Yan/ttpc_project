@@ -166,7 +166,7 @@ MAC_err_t MSG_PrepareCSFrame(void)
     ScheduleParameter_t* pSch;
     NodeProperty_t*      pNode;
 
-    header = (MCR_NO_REQ>>2)&FRAME_TYPE_EXPLICIT;
+    header = (MCR_NO_REQ>>2)|FRAME_TYPE_EXPLICIT;
 
     pSch = MAC_GetScheduleParameter();
     pNode= MAC_GetNodeProperties();

@@ -52,10 +52,10 @@ void FSM_toColdStart(void)
     //code executing time shall be measured from the cold-start staring time
     //to the actual action time. Normally the PSP duration
 
-    static uint32_t COLD_START_EXE_TIME_MACROTICK = 10;
+    static uint16_t COLD_START_EXE_TIME_MACROTICK = 200;
 
     //tsp indicates the AT time of this node
-    uint32_t tsf = CNI_GetTSF();
+    uint16_t tsf = CNI_GetTSF()&0xffff;
 
     CLOCK_Clear(); //stop then clear the clock
     //timer settings and slot timing properties setting

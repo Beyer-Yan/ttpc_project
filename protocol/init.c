@@ -22,11 +22,11 @@
 #include "protocol_data.h"
 #include "clock.h"
 
-static inline void _cni_init(void)
+static void _cni_init(void)
 {
     int _i = 0;
 
-    for (; _i < sizeof(__ttpc_status_regs_group); _i++) {
+    for (; _i < sizeof(__ttpc_status_regs_group)/4; _i++) {
         __ttpc_status_regs_group[_i] = 0;
     }
 
@@ -37,7 +37,7 @@ static inline void _cni_init(void)
     }
 }
 
-static inline void _pv_init(void)
+static void _pv_init(void)
 {
     int i = 0;
     for (; i < sizeof(PV_data); i++) {
@@ -47,7 +47,7 @@ static inline void _pv_init(void)
     PV_EnableFreeShot();
 }
 
-static inline void _clock_init(void)
+static void _clock_init(void)
 {
     ScheduleParameter_t* pSP = MAC_GetScheduleParameter();
 
@@ -61,7 +61,7 @@ static inline void _clock_init(void)
     CLOCK_SetFrequencyDiv(freq_div); //840， normally
 }
 
-static inline void _id_init(void)
+static void _id_init(void)
 {
     //HW_GetPlatformID((uint8_t*)TTP_ID_BASE, sizeof(ttp_id));
     TTP_IDCR = MEDL_GetSchedID();

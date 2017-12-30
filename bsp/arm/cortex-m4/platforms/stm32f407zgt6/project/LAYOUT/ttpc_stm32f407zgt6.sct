@@ -4,9 +4,10 @@ LR_IROM 0x08000000 0x00100000           ;1M load region
     {
         *.o (RESET,+First)
         *(InRoot$$Sections) 
+        .ANY (+RO)
         .ANY (MEDL_SECTION, +Last)
     }
-    ER_IRAM_CCM 0x10000000 0x0001000    ;64K fast speed SRAM region
+    ER_IRAM_CCM 0x10000000 0x0010000    ;64K fast speed SRAM region
     {                                   ;for stack, heap and protocol
         .ANY (STACK,+First)             ;related variables
         .ANY (HEAP)
@@ -14,7 +15,6 @@ LR_IROM 0x08000000 0x00100000           ;1M load region
     }
     ER_IRAM_PT 0x20000000 0x0001C000    ;112K protocol execution region
     {
-	    .ANY (+RO)
         .ANY (+RW +ZI)
     }
     ER_IRAM_CNI 0x2001C000 0x00004000   ;16K CNI ram region

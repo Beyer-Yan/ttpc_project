@@ -95,8 +95,8 @@ typedef struct medl_header
 typedef struct mode_discriptor
 {
     uint32_t mode_addr;
-    uint32_t round_slots;
-    uint32_t tdma_slots;
+    uint16_t round_slots;
+    uint16_t tdma_slots;
 
 }mode_discriptor_t;
 
