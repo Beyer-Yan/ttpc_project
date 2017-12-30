@@ -104,10 +104,13 @@ uint32_t MAC_UpdateSlot(void)
     _G_TDMARound = rs/_G_TDMACycleLength;
     _G_Slot = rs%_G_TDMACycleLength;
 
-    res = rs==0 ? FIRST_SLOT_OF_CURRENT_CLUSTER :
-     _G_Slot==0 ? FIRST_SLOT_OF_SUCCESSOR_TDMAROUND :
-                  NORMAL_SLOT;
-
+    if(rs==0)
+        res = FIRST_SLOT_OF_CURRENT_CLUSTER;
+    else if(_G_Slot==0)
+        res = FIRST_SLOT_OF_SUCCESSOR_TDMAROUND;
+    else
+        res = NORMAL_SLOT;
+    
     /* 
     if(rs==0)
     {
