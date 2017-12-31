@@ -1,6 +1,7 @@
 #include <stm32f4xx_usart.h>
 #include <stm32f4xx_dma.h>
 #include "dbgio.h"
+#include "ttpconstants.h"
 
 static char _G_IO_Buffer[IO_BUFFER_SIZE] = {0};
 

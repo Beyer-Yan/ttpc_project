@@ -23,12 +23,13 @@
  */
 /**@{*/
 
-#warning "more to be done"
+#define MSG_POOL_LENGTH 		      (1024)
 
-#include <stdio.h>
+#define IO_BUFFER_SIZE            (16*1024)
+
+#define COMPENSATE_MI_FOR_LISTEN  (214)
+
+
 /**@}*/// end of the group Exported_Constants
-
-
-
 
 #endif

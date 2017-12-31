@@ -26,8 +26,6 @@
 
 #include "stm32f4xx.h"
 
-// exec time duration
-#define COMPENSATE_MI  214
 
 extern uint32_t phase_indicator;
 
@@ -201,7 +199,7 @@ void FSM_doListen(void)
         CLOCK_Clear();
 
         uint32_t exe_mi = cur_mi - (pDesc->pCH0->rcv_timestamp + pDesc->pCH1->rcv_timestamp) / 2;   
-        exe_mi += COMPENSATE_MI;
+        exe_mi += COMPENSATE_MI_FOR_LISTEN;
         uint32_t actual_ma = CS_GetCurGTF() + (exe_mi + cps_mi) / freq_div;
         uint32_t actual_mi = (exe_mi + cps_mi) % freq_div;
 
