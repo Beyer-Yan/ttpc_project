@@ -49,3 +49,9 @@ void HOST_PrepareData(void)
     
     _byte_copy(addr,&val,2);
 }
+
+void HOST_ModeChange(uint32_t mode)
+{
+    TTP_CR0 &=~ CR_MCR; 
+    TTP_CR0 |=  MCR_MODE_1;
+}

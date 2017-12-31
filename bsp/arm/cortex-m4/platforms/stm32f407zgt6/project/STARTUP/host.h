@@ -21,3 +21,5 @@ void HOST_Init(void);
 
 void HOST_Alive(void);
 void HOST_PrepareData(void);
+
+void HOST_ModeChange(uint32_t mode);

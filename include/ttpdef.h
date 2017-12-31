@@ -24,6 +24,8 @@
 //#define USE_STDINC
 //#define __CC_ARM
 
+#include "ttpconstants.h"
+
 typedef enum {FALSE=0,TRUE} 		bool_t;
 
 #ifdef USE_STDINC

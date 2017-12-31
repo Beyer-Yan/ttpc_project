@@ -17,6 +17,8 @@
  
 #include "protocol.h"
 
+#include "host.h"
+
 extern void psp_for_active(void);
 extern void tp(void);
 extern void prp_for_active(void);
@@ -37,7 +39,8 @@ struct SubSeqRoutine SSR_active =
 
 void FSM_toActive(void)
 {
-    //nothing to be done
+    //for testing
+    HOST_ModeChange(DMC_MODE_1);
 }
 
 void FSM_doActive(void)

@@ -54,10 +54,10 @@ static DataPacketTypeDef Rx_DataPacket;
 
 static inline void _reset_phy(void)
 {
-    GPIO_ResetBits(GPIOB, GPIO_Pin_14);
+    GPIO_ResetBits(GPIOD, GPIO_Pin_3);
     int i = 840000;
     while (i--);
-    GPIO_SetBits(GPIOB, GPIO_Pin_14);
+    GPIO_SetBits(GPIOD, GPIO_Pin_3);
 }
 
 static inline void _mac_address_config(void)
@@ -121,7 +121,7 @@ static inline void _gpio_config(void)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
 
-    RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA | RCC_AHB1Periph_GPIOB |RCC_AHB1Periph_GPIOC, ENABLE);
+    RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA | RCC_AHB1Periph_GPIOC |RCC_AHB1Periph_GPIOD| RCC_AHB1Periph_GPIOG, ENABLE);
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
 
     SYSCFG_ETH_MediaInterfaceConfig(SYSCFG_ETH_MediaInterface_RMII);
@@ -133,10 +133,10 @@ static inline void _gpio_config(void)
     ETH_RMII_CRS_DV ------------------> PA7
     ETH_RMII_RXD0 --------------------> PC4
     ETH_RMII_RXD1 --------------------> PC5
-    ETH_RMII_TX_EN -------------------> PB11
-    ETH_RMII_TXD0 --------------------> PB12
-    ETH_RMII_TXD1 --------------------> PB13
-    ETH_RESET-------------------------> PB14*/
+    ETH_RMII_TX_EN -------------------> PG11
+    ETH_RMII_TXD0 --------------------> PG13
+    ETH_RMII_TXD1 --------------------> PG14
+    ETH_RESET-------------------------> PD3*/
 
     //config PA1 PA2 PA7
     GPIO_InitStructure.GPIO_Pin   = GPIO_Pin_1 | GPIO_Pin_2 | GPIO_Pin_7;
@@ -150,20 +150,27 @@ static inline void _gpio_config(void)
     GPIO_PinAFConfig(GPIOA, GPIO_PinSource2, GPIO_AF_ETH);
     GPIO_PinAFConfig(GPIOA, GPIO_PinSource7, GPIO_AF_ETH);
 
-    //config PB11, PB12, PB13 and PB14
-    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_11 | GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14;
-    GPIO_Init(GPIOB, &GPIO_InitStructure);
-    GPIO_PinAFConfig(GPIOB, GPIO_PinSource11, GPIO_AF_ETH);
-    GPIO_PinAFConfig(GPIOB, GPIO_PinSource12, GPIO_AF_ETH);
-    GPIO_PinAFConfig(GPIOB, GPIO_PinSource13, GPIO_AF_ETH);
-    //PB14 is used for hardware reset
-
     //config PC1,PC4 and PC5
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_1 | GPIO_Pin_4 | GPIO_Pin_5;
     GPIO_Init(GPIOC, &GPIO_InitStructure);
     GPIO_PinAFConfig(GPIOC, GPIO_PinSource1, GPIO_AF_ETH);
     GPIO_PinAFConfig(GPIOC, GPIO_PinSource4, GPIO_AF_ETH);
     GPIO_PinAFConfig(GPIOC, GPIO_PinSource5, GPIO_AF_ETH);
+
+    //config PG11, PG14 and PG13
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_11 | GPIO_Pin_13 | GPIO_Pin_14;
+    GPIO_Init(GPIOG, &GPIO_InitStructure);
+    GPIO_PinAFConfig(GPIOG, GPIO_PinSource11, GPIO_AF_ETH);
+    GPIO_PinAFConfig(GPIOG, GPIO_PinSource13, GPIO_AF_ETH);
+    GPIO_PinAFConfig(GPIOG, GPIO_PinSource14, GPIO_AF_ETH);
+
+    //config PD3
+    GPIO_InitStructure.GPIO_Pin   = GPIO_Pin_3;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
+    GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_OUT;
+    GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+    GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_NOPULL;
+    GPIO_Init(GPIOD, &GPIO_InitStructure);
 
     //traffic signal PA6
     //for ethernet, the signal is provided by RX_DV or CRS_DV
@@ -176,7 +183,7 @@ static inline void _gpio_config(void)
     GPIO_Init(GPIOA, &GPIO_InitStructure);
     
     //hardware reset the ETH PHY
-    //_reset_phy();
+    _reset_phy();
 }
 
 static inline void _mac_config(void)
@@ -227,9 +234,6 @@ static inline void _mac_config(void)
     
     _mac_address_config();
     _buffer_config();
-    
-    uint32_t x1 = ETH_ReadPHYRegister(LAN8720_PHY_ADDRESS, PHY_BSR);
-    uint32_t x2 = ETH_ReadPHYRegister(LAN8720_PHY_ADDRESS, PHY_BCR);
     
     //enable transimission
     ETH_MACTransmissionCmd(ENABLE);
