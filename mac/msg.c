@@ -262,11 +262,14 @@ TTP_FrameDesc* MSG_GetFrameDesc(void)
     _G_TTP_FrameDesc.pCH0->rcv_timestamp = CLOCK_GetCaptureRX0();
     _G_TTP_FrameDesc.pCH0->status = _status_adapter(pDataPacket->ch0->status);
 
-    _G_TTP_FrameDesc.pCH1->length = pDataPacket->ch1->length;
-    _G_TTP_FrameDesc.pCH1->pFrame = (TTP_FrameStructDesc*)pDataPacket->ch1->BufferAddr;
-    _G_TTP_FrameDesc.pCH1->rcv_timestamp = CLOCK_GetCaptureRX1();
-    _G_TTP_FrameDesc.pCH1->status = _status_adapter(pDataPacket->ch1->status);
+    //_G_TTP_FrameDesc.pCH1->length = pDataPacket->ch1->length;
+    //_G_TTP_FrameDesc.pCH1->pFrame = (TTP_FrameStructDesc*)pDataPacket->ch1->BufferAddr;
+    //_G_TTP_FrameDesc.pCH1->rcv_timestamp = CLOCK_GetCaptureRX1();
+    //_G_TTP_FrameDesc.pCH1->status = _status_adapter(pDataPacket->ch1->status);
 
+    #warning "for test, the channel 1 is assigned to channel 0"
+    _G_TTP_FrameDesc.pCH1 = _G_TTP_FrameDesc.pCH0;
+    
     return &_G_TTP_FrameDesc;               
 }
 

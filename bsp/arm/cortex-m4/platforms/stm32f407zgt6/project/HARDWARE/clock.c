@@ -62,7 +62,7 @@ void CLOCK_DepInit(void)
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3,ENABLE); //clock divider 16bit
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4,ENABLE); //system global clock 16bit
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM5,ENABLE); //user global clock 32bit
-    
+
     //input capture channel pins
     RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA,ENABLE);
     RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB,ENABLE);
@@ -221,6 +221,15 @@ void CLOCK_DepInit(void)
     NVIC_Init(&NVIC_InitStructure);
     
     TIM_ITConfig(TIM5,TIM_IT_Update,ENABLE);
+    
+    /* for system time measuring */
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM14,ENABLE);
+    TIM_TimeBaseInitStructure.TIM_Prescaler     = 0;
+    TIM_TimeBaseInitStructure.TIM_CounterMode   = TIM_CounterMode_Up;
+    TIM_TimeBaseInitStructure.TIM_Period        = 0xffff;
+    TIM_TimeBaseInitStructure.TIM_ClockDivision = TIM_CKD_DIV1;
+    TIM_TimeBaseInit(TIM14,&TIM_TimeBaseInitStructure);
+    TIM14->CR1 |= TIM_CR1_CEN; 
 }
 /*
 void DMA1_Stream2_IRQHandler(void)

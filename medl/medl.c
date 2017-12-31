@@ -218,20 +218,26 @@ void* MEDL_GetRoundSlotAddr(uint32_t ModeNum, uint32_t RoundSlot)
 	/**
 	 * Only in the first time are the slot properties extracted.
 	 */
-    if(_modeNum>=__G_medl_header.mode_region_num)
-        return NULL;
-    
 	if(_modeNum!=ModeNum){
+        
+        if(ModeNum>=__G_medl_header.mode_region_num)
+            return NULL;
+        
 		_modeNum = ModeNum;
-		_slot    = RoundSlot;
 		__medl_mode_extract(_modeNum);
+        
+        if(RoundSlot>=__G_mode_discriptor.round_slots)
+			return NULL;
+        
+        _slot = RoundSlot;
 		_slot_property_extract(__medl_get_slot_entry(_modeNum,_slot));
+        
 	}else if(_slot!=RoundSlot){
 		
 		if(RoundSlot>=__G_mode_discriptor.round_slots)
 			return NULL;
 
-		_slot    = RoundSlot;
+		_slot = RoundSlot;
 		const uint8_t* buf = __medl_get_slot_entry(_modeNum,_slot);
 		_slot_property_extract(buf);
 	}

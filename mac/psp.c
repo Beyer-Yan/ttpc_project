@@ -227,7 +227,7 @@ static inline uint32_t _is_data_frame()
 void psp_for_passive(void)
 {
     RoundSlotProperty_t* pRS;
-
+    
     _slot_properties_update();
     /** check MEDL configuration */
     #warning "periodic checking for MEDL has not been implemented"

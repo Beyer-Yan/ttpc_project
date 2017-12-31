@@ -24,8 +24,10 @@
 #include "msg.h"
 #include "xfer.h"
 
-// exec time duration from line 184 to line 197
-#define COMPENSATE_MI  34
+#include "stm32f4xx.h"
+
+// exec time duration
+#define COMPENSATE_MI  214
 
 extern uint32_t phase_indicator;
 
@@ -59,11 +61,13 @@ static inline int _process_slot_parameters()
     uint32_t mode_num = CALC_MODE_NUM(mode);
     uint32_t rs = CS_GetCurRoundSlot();
 
-    if(MAC_LoadSlotProperties(mode, rs)==NULL)
+    if(MAC_LoadSlotProperties(mode, rs)==NULL){
+        INFO("frame with error cstate");
         return 0;
+    }
 
     uint32_t ccl = MEDL_GetRoundCycleLength(mode_num); /* cluster cycle length */
-    uint32_t ctl = MEDL_GetTDMACycleLength(mode_num); /* TDMA cycle length */
+    uint32_t ctl = MEDL_GetTDMACycleLength(mode_num);  /* TDMA cycle length */
 
     MAC_SetClusterCycleLength(ccl);
     MAC_SetTDMACycleLength(ctl);
@@ -81,7 +85,6 @@ static inline int _process_slot_parameters()
 void FSM_toListen(void)
 {
     //TIM_CMD(CLEAR);
-    MAC_StartReceive();
     MAC_SetSlot(0);
     MAC_SetTDMARound(0);
     CLOCK_Start();
@@ -111,12 +114,15 @@ void FSM_doListen(void)
     uint32_t frequency = CLOCK_GetLocalFrequency();
     uint32_t ATW = pSP->ArrivalTimingWindow*frequency/1000 + 1;
     
-    PRINT("Trying to listen");
-
+    
+    uint32_t t0,t1,t2,t3,t4,t5,t6;
+    
+    //PRINT("Trying to listen"); 
+    MAC_StartReceive();
     if (CLOCK_WaitAlarm(pSP->ListenTimeout, _listen_disturb)) {
 
         CLOCK_WaitMicroticks(ATW,NULL);
-
+        
         uint32_t ch0_res = MSG_CheckReceived(CH0);
         uint32_t ch1_res = MSG_CheckReceived(CH1);
 
@@ -126,7 +132,7 @@ void FSM_doListen(void)
             PV_DisableBigBang();
             goto _end;
         }
-            
+  
         pDesc = MSG_GetFrameDesc();
         if(pDesc==NULL)
             goto _end;
@@ -164,15 +170,16 @@ void FSM_doListen(void)
             if (pSP->ColdStartIntegrationAllow != COLD_START_INTEGRATION_ALLOWED)
                 goto _end;
         }
-
+        
         // now the frame received is taken into consideration
         CS_SetCState(&cstate);
+
         //set current slot parameter according the sender's c-state
         if(!_process_slot_parameters())
             goto _end;
-
+        
         pRS = MAC_GetRoundSlotProperties();
-
+        
         // mode error, desert the received frame
         if (header >> 1 != 0 && pRS->ModeChangePermission == MODE_CHANGE_DENY)
             goto _end;
@@ -183,7 +190,7 @@ void FSM_doListen(void)
         PV_SetCounter(FAILED_SLOTS_COUNTER, 0);
         SVC_ClrClockSyncFIFO();
         CNI_ResetHLFS(); /**< more reasonable Op interface shall be negotiated */
-
+        
         // cluster time correcting.
         //perform "correction" + "precision" of "sender", meaning cps_value
         uint32_t cps_value = pRS->DelayCorrectionTerms + pSP->Precision;
@@ -206,7 +213,9 @@ void FSM_doListen(void)
         MAC_SetSlotTime(CS_GetCurGTF(),pRS->TransmissionDuration,pRS->PSPDuration,pRS->SlotDuration);
 
         phase_indicator = 0;        /**< point to the psp phase o the next slot */
+
         CLOCK_Start();
+
         MAC_StartPhaseCirculation(); /**< start synchronization mode */
 
         CNI_SetSRBit(ISR_CV); //CSATE available

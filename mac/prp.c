@@ -281,7 +281,6 @@ static inline uint32_t _is_data_frame()
 
 void prp_for_passive(void)
 {
-
     uint32_t res_ch[2];
     uint32_t frame_status_ch[2];
 
