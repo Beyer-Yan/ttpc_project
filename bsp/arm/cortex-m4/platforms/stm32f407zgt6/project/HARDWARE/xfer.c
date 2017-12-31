@@ -16,7 +16,7 @@
   */
 
 #include "xfer.h"
-#include "lan8720.h"
+//#include "lan8720.h"
 #include "stm32f4x7_eth.h"
 #include "stm32f4x7_eth_conf.h"
 #include "ttpdebug.h"
@@ -24,10 +24,10 @@
 #include "ttpconstants.h"
 
 #if defined (TTP_NODE0) || defined (TTP_NODE1)
-    #undef LAN8720_PHY_ADDRESS
     #define LAN8720_PHY_ADDRESS 0x00
+#else
+    #define LAN8720_PHY_ADDRESS 0x01
 #endif
-
 
 //#include "crc.h"
 
@@ -60,13 +60,6 @@ static ChannelDataTypeDef Rx_CH1;
 
 static DataPacketTypeDef Rx_DataPacket;
 
-static inline void _reset_phy(void)
-{
-    GPIO_ResetBits(GPIOB, GPIO_Pin_14);
-    int i = 840000;
-    while (i--);
-    GPIO_SetBits(GPIOB, GPIO_Pin_14);
-}
 
 static inline void _mac_address_config(void)
 {
@@ -125,6 +118,78 @@ static inline void _buffer_config(void)
     //todo
 }
 
+static inline void _gpio_config_x(void)
+{
+    GPIO_InitTypeDef GPIO_InitStructure;
+
+    RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA | RCC_AHB1Periph_GPIOC |RCC_AHB1Periph_GPIOD| RCC_AHB1Periph_GPIOG, ENABLE);
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
+
+    SYSCFG_ETH_MediaInterfaceConfig(SYSCFG_ETH_MediaInterface_RMII);
+
+    /* Pin configuration of RMII mode
+    ETH_MDIO -------------------------> PA2
+    ETH_MDC --------------------------> PC1
+    ETH_RMII_REF_CLK------------------> PA1
+    ETH_RMII_CRS_DV ------------------> PA7
+    ETH_RMII_RXD0 --------------------> PC4
+    ETH_RMII_RXD1 --------------------> PC5
+    ETH_RMII_TX_EN -------------------> PG11
+    ETH_RMII_TXD0 --------------------> PG13
+    ETH_RMII_TXD1 --------------------> PG14
+    ETH_RESET-------------------------> PD3*/
+
+    //config PA1 PA2 PA7
+    GPIO_InitStructure.GPIO_Pin   = GPIO_Pin_1 | GPIO_Pin_2 | GPIO_Pin_7;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
+    GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_AF;
+    GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+    GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_NOPULL;
+    GPIO_Init(GPIOA, &GPIO_InitStructure);
+
+    GPIO_PinAFConfig(GPIOA, GPIO_PinSource1, GPIO_AF_ETH);
+    GPIO_PinAFConfig(GPIOA, GPIO_PinSource2, GPIO_AF_ETH);
+    GPIO_PinAFConfig(GPIOA, GPIO_PinSource7, GPIO_AF_ETH);
+
+    //config PC1,PC4 and PC5
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_1 | GPIO_Pin_4 | GPIO_Pin_5;
+    GPIO_Init(GPIOC, &GPIO_InitStructure);
+    GPIO_PinAFConfig(GPIOC, GPIO_PinSource1, GPIO_AF_ETH);
+    GPIO_PinAFConfig(GPIOC, GPIO_PinSource4, GPIO_AF_ETH);
+    GPIO_PinAFConfig(GPIOC, GPIO_PinSource5, GPIO_AF_ETH);
+
+    //config PG11, PG14 and PG13
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_11 | GPIO_Pin_13 | GPIO_Pin_14;
+    GPIO_Init(GPIOG, &GPIO_InitStructure);
+    GPIO_PinAFConfig(GPIOG, GPIO_PinSource11, GPIO_AF_ETH);
+    GPIO_PinAFConfig(GPIOG, GPIO_PinSource13, GPIO_AF_ETH);
+    GPIO_PinAFConfig(GPIOG, GPIO_PinSource14, GPIO_AF_ETH);
+
+    //config PD3
+    GPIO_InitStructure.GPIO_Pin   = GPIO_Pin_3;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
+    GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_OUT;
+    GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+    GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_NOPULL;
+    GPIO_Init(GPIOD, &GPIO_InitStructure);
+
+    //traffic signal PA6
+    //for ethernet, the signal is provided by RX_DV or CRS_DV
+    //which indicates that a frame is receiving
+    GPIO_InitStructure.GPIO_Pin   = GPIO_Pin_6;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
+    GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_IN;
+    GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+    GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_NOPULL;
+    GPIO_Init(GPIOA, &GPIO_InitStructure);
+    
+    //hardware reset the ETH PHY
+    GPIO_ResetBits(GPIOD, GPIO_Pin_3);
+    int i = 840000;
+    while (i--);
+    GPIO_SetBits(GPIOD, GPIO_Pin_3);
+}
+
 static inline void _gpio_config(void)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
@@ -172,7 +237,7 @@ static inline void _gpio_config(void)
     GPIO_PinAFConfig(GPIOC, GPIO_PinSource1, GPIO_AF_ETH);
     GPIO_PinAFConfig(GPIOC, GPIO_PinSource4, GPIO_AF_ETH);
     GPIO_PinAFConfig(GPIOC, GPIO_PinSource5, GPIO_AF_ETH);
-
+    
     //traffic signal PA6
     //for ethernet, the signal is provided by RX_DV or CRS_DV
     //which indicates that a frame is receiving
@@ -184,7 +249,6 @@ static inline void _gpio_config(void)
     GPIO_Init(GPIOA, &GPIO_InitStructure);
     
     //hardware reset the ETH PHY
-    //_reset_phy();
 }
 
 static inline void _mac_config(void)
@@ -236,9 +300,6 @@ static inline void _mac_config(void)
     _mac_address_config();
     _buffer_config();
     
-    uint32_t x1 = ETH_ReadPHYRegister(LAN8720_PHY_ADDRESS, PHY_BSR);
-    uint32_t x2 = ETH_ReadPHYRegister(LAN8720_PHY_ADDRESS, PHY_BCR);
-    
     //enable transimission
     ETH_MACTransmissionCmd(ENABLE);
     ETH_FlushTransmitFIFO();
@@ -250,13 +311,18 @@ static inline void _mac_config(void)
 
 void DRV_DepInit(void)
 {
-    _gpio_config();   
+    #if defined (TTP_NODE0) || defined (TTP_NODE1) 
+    _gpio_config_x();
+    #else
+    _gpio_config();
+    #endif
+    
     _mac_config();
 }
 void DRV_Reset(void)
 {
     //reset the PHY
-    _reset_phy();
+    //_reset_phy();
     //reset the MAC
     ETH_SoftwareReset();
     Tx_CurPointer = ETH_HEADER;
