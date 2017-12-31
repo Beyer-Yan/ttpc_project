@@ -26,16 +26,110 @@ Project File Date:  12/30/2017
 
 <h2>Output:</h2>
 Build target 'STM32F407ZG_TTPC'
-compiling xfer.c...
-..\HARDWARE\xfer.c(42): warning:  #177-D: variable "Rx_Buff1" was declared but never referenced
-      static uint8_t Rx_Buff1[ETH_RX_BUF_SIZE];
-..\HARDWARE\xfer.c(44): warning:  #550-D: variable "Tx_Buff1" was set but never used
-      static uint8_t Tx_Buff1[ETH_TX_BUF_SIZE];
-..\HARDWARE\xfer.c: 2 warnings, 0 errors
+compiling main.c...
+..\..\..\..\..\..\..\virthw\crc.h(25): warning:  #1215-D: #warning directive: "Incompatible CRC bits with AS6003 "
+  #warning "Incompatible CRC bits with AS6003 "
+..\STARTUP\main.c(15): warning:  #177-D: variable "_ps" was declared but never referenced
+  static char _ps[10][10] = {"FREEZE","INIT","LISTEN","COLDSTART","SUB_CS","ACTIVE","PASSIVE","AWAIT","TEST","DOWNLOAD"};
+..\STARTUP\main.c: 2 warnings, 0 errors
+compiling host.c...
+compiling mem.c...
+compiling crc.c...
+..\..\..\..\..\..\..\virthw\crc.h(25): warning:  #1215-D: #warning directive: "Incompatible CRC bits with AS6003 "
+  #warning "Incompatible CRC bits with AS6003 "
+..\HARDWARE\crc.c: 1 warning, 0 errors
+compiling usart.c...
+compiling medl_data.c...
+compiling debug.c...
+compiling ctrl.c...
+compiling msg.c...
+..\..\..\..\..\..\..\virthw\crc.h(25): warning:  #1215-D: #warning directive: "Incompatible CRC bits with AS6003 "
+  #warning "Incompatible CRC bits with AS6003 "
+..\..\..\..\..\..\..\mac\msg.c(270): warning:  #1215-D: #warning directive: "for test, the channel 1 is assigned to channel 0"
+      #warning "for test, the channel 1 is assigned to channel 0"
+..\..\..\..\..\..\..\mac\msg.c: 2 warnings, 0 errors
+compiling param.c...
+compiling phases_index.c...
+compiling prp.c...
+..\..\..\..\..\..\..\virthw\crc.h(25): warning:  #1215-D: #warning directive: "Incompatible CRC bits with AS6003 "
+  #warning "Incompatible CRC bits with AS6003 "
+..\..\..\..\..\..\..\mac\prp.c: 1 warning, 0 errors
+compiling psp.c...
+..\..\..\..\..\..\..\mac\psp.c(233): warning:  #1215-D: #warning directive: "periodic checking for MEDL has not been implemented"
+      #warning "periodic checking for MEDL has not been implemented"
+..\..\..\..\..\..\..\mac\psp.c(130): warning:  #177-D: function "_check_clique" was declared but never referenced
+  static inline uint32_t _check_clique(void)
+..\..\..\..\..\..\..\mac\psp.c: 2 warnings, 0 errors
+compiling slots.c...
+..\..\..\..\..\..\..\mac\slots.c(173): warning:  #1215-D: #warning directive: "Formal verification needed to be performed"
+  #warning "Formal verification needed to be performed"
+..\..\..\..\..\..\..\mac\slots.c: 1 warning, 0 errors
+compiling tp.c...
+compiling medl.c...
+..\..\..\..\..\..\..\virthw\crc.h(25): warning:  #1215-D: #warning directive: "Incompatible CRC bits with AS6003 "
+  #warning "Incompatible CRC bits with AS6003 "
+..\..\..\..\..\..\..\medl\medl.c(155): warning:  #177-D: function "__medl_crc32_check" was declared but never referenced
+  static uint32_t __medl_crc32_check(void)
+..\..\..\..\..\..\..\medl\medl.c: 2 warnings, 0 errors
+compiling active.c...
+compiling await.c...
+..\..\..\..\..\..\..\protocol\await.c(22): warning:  #1215-D: #warning directive: "to be done"
+      #warning "to be done"
+..\..\..\..\..\..\..\protocol\await.c(27): warning:  #1215-D: #warning directive: "to be done"
+      #warning "to be done"
+..\..\..\..\..\..\..\protocol\await.c: 2 warnings, 0 errors
+compiling cold_start.c...
+compiling download.c...
+..\..\..\..\..\..\..\protocol\download.c(22): warning:  #1215-D: #warning directive: "to be done"
+      #warning "to be done"
+..\..\..\..\..\..\..\protocol\download.c(27): warning:  #1215-D: #warning directive: "to be done"
+      #warning "to be done"
+..\..\..\..\..\..\..\protocol\download.c: 2 warnings, 0 errors
+compiling freeze.c...
+compiling init.c...
+compiling listen.c...
+..\..\..\..\..\..\..\protocol\listen.c(102): warning:  #550-D: variable "pNP" was set but never used
+      NodeProperty_t* pNP;
+..\..\..\..\..\..\..\protocol\listen.c(118): warning:  #177-D: variable "t0" was declared but never referenced
+      uint32_t t0,t1,t2,t3,t4,t5,t6;
+..\..\..\..\..\..\..\protocol\listen.c(118): warning:  #177-D: variable "t1" was declared but never referenced
+      uint32_t t0,t1,t2,t3,t4,t5,t6;
+..\..\..\..\..\..\..\protocol\listen.c(118): warning:  #177-D: variable "t2" was declared but never referenced
+      uint32_t t0,t1,t2,t3,t4,t5,t6;
+..\..\..\..\..\..\..\protocol\listen.c(118): warning:  #177-D: variable "t3" was declared but never referenced
+      uint32_t t0,t1,t2,t3,t4,t5,t6;
+..\..\..\..\..\..\..\protocol\listen.c(118): warning:  #177-D: variable "t4" was declared but never referenced
+      uint32_t t0,t1,t2,t3,t4,t5,t6;
+..\..\..\..\..\..\..\protocol\listen.c(118): warning:  #177-D: variable "t5" was declared but never referenced
+      uint32_t t0,t1,t2,t3,t4,t5,t6;
+..\..\..\..\..\..\..\protocol\listen.c(118): warning:  #177-D: variable "t6" was declared but never referenced
+      uint32_t t0,t1,t2,t3,t4,t5,t6;
+..\..\..\..\..\..\..\protocol\listen.c: 8 warnings, 0 errors
+compiling passive.c...
+compiling state_machine_direct.c...
+compiling test.c...
+..\..\..\..\..\..\..\protocol\test.c(21): warning:  #1215-D: #warning directive: "to be done"
+      #warning "to be done"
+..\..\..\..\..\..\..\protocol\test.c(26): warning:  #1215-D: #warning directive: "to be done"
+      #warning "to be done"
+..\..\..\..\..\..\..\protocol\test.c: 2 warnings, 0 errors
+compiling ack.c...
+..\..\..\..\..\..\..\service\ack.c(293): warning:  #177-D: variable "first_successor_addr" was declared but never referenced
+      uint32_t first_successor_addr = PV_GetFSAddr();
+..\..\..\..\..\..\..\service\ack.c: 1 warning, 0 errors
+compiling clique.c...
+compiling core.c...
+compiling slot_acquirement.c...
+compiling sync.c...
+..\..\..\..\..\..\..\service\sync.c(75): warning:  #1215-D: #warning directive: "some errors happen in the current implementation"
+  #warning "some errors happen in the current implementation"
+..\..\..\..\..\..\..\service\sync.c(76): warning:  #177-D: function "_alignment_err_accumulated_bugs" was declared but never referenced
+  static int32_t _alignment_err_accumulated_bugs(int32_t value)
+..\..\..\..\..\..\..\service\sync.c: 2 warnings, 0 errors
 linking...
 Program Size: Code=27072 RO-data=18936 RW-data=1512 ZI-data=19680  
 FromELF: creating hex file...
-".\Objects\TTPC_Project.axf" - 0 Error(s), 2 Warning(s).
+".\Objects\TTPC_Project.axf" - 0 Error(s), 28 Warning(s).
 
 <h2>Collection of Component include folders:</h2>
   E:\zfas_project\material\TTPC_project\bsp\arm\cortex-m4\platforms\stm32f407zgt6\project\RVMDK\RTE

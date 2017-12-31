@@ -23,12 +23,7 @@
  */
 /**@{*/
 
-#define MSG_POOL_LENGTH 		      (1024)
-
-#define IO_BUFFER_SIZE            (16*1024)
-
-#define COMPENSATE_MI_FOR_LISTEN  (214)
-
+#define TTP_NODE0
 
 /**@}*/// end of the group Exported_Constants
 

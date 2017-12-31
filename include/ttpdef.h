@@ -24,7 +24,6 @@
 //#define USE_STDINC
 //#define __CC_ARM
 
-#include "ttpconstants.h"
 
 typedef enum {FALSE=0,TRUE} 		bool_t;
 
@@ -1380,7 +1379,7 @@ extern uint32_t __ttpc_control_info[4];
 /**@{*/
 
 #define MSG_POOL_LENGTH 		1024
- 
+
 extern uint8_t msg_pool[MSG_POOL_LENGTH];
 
 #define MSG_POOL_BASE			msg_pool

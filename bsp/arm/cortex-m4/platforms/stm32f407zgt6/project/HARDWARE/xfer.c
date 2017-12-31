@@ -21,6 +21,14 @@
 #include "stm32f4x7_eth_conf.h"
 #include "ttpdebug.h"
 
+#include "ttpconstants.h"
+
+#if defined (TTP_NODE0) || defined (TTP_NODE1)
+    #undef LAN8720_PHY_ADDRESS
+    #define LAN8720_PHY_ADDRESS 0x00
+#endif
+
+
 //#include "crc.h"
 
 //DMA descriptor and buffer variables for channel 0

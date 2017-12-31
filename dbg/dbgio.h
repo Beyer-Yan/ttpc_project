@@ -22,6 +22,8 @@
  #ifndef __DBGIO_H__
  #define __DBGIO_H__ 
 
+#define IO_BUFFER_SIZE            16*1024
+
 /**
  * The buffer will use the default buffer region as the debug buffer. The debug buffer is specified
  * in a paiticular memory region. All the interface of IO will aceess the data of the specified region.

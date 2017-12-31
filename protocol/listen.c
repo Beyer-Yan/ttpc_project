@@ -27,6 +27,8 @@
 #include "stm32f4xx.h"
 
 
+#define COMPENSATE_MI_FOR_LISTEN  214
+
 extern uint32_t phase_indicator;
 
 /*
