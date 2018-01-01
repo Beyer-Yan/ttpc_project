@@ -27,7 +27,7 @@
 #include "stm32f4xx.h"
 
 
-#define EXE_MI_FOR_LISTEN  (214+3525)
+#define EXE_MI_FOR_LISTEN  (214+3448)
 
 extern uint32_t phase_indicator;
 
@@ -87,6 +87,7 @@ void FSM_toListen(void)
     MAC_SetSlot(0);
     MAC_SetTDMARound(0);
     CLOCK_Start();
+    MAC_StartReceive();
 }
 
 static uint32_t _listen_disturb(void)
@@ -113,8 +114,7 @@ void FSM_doListen(void)
     uint32_t frequency = CLOCK_GetLocalFrequency();
     uint32_t ATW = pSP->ArrivalTimingWindow*frequency/1000 + 1;
     
-    PRINT("Trying to listen"); 
-    MAC_StartReceive();
+    DBG_Flush();
     if (CLOCK_WaitAlarm(pSP->ListenTimeout, _listen_disturb)) {
 
         CLOCK_WaitMicroticks(ATW,NULL);
@@ -205,7 +205,7 @@ void FSM_doListen(void)
         MAC_SetPhaseCycleStartPoint(CS_GetCurGTF()-pRS->AtTime,0);
 
         //attention that the AT and the PRP time have expired at this time.
-        MAC_SetSlotTime(AT_time,pRS->TransmissionDuration,pRS->PSPDuration,pRS->SlotDuration);
+        MAC_SetSlotTime(AT_time,pRS->TransmissionDuration,pRS->PSPDuration,pRS->SlotDuration, 0);
 
         phase_indicator = 0;        /**< point to the psp phase o the next slot */
 

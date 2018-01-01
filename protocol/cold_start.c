@@ -24,6 +24,10 @@
 #include "ttpdebug.h"
 #include "msg.h"
 
+#include "stm32f4xx.h"
+
+#define START_TIME_COMPENSATE             170
+
 extern void psp_for_coldstart(void);
 extern void tp(void);
 extern void prp_for_coldstart(void);
@@ -51,7 +55,6 @@ void FSM_toColdStart(void)
     //inform the host that the cold start starts
     //code executing time shall be measured from the cold-start staring time
     //to the actual action time. Normally the PSP duration
-
     static uint16_t COLD_START_EXE_TIME_MACROTICK = 200;
 
     //tsp indicates the AT time of this node
@@ -59,7 +62,7 @@ void FSM_toColdStart(void)
 
     CLOCK_Clear(); //stop then clear the clock
     //timer settings and slot timing properties setting
-    CLOCK_SetCurMicrotick(0);
+    CLOCK_SetCurMicrotick(START_TIME_COMPENSATE);
     CLOCK_SetCurMacrotick(tsf - COLD_START_EXE_TIME_MACROTICK);
     CLOCK_Start();
     
@@ -90,7 +93,7 @@ void FSM_toColdStart(void)
     MAC_SetSlot(slot);
     MAC_SetTDMARound(0);
     MAC_SetPhaseCycleStartPoint(tsf-pRS->AtTime,0);
-    MAC_SetSlotTime(tsf+pNP->SendDelay,pRS->TransmissionDuration,pRS->PSPDuration,pRS->SlotDuration);
+    MAC_SetSlotTime(tsf,pRS->TransmissionDuration,pRS->PSPDuration,pRS->SlotDuration, pNP->SendDelay);
     
     //SVC synchronization setting
     SVC_ClrClockSyncFIFO();

@@ -239,12 +239,16 @@ uint32_t MAC_CheckSlot(void)
     return _G_slot_pointer;
 }
 
-void MAC_SetSlotTime(uint32_t ActAT, uint32_t TP,uint32_t PSP, uint32_t SD)
+void MAC_SetSlotTime(uint32_t ActAT, uint32_t TP,uint32_t PSP, uint32_t SD, uint32_t delay)
 {
-    uint16_t real_at =  ActAT & 0xffff;
+    uint16_t real_at =  (ActAT & 0xffff) + delay;
     uint16_t real_prp = real_at + (TP & 0xffff);
     uint16_t slot_end = real_at + (SD & 0xffff) - PSP;
 
+    INFO("--PREDISIGN TIMING--");
+    INFO("AT :%u",real_at);
+    INFO("PRP:%u",real_prp);
+    INFO("END:%u",slot_end);
     CLOCK_SetTriggerAT(ActAT);
     CLOCK_SetTriggerPRP(real_prp);
     CLOCK_SetTriggerSlotEnd(slot_end);

@@ -35,8 +35,10 @@ void tp(void)
     
     slot_acquisition = MAC_GetSlotAcquisition();
 
-	if(slot_acquisition==SENDING_FRAME)
+	if(slot_acquisition==SENDING_FRAME){
         MAC_StartTransmit();
+    }
+        
     else
         MAC_StartReceive();
 
@@ -46,7 +48,8 @@ void tp(void)
         LED_On(LED_TX);
     else
         LED_Off(LED_TX);
-
+    INFO("TP --         TIME:%u",x);
+    DBG_Flush();
     //other test interface shall be specified here.
 
 	SVC_RaiseATSynchronousInterrupt();

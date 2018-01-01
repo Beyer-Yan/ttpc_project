@@ -287,6 +287,7 @@ void prp_for_passive(void)
 
     uint32_t slot_status;
 
+    INFO("RRR PASSIVE -- TIME:%u",CLOCK_GetCurMicrotick());
     TTP_FrameDesc* pDesc;
     RoundSlotProperty_t* pRS = MAC_GetRoundSlotProperties();
     ScheduleParameter_t* pSP = MAC_GetScheduleParameter();
@@ -357,6 +358,7 @@ void prp_for_passive(void)
     if(pRS->ClockSynchronization == CLOCK_SYN_NEEDED){
         if(!SVC_ExecSyncSchema(step)){
             CNI_SetSRBit(SR_SE);
+            INFO("SYNC ERROR");
             FSM_TransitIntoState(FSM_FREEZE);
         }
     } 
@@ -469,7 +471,8 @@ void prp_for_active(void)
     RoundSlotProperty_t* pRS = MAC_GetRoundSlotProperties();
     //ScheduleParameter_t* pSP = MAC_GetScheduleParameter();
     //NodeProperty_t* pNP = MAC_GetNodeProperties();
-
+    INFO("RRR ACTIVE -- TIME:%u",CLOCK_GetCurMicrotick());
+    
     if (slot_acq == SENDING_FRAME) {
         PV_SetAckState(WAIT_FIRST_SUCCESSOR);
         SVC_AckInit();
@@ -532,6 +535,7 @@ void prp_for_active(void)
             if(max_member_fail == PV_GetCounter(MEMBERSHIP_FAILED_COUNTER)){
                 //membership loss, the controller shall transmit into FREEZE state.
                 CNI_SetSRBit(SR_ME);
+                INFO("MEMBERSHIP LOSS");
                 FSM_TransitIntoState(FSM_FREEZE);
             }else{
                 //membership loss               
@@ -583,6 +587,7 @@ void prp_for_active(void)
     if(pRS->ClockSynchronization == CLOCK_SYN_NEEDED){
         if(!SVC_ExecSyncSchema(step)){
             CNI_SetSRBit(SR_SE);
+            INFO("SYNC ERROR");
             FSM_TransitIntoState(FSM_FREEZE);
         }
     }
@@ -594,6 +599,7 @@ void prp_for_coldstart(void)
     uint32_t slot_acq = MAC_GetSlotAcquisition();
     RoundSlotProperty_t* pRS = MAC_GetRoundSlotProperties();
 
+    INFO("RRR COLDSTART -- TIME:%u",CLOCK_GetCurMicrotick());
     if (slot_acq == SENDING_FRAME) {
         return;
     }
@@ -627,7 +633,7 @@ void prp_for_coldstart(void)
 
     //No ack need to be performed
     if (slot_status == FRAME_CORRECT) {
-
+        INFO("CORRECT FRAME RECEIVED");
         /** for mode change processor */
         TTP_ChannelFrameDesc *pDesc_chosen = frame_status_ch[0] == FRAME_CORRECT ? pDesc->pCH0 : pDesc->pCH1;
         uint8_t header = pDesc_chosen->pFrame->hdr[0];
@@ -657,6 +663,7 @@ void prp_for_coldstart(void)
     if(pRS->ClockSynchronization == CLOCK_SYN_NEEDED){
         if(!SVC_ExecSyncSchema(step)){
             CNI_SetSRBit(SR_SE);
+            INFO("SYNC ERROR");
             FSM_TransitIntoState(FSM_FREEZE);
         }
     }

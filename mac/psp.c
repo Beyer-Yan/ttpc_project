@@ -163,7 +163,7 @@ static inline void _prepare_for_receive(void)
 
     uint32_t actual_at = pRS->AtTime + _G_ClusterCycleStartTime + _G_TDMARoundStartTimeOffset;
 
-    MAC_SetSlotTime(actual_at-1, pRS->TransmissionDuration,pRS->PSPDuration, pRS->SlotDuration);
+    MAC_SetSlotTime(actual_at, pRS->TransmissionDuration,pRS->PSPDuration, pRS->SlotDuration,0);
     MAC_SetSlotAcquisition(RECEIVING_FRAME);
 }
 
@@ -172,7 +172,7 @@ static inline void _prepare_for_transmit(void)
     RoundSlotProperty_t* pRS = MAC_GetRoundSlotProperties();
 	NodeProperty_t*      pNP = MAC_GetNodeProperties();
 
-    uint32_t actual_at = pRS->AtTime + _G_ClusterCycleStartTime + _G_TDMARoundStartTimeOffset + pNP->SendDelay;
+    uint32_t actual_at = pRS->AtTime + _G_ClusterCycleStartTime + _G_TDMARoundStartTimeOffset;
 
     /**
 	 * A sending node shall perceive itself as fully operational in its PSP, and shall
@@ -183,7 +183,7 @@ static inline void _prepare_for_transmit(void)
     CS_SetMemberBit(pRS->FlagPosition);
     PV_SetCounter(AGREED_SLOTS_COUNTER, 1);
 
-    MAC_SetSlotTime(actual_at, pRS->TransmissionDuration,pRS->PSPDuration, pRS->SlotDuration);
+    MAC_SetSlotTime(actual_at, pRS->TransmissionDuration,pRS->PSPDuration, pRS->SlotDuration, pNP->SendDelay);
     MSG_PushFrame();
     MAC_SetSlotAcquisition(SENDING_FRAME);
 
@@ -229,6 +229,10 @@ void psp_for_passive(void)
     RoundSlotProperty_t* pRS;
     
     _slot_properties_update();
+    
+    INFO("SLOT----------------------------------------%d",MAC_GetRoundSlot());
+    INFO("SSS PASSIVE -- TIME:%u",_G_SlotStartMacrotickTime);
+    
     /** check MEDL configuration */
     #warning "periodic checking for MEDL has not been implemented"
 
@@ -236,10 +240,12 @@ void psp_for_passive(void)
         uint32_t clique_res = SVC_CliqueDetect();
         if(clique_res == CLIQUE_MINORITY){
             CNI_SetSRBit(SR_CE);
+            INFO("CLIQUE_MINORITY");
             FSM_TransitIntoState(FSM_FREEZE);
             goto _end;
         }else if(clique_res == CLIQUE_NO_ACTIVITY){
             CNI_SetSRBit(SR_CB);
+            INFO("CLIQUE_NO_ACTIVITY");
             FSM_TransitIntoState(FSM_FREEZE);
             goto _end;
         }else{
@@ -276,16 +282,21 @@ void psp_for_active(void)
     RoundSlotProperty_t* pRS;
 
     _slot_properties_update();
+    
+    INFO("SLOT----------------------------------------%d",MAC_GetRoundSlot());
+    INFO("SSS ACTIVE -- TIME:%u",_G_SlotStartMacrotickTime);
 
     if (MAC_IsOwnNodeSlot()) {
         //clique detection
         uint32_t clique_res = SVC_CliqueDetect();
         if(clique_res == CLIQUE_MINORITY){
             CNI_SetSRBit(SR_CE);
+            INFO("CLIQUE_MINORITY");
             FSM_TransitIntoState(FSM_FREEZE);
             goto _end;
         }else if(clique_res == CLIQUE_NO_ACTIVITY){
             CNI_SetSRBit(SR_CB);
+            INFO("CLIQUE_NO_ACTIVITY");
             FSM_TransitIntoState(FSM_FREEZE);
             goto _end;
         }else{
@@ -340,13 +351,20 @@ void psp_for_coldstart(void)
     RoundSlotProperty_t* pRS;
 
     _slot_properties_update();
+    
+    INFO("SLOT----------------------------------------%d",MAC_GetRoundSlot());
+    INFO("SSS COLDSTART -- TIME:%u",_G_SlotStartMacrotickTime);
 
+    pRS = MAC_GetRoundSlotProperties();
+    
     if (MAC_IsOwnNodeSlot()) {
         uint32_t clique_res = SVC_CliqueDetect();
         if(clique_res == CLIQUE_MINORITY){
+            INFO("CLIQUE_MINORITY");
             FSM_TransitIntoState(FSM_LISTEN);
             return;
         }else if(clique_res == CLIQUE_NO_ACTIVITY){
+            INFO("CLIQUE_NO_ACTIVITY");
             FSM_TransitIntoState(FSM_SUB_CS);
             return;
         }else{
@@ -362,7 +380,6 @@ void psp_for_coldstart(void)
 
     //the node is in passive or active now, because of the delay of the FSM,
     //the state will be changed in the next transition
-    pRS = MAC_GetRoundSlotProperties();
 
     if (MAC_IsSendSlot()) {
         if (!SVC_CheckHostLifeSign()) {

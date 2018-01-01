@@ -106,8 +106,8 @@ static int32_t _alignment_err_accumulated(int32_t value)
 	/** error correction term */
 	static int32_t theta = 0;
 
-	err   = (value*lmi%1000 + err)%1000;
-	theta = (value*lmi/1000 + err)/1000; 
+	err   = (value+err)%(1000/lmi + 1);
+	theta = (err)/(1000/lmi + 1); 
 
 	return value*lmi/1000 + theta; 
 }
@@ -128,7 +128,8 @@ uint32_t SVC_GetAlignedEstimateArivalTimeInterval()
 
 void SVC_SyncCalcOffset(uint32_t FrameTsmp)
 {
-	uint32_t estimate_frame_tsmp = MAC_GetATMicroticks() + _G_aligned_estimate_time_interval;
+    uint32_t at_microtick = MAC_GetATMicroticks();
+	uint32_t estimate_frame_tsmp = at_microtick + _G_aligned_estimate_time_interval;
 	int32_t  offset = (int32_t)FrameTsmp - (int32_t)estimate_frame_tsmp;
 
 	_stack_push(offset);
