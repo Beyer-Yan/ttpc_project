@@ -163,8 +163,9 @@ static inline void _prepare_for_receive(void)
 
     uint32_t actual_at = pRS->AtTime + _G_ClusterCycleStartTime + _G_TDMARoundStartTimeOffset;
 
-    MAC_SetSlotTime(actual_at, pRS->TransmissionDuration,pRS->PSPDuration, pRS->SlotDuration);
+    MAC_SetSlotTime(actual_at-1, pRS->TransmissionDuration,pRS->PSPDuration, pRS->SlotDuration);
     MAC_SetSlotAcquisition(RECEIVING_FRAME);
+    MAC_StartReceive();
 }
 
 static inline void _prepare_for_transmit(void)
@@ -384,8 +385,8 @@ void psp_for_coldstart(void)
                 return;
             } 
         }
-        _prepare_for_transmit();//transmit a I-frame, normally.
         FSM_TransitIntoState(FSM_ACTIVE);
+        _prepare_for_transmit();//transmit a I-frame, normally.
         return;
     }
     _prepare_for_receive();

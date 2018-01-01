@@ -33,6 +33,8 @@ void FSM_toFreeze(void)
     TCN_ClrCA();
     //clear the BIST flag
     TCN_ClrBIST();
+    
+    
 	
 }
 

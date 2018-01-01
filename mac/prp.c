@@ -24,6 +24,7 @@
 #include "crc.h"
 #include "msg.h"
 #include "medl.h"
+#include "clock.h"
 
 /**
  * This function sets the channel activity.
@@ -589,13 +590,14 @@ void prp_for_active(void)
 
 void prp_for_coldstart(void)
 {
+    uint32_t x = CLOCK_GetCurMacrotick();
     uint32_t slot_acq = MAC_GetSlotAcquisition();
     RoundSlotProperty_t* pRS = MAC_GetRoundSlotProperties();
 
     if (slot_acq == SENDING_FRAME) {
         return;
     }
-
+    
     uint32_t res_ch[2];
     uint32_t frame_status_ch[2];
     uint32_t slot_status;

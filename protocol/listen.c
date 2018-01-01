@@ -114,10 +114,7 @@ void FSM_doListen(void)
     uint32_t frequency = CLOCK_GetLocalFrequency();
     uint32_t ATW = pSP->ArrivalTimingWindow*frequency/1000 + 1;
     
-    
-    uint32_t t0,t1,t2,t3,t4,t5,t6;
-    
-    //PRINT("Trying to listen"); 
+    PRINT("Trying to listen"); 
     MAC_StartReceive();
     if (CLOCK_WaitAlarm(pSP->ListenTimeout, _listen_disturb)) {
 
@@ -194,15 +191,16 @@ void FSM_doListen(void)
         // cluster time correcting.
         //perform "correction" + "precision" of "sender", meaning cps_value
         uint32_t cps_value = pRS->DelayCorrectionTerms + pSP->Precision;
-        uint32_t cps_mi = cps_value / (pSP->MacrotickParameter / freq_div);
-        uint32_t cur_mi = CLOCK_GetCurMicrotick();
+        uint32_t cps_mi = cps_value*frequency/1000+1;
         
         //stop then clear the clock
         CLOCK_Clear();
+        
+        uint32_t AT_time = CS_GetCurGTF()&0xffff;
 
-        uint32_t exe_mi = cur_mi - (pDesc->pCH0->rcv_timestamp + pDesc->pCH1->rcv_timestamp) / 2;   
+        //uint32_t exe_mi = ;   
         exe_mi += COMPENSATE_MI_FOR_LISTEN;
-        uint32_t actual_ma = CS_GetCurGTF() + (exe_mi + cps_mi) / freq_div;
+        uint32_t actual_ma = AT_time + (exe_mi + cps_mi) / freq_div;
         uint32_t actual_mi = (exe_mi + cps_mi) % freq_div;
 
         CLOCK_SetCurMacrotick(actual_ma);
@@ -210,7 +208,7 @@ void FSM_doListen(void)
         MAC_SetPhaseCycleStartPoint(CS_GetCurGTF()-pRS->AtTime,0);
 
         //attention that the AT and the PRP time have expired at this time.
-        MAC_SetSlotTime(CS_GetCurGTF(),pRS->TransmissionDuration,pRS->PSPDuration,pRS->SlotDuration);
+        MAC_SetSlotTime(AT_time,pRS->TransmissionDuration,pRS->PSPDuration,pRS->SlotDuration);
 
         phase_indicator = 0;        /**< point to the psp phase o the next slot */
 
@@ -223,7 +221,6 @@ void FSM_doListen(void)
 
     } else {
         //Listening timeout expired, check if the cold start conditions are fullfilled.
-        INFO("Listen time expired");
         
         if (pSP->ColdStartAllow == COLD_START_NOT_ALLOWED)
             goto _end;

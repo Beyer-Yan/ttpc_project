@@ -35,6 +35,8 @@ static void _cni_init(void)
     for (; _i < sizeof(msg_pool); _i++) {
         msg_pool[_i] = 0;
     }
+    
+    CNI_ClrMCR();
 }
 
 static void _pv_init(void)

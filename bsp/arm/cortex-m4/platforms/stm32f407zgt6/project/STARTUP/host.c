@@ -19,6 +19,8 @@
 #include "lsens.h"
 #include "msg.h"
 
+#include "ttpconstants.h"
+
 static inline void _byte_copy(volatile void* dst, const void* src,int size)
 {
 	volatile uint8_t* _d = (volatile uint8_t*)dst;
@@ -34,6 +36,10 @@ void HOST_Init(void)
 {
     TTP_HLSR = 1;
     TTP_CR0 &= CR_CO;
+    
+    #ifdef TTP_NODE0
+        TTP_CR4 |= (300<<16);
+    #endif
 }
 
 void HOST_Alive(void)

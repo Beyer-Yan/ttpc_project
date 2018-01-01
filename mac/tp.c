@@ -30,9 +30,13 @@ void tp(void)
     uint32_t slot_acquisition;
 
     _G_ATStartMicrotickTime = CLOCK_GetCurMicrotick();
+    
+    uint32_t x = CLOCK_GetCurMacrotick();
+    
     slot_acquisition = MAC_GetSlotAcquisition();
 
-	slot_acquisition==SENDING_FRAME ? MAC_StartTransmit() : MAC_StartReceive();
+	if(slot_acquisition==SENDING_FRAME)
+        MAC_StartTransmit();
 
     CNI_UpdateCLFS();
     if(slot_acquisition==SENDING_FRAME)
