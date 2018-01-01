@@ -213,34 +213,15 @@ void* MEDL_GetScheduleAddr(void)
 
 void* MEDL_GetRoundSlotAddr(uint32_t ModeNum, uint32_t RoundSlot)
 {
-	static uint32_t _modeNum   = 0xffffffff;
-	static uint32_t _slot      = 0xffffffff;
-	/**
-	 * Only in the first time are the slot properties extracted.
-	 */
-	if(_modeNum!=ModeNum){
-        
-        if(ModeNum>=__G_medl_header.mode_region_num)
-            return NULL;
-        
-		_modeNum = ModeNum;
-		__medl_mode_extract(_modeNum);
-        
-        if(RoundSlot>=__G_mode_discriptor.round_slots)
-			return NULL;
-        
-        _slot = RoundSlot;
-		_slot_property_extract(__medl_get_slot_entry(_modeNum,_slot));
-        
-	}else if(_slot!=RoundSlot){
-		
-		if(RoundSlot>=__G_mode_discriptor.round_slots)
-			return NULL;
-
-		_slot = RoundSlot;
-		const uint8_t* buf = __medl_get_slot_entry(_modeNum,_slot);
-		_slot_property_extract(buf);
-	}
+	if(ModeNum>=__G_medl_header.mode_region_num)
+		return NULL;
+	
+	__medl_mode_extract(ModeNum);
+	
+	if(RoundSlot>=__G_mode_discriptor.round_slots)
+		return NULL;
+	
+	_slot_property_extract(__medl_get_slot_entry(ModeNum,RoundSlot));
 
 	return ((void*)&__G_slot);
 }
