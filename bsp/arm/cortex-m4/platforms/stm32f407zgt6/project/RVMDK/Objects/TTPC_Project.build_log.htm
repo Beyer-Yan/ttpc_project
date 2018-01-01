@@ -26,26 +26,18 @@ Project File Date:  12/30/2017
 
 <h2>Output:</h2>
 Build target 'STM32F407ZG_TTPC'
-compiling host.c...
-compiling xfer.c...
-..\HARDWARE\xfer.c(50): warning:  #177-D: variable "Rx_Buff1" was declared but never referenced
-      static uint8_t Rx_Buff1[ETH_RX_BUF_SIZE];
-..\HARDWARE\xfer.c(52): warning:  #550-D: variable "Tx_Buff1" was set but never used
-      static uint8_t Tx_Buff1[ETH_TX_BUF_SIZE];
-..\HARDWARE\xfer.c(193): warning:  #177-D: function "_gpio_config" was declared but never referenced
-  static inline void _gpio_config(void)
-..\HARDWARE\xfer.c: 3 warnings, 0 errors
-compiling medl_data.c...
 linking...
-Program Size: Code=27904 RO-data=18944 RW-data=1616 ZI-data=19616  
-FromELF: creating hex file...
-".\Objects\TTPC_Project.axf" - 0 Error(s), 3 Warning(s).
+.\Objects\TTPC_Project.axf: Error: L6218E: Undefined symbol PV_SetAckState (referred from prp.o).
+Not enough information to list image symbols.
+Finished: 1 information, 0 warning and 1 error messages.
+".\Objects\TTPC_Project.axf" - 1 Error(s), 0 Warning(s).
 
 <h2>Collection of Component include folders:</h2>
   E:\zfas_project\material\TTPC_project\bsp\arm\cortex-m4\platforms\stm32f407zgt6\project\RVMDK\RTE
   D:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\1.0.8\Device\Include
 
 <h2>Collection of Component Files used:</h2>
+Target not created.
 </pre>
 </body>
 </html>

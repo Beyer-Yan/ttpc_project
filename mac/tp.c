@@ -48,7 +48,11 @@ void tp(void)
         LED_On(LED_TX);
     else
         LED_Off(LED_TX);
-    INFO("TP --         TIME:%u",x);
+    
+    if(slot_acquisition==SENDING_FRAME)
+        INFO("TP            -- TIME:%-6u   ----------SEND",x);
+    else
+        INFO("TP            -- TIME:%u",x);
     DBG_Flush();
     //other test interface shall be specified here.
 

@@ -287,7 +287,7 @@ void prp_for_passive(void)
 
     uint32_t slot_status;
 
-    INFO("RRR PASSIVE -- TIME:%u",CLOCK_GetCurMicrotick());
+    INFO("RRR PASSIVE -- TIME:%u",CLOCK_GetCurMacrotick());
     TTP_FrameDesc* pDesc;
     RoundSlotProperty_t* pRS = MAC_GetRoundSlotProperties();
     ScheduleParameter_t* pSP = MAC_GetScheduleParameter();
@@ -471,7 +471,7 @@ void prp_for_active(void)
     RoundSlotProperty_t* pRS = MAC_GetRoundSlotProperties();
     //ScheduleParameter_t* pSP = MAC_GetScheduleParameter();
     //NodeProperty_t* pNP = MAC_GetNodeProperties();
-    INFO("RRR ACTIVE -- TIME:%u",CLOCK_GetCurMicrotick());
+    INFO("RRR ACTIVE -- TIME:%u",CLOCK_GetCurMacrotick());
     
     if (slot_acq == SENDING_FRAME) {
         PV_SetAckState(WAIT_FIRST_SUCCESSOR);
@@ -599,7 +599,7 @@ void prp_for_coldstart(void)
     uint32_t slot_acq = MAC_GetSlotAcquisition();
     RoundSlotProperty_t* pRS = MAC_GetRoundSlotProperties();
 
-    INFO("RRR COLDSTART -- TIME:%u",CLOCK_GetCurMicrotick());
+    INFO("RRR COLDSTART -- TIME:%u",CLOCK_GetCurMacrotick());
     if (slot_acq == SENDING_FRAME) {
         return;
     }

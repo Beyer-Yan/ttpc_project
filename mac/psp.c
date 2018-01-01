@@ -242,12 +242,12 @@ void psp_for_passive(void)
             CNI_SetSRBit(SR_CE);
             INFO("CLIQUE_MINORITY");
             FSM_TransitIntoState(FSM_FREEZE);
-            goto _end;
+            return;
         }else if(clique_res == CLIQUE_NO_ACTIVITY){
             CNI_SetSRBit(SR_CB);
             INFO("CLIQUE_NO_ACTIVITY");
             FSM_TransitIntoState(FSM_FREEZE);
-            goto _end;
+            return;
         }else{
             //majority clique
             PV_ClrCounter(AGREED_SLOTS_COUNTER);
@@ -293,12 +293,12 @@ void psp_for_active(void)
             CNI_SetSRBit(SR_CE);
             INFO("CLIQUE_MINORITY");
             FSM_TransitIntoState(FSM_FREEZE);
-            goto _end;
+            return;
         }else if(clique_res == CLIQUE_NO_ACTIVITY){
             CNI_SetSRBit(SR_CB);
             INFO("CLIQUE_NO_ACTIVITY");
             FSM_TransitIntoState(FSM_FREEZE);
-            goto _end;
+            return;
         }else{
             //majority clique
             PV_ClrCounter(AGREED_SLOTS_COUNTER);

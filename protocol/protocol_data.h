@@ -66,11 +66,39 @@ extern uint8_t PV_data[20];
  		  @arg 	FAILED_SLOTS_COUNTER 	
  		  @arg	MEMBERSHIP_FAILED_COUNTER
  */
-#define PV_SetCounter(counter,value)    (PV_data[counter]=value)
-#define PV_IncCounter(counter)			(PV_data[counter]++)
-#define PV_DecCounter(counter) 			(PV_data[counter]--)
-#define PV_ClrCounter(counter) 			(PV_data[counter]=0)
-#define PV_GetCounter(counter)			(PV_data[counter])
+//#define PV_SetCounter(counter,value)    (PV_data[counter]=value)
+//#define PV_IncCounter(counter)			(PV_data[counter]++)
+//#define PV_DecCounter(counter) 			(PV_data[counter]--)
+//#define PV_ClrCounter(counter) 			(PV_data[counter]=0)
+//#define PV_GetCounter(counter)			(PV_data[counter])
+
+static inline void PV_SetCounter(uint32_t counter,uint32_t value)
+{
+    PV_data[counter]=value;
+}
+
+static inline uint32_t PV_IncCounter(uint32_t counter)
+{
+    PV_data[counter] += 1;
+    return PV_data[counter];
+}
+
+static inline uint32_t PV_DecCounter(uint32_t counter)
+{
+    PV_data[counter] -= 1;
+    return PV_data[counter];
+}
+
+static inline uint32_t PV_ClrCounter(uint32_t counter)
+{
+    PV_data[counter] = 0;
+    return 0;
+} 
+
+static inline uint32_t  PV_GetCounter(uint32_t counter)
+{
+    return PV_data[counter];
+}
 
 /** ack related state and operation definitions */
 #define ACK_INIT 						0
@@ -78,15 +106,50 @@ extern uint8_t PV_data[20];
 #define WAIT_SECOND_SUCCESSOR 			2
 #define ACK_FINISHED 					3
 /** ack operations definitions */
-#define PV_GetAckState() 				(PV_as) 
-#define PV_SetAckState(state) 			(PV_as = state)
-#define PV_ClrAckState() 				(PV_as = 0)
+//#define PV_GetAckState() 				(PV_as) 
+//#define PV_SetAckState(state) 		(PV_as = state)
+//#define PV_ClrAckState() 				(PV_as = 0)
+
+static inline uint32_t PV_GetAckState(void)
+{
+    return PV_as;
+}
+
+static inline void PV_PV_SetAckState(uint32_t state)
+{
+    PV_as = state;
+}
+
+static inline void PV_ClrAckState(void)
+{
+    PV_as = 0;
+}	
 
 /** record the message address of the first successor  */
-#define PV_SetFSAddr(addr) 				(PV_fsaddr = addr)
-#define PV_GetFSAddr() 					(PV_fsaddr)
-#define PV_SetFirstSuccessorMemPos(pos) (PV_fsmp = pos)
-#define PV_GetFirstSuccessorMemPos() 	(PV_fsmp)
+//#define PV_SetFSAddr(addr) 				(PV_fsaddr = addr)
+//#define PV_GetFSAddr() 					(PV_fsaddr)
+//#define PV_SetFirstSuccessorMemPos(pos)   (PV_fsmp = pos)
+//#define PV_GetFirstSuccessorMemPos()   	(PV_fsmp)
+
+static inline void PV_SetFSAddr(uint32_t addr)
+{
+    PV_fsaddr = addr & 0xffff;
+}
+
+static inline uint32_t PV_GetFSAddr(void)
+{
+    return PV_fsaddr;
+}
+
+static inline void PV_SetFirstSuccessorMemPos(uint32_t pos)
+{
+    PV_fsmp = pos;
+}
+
+static inline uint32_t PV_GetFirstSuccessorMemPos(void)
+{
+    return PV_fsmp;
+}
 
 /** necessary flags related */
 #define BIG_BANG_ENABLE 				0
@@ -94,20 +157,55 @@ extern uint8_t PV_data[20];
 #define FREE_SHOT_ENABLE  				0
 #define FREE_SHOT_DISABLE				1
 
-#define PV_GetBigBangFlag()				(PV_bbf)
-#define PV_EnableBigBang()		 		(PV_bbf = BIG_BANG_ENABLE)
-#define PV_DisableBigBang() 			(PV_bbf = BIG_BANG_DISABLE)
+//#define PV_GetBigBangFlag()				(PV_bbf)
+//#define PV_EnableBigBang()		 		(PV_bbf = BIG_BANG_ENABLE)
+//#define PV_DisableBigBang() 			(PV_bbf = BIG_BANG_DISABLE)
 
-#define PV_GetFreeShotFlag() 			(PV_fsf)
-#define PV_EnableFreeShot() 			(PV_fsf = FREE_SHOT_DISABLE)	
-#define PV_DisableFreeShot() 			(PV_fsf = FREE_SHOT_ENABLE)	
+static inline uint32_t  PV_GetBigBangFlag(void)
+{
+    return PV_bbf;
+}
+static inline void PV_EnableBigBang(void)
+{
+    PV_bbf = BIG_BANG_ENABLE;
+}
+static inline void PV_DisableBigBang(void)
+{
+    PV_bbf = BIG_BANG_DISABLE;
+}
+
+//#define PV_GetFreeShotFlag() 			(PV_fsf)
+//#define PV_EnableFreeShot() 			(PV_fsf = FREE_SHOT_DISABLE)	
+//#define PV_DisableFreeShot() 			(PV_fsf = FREE_SHOT_ENABLE)	
+
+static inline uint32_t PV_GetFreeShotFlag(void)
+{
+    return PV_fsf;
+} 
+static inline void PV_EnableFreeShot(void)
+{
+    PV_fsf = FREE_SHOT_DISABLE;
+}
+static inline void PV_DisableFreeShot(void)
+{
+    PV_fsf = FREE_SHOT_ENABLE;
+}
 
 /** observed channel  */
 #define CH0                      		0
 #define CH1                      		1
 
-#define PV_GetObservedChannel() 		(PV_oc)
-#define PV_SetObservedChannel(ch) 		(PV_oc = ch)	
+//#define PV_GetObservedChannel() 		(PV_oc)
+//#define PV_SetObservedChannel(ch) 		(PV_oc = ch)	
+
+static inline uint32_t PV_GetObservedChannel(void)
+{
+    return PV_oc;
+} 
+static inline void PV_SetObservedChannel(uint32_t ch)
+{
+    PV_oc = ch&1;
+}
 
 #endif
 
