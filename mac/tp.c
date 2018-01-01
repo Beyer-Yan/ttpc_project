@@ -37,8 +37,11 @@ void tp(void)
 
 	if(slot_acquisition==SENDING_FRAME)
         MAC_StartTransmit();
+    else
+        MAC_StartReceive();
 
     CNI_UpdateCLFS();
+    
     if(slot_acquisition==SENDING_FRAME)
         LED_On(LED_TX);
     else

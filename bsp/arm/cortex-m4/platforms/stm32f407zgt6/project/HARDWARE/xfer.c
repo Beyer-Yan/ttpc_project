@@ -435,7 +435,7 @@ int DRV_CheckReceived(int channel)
         {
             frame = ETH_Get_Received_Frame();
             Rx_CH0.BufferAddr = Rx_Buff0 + ETH_HEADER; //substruct the 14 bytes of the ETH header
-            Rx_CH0.length = frame.length;
+            Rx_CH0.length = frame.length - 10; // 
             Rx_CH0.status = DRV_OK;
         }
         

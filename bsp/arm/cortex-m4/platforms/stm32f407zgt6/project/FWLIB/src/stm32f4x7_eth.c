@@ -1106,8 +1106,11 @@ FrameTypeDef ETH_Get_Received_Frame(void)
   uint32_t framelength = 0;
   FrameTypeDef frame = {0,0,0}; 
 
-  /* Get the Frame Length of the received packet: substruct 4 bytes of the CRC */
-  framelength = ((DMARxDescToGet->Status & ETH_DMARxDesc_FL) >> ETH_DMARxDesc_FrameLengthShift) - 4;
+  /* Get the Frame Length of the received packet*/
+  #warning "4 bytes crc shall be removed when type/length filed is less than 0x600 and the\
+            auto_pad_strip is enabled -- beyer"
+  
+  framelength = ((DMARxDescToGet->Status & ETH_DMARxDesc_FL) >> ETH_DMARxDesc_FrameLengthShift);
   frame.length = framelength;
 
   /* Get the address of the first frame descriptor and the buffer start address */ 

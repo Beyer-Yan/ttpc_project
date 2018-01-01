@@ -27,7 +27,7 @@
 #include "stm32f4xx.h"
 
 
-#define EXE_MI_FOR_LISTEN  (214+2995+1000)
+#define EXE_MI_FOR_LISTEN  (214+3525)
 
 extern uint32_t phase_indicator;
 

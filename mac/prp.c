@@ -599,7 +599,7 @@ void prp_for_coldstart(void)
     }
     
     uint32_t res_ch[2];
-    uint32_t frame_status_ch[2];
+    uint32_t frame_status_ch[2]={0xffffffff,0xffffffff};
     uint32_t slot_status;
     TTP_FrameDesc* pDesc;
 
@@ -611,11 +611,12 @@ void prp_for_coldstart(void)
 
     if ((res_ch[0] == _FRAME_INVALID_) && (res_ch[1] == _FRAME_INVALID_)) {
         CS_ClearMemberBit(pRS->FlagPosition);
-    } else if (res_ch[0] == _FRAME_VALID_) {
-        frame_status_ch[0] = _get_valid_frame_status(pDesc->pCH0, pRS->FrameType);
-    } else {
-        frame_status_ch[1] = _get_valid_frame_status(pDesc->pCH1, pRS->FrameType);
-    }
+    } else{
+        if (res_ch[0] == _FRAME_VALID_)
+            frame_status_ch[0] = _get_valid_frame_status(pDesc->pCH0, pRS->FrameType);
+        if (res_ch[1] == _FRAME_VALID_)
+            frame_status_ch[1] = _get_valid_frame_status(pDesc->pCH1, pRS->FrameType);
+    }    
 
     slot_status = MIN(frame_status_ch[0], frame_status_ch[1]);
     if ((frame_status_ch[0] == FRAME_NULL && frame_status_ch[1] == FRAME_INVALID) ||

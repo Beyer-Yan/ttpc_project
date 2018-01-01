@@ -165,7 +165,6 @@ static inline void _prepare_for_receive(void)
 
     MAC_SetSlotTime(actual_at-1, pRS->TransmissionDuration,pRS->PSPDuration, pRS->SlotDuration);
     MAC_SetSlotAcquisition(RECEIVING_FRAME);
-    MAC_StartReceive();
 }
 
 static inline void _prepare_for_transmit(void)
