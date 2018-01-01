@@ -27,7 +27,7 @@
 #include "stm32f4xx.h"
 
 
-#define COMPENSATE_MI_FOR_LISTEN  214
+#define EXE_MI_FOR_LISTEN  (214+2995+1000)
 
 extern uint32_t phase_indicator;
 
@@ -62,7 +62,6 @@ static inline int _process_slot_parameters()
     uint32_t rs = CS_GetCurRoundSlot();
 
     if(MAC_LoadSlotProperties(mode, rs)==NULL){
-        INFO("frame with error cstate");
         return 0;
     }
 
@@ -197,11 +196,9 @@ void FSM_doListen(void)
         CLOCK_Clear();
         
         uint32_t AT_time = CS_GetCurGTF()&0xffff;
-
-        //uint32_t exe_mi = ;   
-        exe_mi += COMPENSATE_MI_FOR_LISTEN;
-        uint32_t actual_ma = AT_time + (exe_mi + cps_mi) / freq_div;
-        uint32_t actual_mi = (exe_mi + cps_mi) % freq_div;
+ 
+        uint32_t actual_ma = AT_time + (EXE_MI_FOR_LISTEN + cps_mi) / freq_div;
+        uint32_t actual_mi = (EXE_MI_FOR_LISTEN + cps_mi) % freq_div;
 
         CLOCK_SetCurMacrotick(actual_ma);
         CLOCK_SetCurMicrotick(actual_mi);

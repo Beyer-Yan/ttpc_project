@@ -420,8 +420,8 @@ void CLOCK_SetCurMacrotick(uint32_t MacrotickValue)
 }
 void CLOCK_SetCurMicrotick(uint32_t MicrotickValue)
 {
-    TIM2->CNT = MicrotickValue;
-    TIM3->CNT = 0;
+    TIM2->CNT = 0;
+    TIM3->CNT = MicrotickValue;
 }
 
 //in uint of macrotick
