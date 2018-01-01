@@ -26,11 +26,22 @@
 
 RoundSlotProperty_t* MAC_GetRoundSlotProperties(void)
 {
+    static void* bufferAddr = NULL;
+    static uint32_t _mode = 0xffffffff;
+    static uint32_t _slot = 0xffffffff;
+
     uint32_t mode = CS_GetCurMode();
     uint32_t slot = MAC_GetRoundSlot();
 
-    uint32_t mode_num = CALC_MODE_NUM(mode);
-    return MEDL_GetRoundSlotAddr(mode_num, slot);
+    if(mode!=_mode || slot!=_slot)
+    {
+        uint32_t mode_num = CALC_MODE_NUM(mode);
+        bufferAddr = MEDL_GetRoundSlotAddr(mode_num, slot);
+        _mode = mode;
+        _slot = slot;
+    }
+
+    return bufferAddr;
 }
 
 RoundSlotProperty_t* MAC_LoadSlotProperties(uint32_t mode, uint32_t RoundSlot)
