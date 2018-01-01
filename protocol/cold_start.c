@@ -62,10 +62,6 @@ void FSM_toColdStart(void)
     CLOCK_SetCurMicrotick(0);
     CLOCK_SetCurMacrotick(tsf - COLD_START_EXE_TIME_MACROTICK);
     CLOCK_Start();
-
-    uint32_t t1,t2,t3,t4,t5;
-    
-    t1 = CLOCK_GetCurMacrotick();
     
     NodeProperty_t *pNP = MAC_GetNodeProperties();
     ScheduleParameter_t *pSP = MAC_GetScheduleParameter();
@@ -96,8 +92,6 @@ void FSM_toColdStart(void)
     MAC_SetPhaseCycleStartPoint(tsf-pRS->AtTime,0);
     MAC_SetSlotTime(tsf+pNP->SendDelay,pRS->TransmissionDuration,pRS->PSPDuration,pRS->SlotDuration);
     
-    t2 = CLOCK_GetCurMacrotick();
-    
     //SVC synchronization setting
     SVC_ClrClockSyncFIFO();
 
@@ -106,15 +100,12 @@ void FSM_toColdStart(void)
     PV_SetCounter(FAILED_SLOTS_COUNTER,0);
     PV_SetCounter(INTEGRATION_COUNTER,pSP->MinimumIntegrationCount);
     PV_DisableFreeShot();
-    
-    t3 = CLOCK_GetCurMacrotick();
+
     //start the real clock and transmition
     phase_indicator = 1; //start from TP, for psp=0,tp=1,prp=2
     
     MAC_StartPhaseCirculation();
     MAC_SetSlotAcquisition(SENDING_FRAME);
-    
-    t4 = CLOCK_GetCurMacrotick();
 }
 
 void FSM_doColdStart(void)
