@@ -27,7 +27,7 @@
 #include "stm32f4xx.h"
 
 
-#define EXE_MI_FOR_LISTEN  (214+3448)
+#define EXE_MI_FOR_LISTEN  (3402)
 
 extern uint32_t phase_indicator;
 
@@ -114,9 +114,11 @@ void FSM_doListen(void)
     uint32_t frequency = CLOCK_GetLocalFrequency();
     uint32_t ATW = pSP->ArrivalTimingWindow*frequency/1000 + 1;
     
+    uint32_t t1,t2,t3,t4;
+    
     DBG_Flush();
     if (CLOCK_WaitAlarm(pSP->ListenTimeout, _listen_disturb)) {
-
+        uint32_t t1 = TIM14->CNT;
         CLOCK_WaitMicroticks(ATW,NULL);
         
         uint32_t ch0_res = MSG_CheckReceived(CH0);
@@ -169,13 +171,14 @@ void FSM_doListen(void)
         
         // now the frame received is taken into consideration
         CS_SetCState(&cstate);
-
+        uint32_t t2 = TIM14->CNT;
         //set current slot parameter according the sender's c-state
         if(!_process_slot_parameters())
             goto _end;
+        uint32_t t3 = TIM14->CNT;
         
         pRS = MAC_GetRoundSlotProperties();
-        
+
         // mode error, desert the received frame
         if (header >> 1 != 0 && pRS->ModeChangePermission == MODE_CHANGE_DENY)
             goto _end;
@@ -191,7 +194,7 @@ void FSM_doListen(void)
         //perform "correction" + "precision" of "sender", meaning cps_value
         uint32_t cps_value = pRS->DelayCorrectionTerms + pSP->Precision;
         uint32_t cps_mi = cps_value*frequency/1000+1;
-        
+        uint32_t y = TIM14->CNT;
         //stop then clear the clock
         CLOCK_Clear();
         
@@ -203,14 +206,18 @@ void FSM_doListen(void)
         CLOCK_SetCurMacrotick(actual_ma);
         CLOCK_SetCurMicrotick(actual_mi);
         MAC_SetPhaseCycleStartPoint(CS_GetCurGTF()-pRS->AtTime,0);
-
+        
         //attention that the AT and the PRP time have expired at this time.
-        MAC_SetSlotTime(AT_time,pRS->TransmissionDuration,pRS->PSPDuration,pRS->SlotDuration, 0);
+        //MAC_SetSlotTime(AT_time,pRS->TransmissionDuration,pRS->PSPDuration,pRS->SlotDuration, 0);
+        uint16_t slot_end = AT_time + (pRS->SlotDuration & 0xffff) - pRS->PSPDuration;
+        CLOCK_SetTriggerSlotEnd(slot_end);
 
         phase_indicator = 0;        /**< point to the psp phase o the next slot */
 
         CLOCK_Start();
-
+        uint32_t t4 = TIM14->CNT;
+        INFO("%u,%u,%u",actual_ma,actual_mi,t4-t1);
+        
         MAC_StartPhaseCirculation(); /**< start synchronization mode */
 
         CNI_SetSRBit(ISR_CV); //CSATE available

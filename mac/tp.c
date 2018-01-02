@@ -44,11 +44,20 @@ void tp(void)
 
     CNI_UpdateCLFS();
     
+    //uint32_t t1 = test_x_function(_G_ATStartMicrotickTime);
+    //uint32_t t2 = CLOCK_GetCaptureRX1();
+    
+    //uint32_t diff1 = t1;
+    //uint32_t diff2 = t2 - _G_ATStartMicrotickTime;
+    
+    //uint32_t total = diff1+diff2;
+    
     if(slot_acquisition==SENDING_FRAME)
         LED_On(LED_TX);
     else
         LED_Off(LED_TX);
     
+    //INFO("diff:%u,%u,%u",diff1,diff2,total);
     if(slot_acquisition==SENDING_FRAME)
         INFO("TP            -- TIME:%-6u   ----------SEND",x);
     else

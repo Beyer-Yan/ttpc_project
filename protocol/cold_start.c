@@ -26,7 +26,7 @@
 
 #include "stm32f4xx.h"
 
-#define START_TIME_COMPENSATE             170
+#define START_TIME_COMPENSATE             120
 
 extern void psp_for_coldstart(void);
 extern void tp(void);
@@ -101,6 +101,7 @@ void FSM_toColdStart(void)
     //counters setting
     PV_IncCounter(COLD_START_COUNTER);
     PV_SetCounter(FAILED_SLOTS_COUNTER,0);
+    PV_SetCounter(AGREED_SLOTS_COUNTER,1);
     PV_SetCounter(INTEGRATION_COUNTER,pSP->MinimumIntegrationCount);
     PV_DisableFreeShot();
 

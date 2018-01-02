@@ -231,7 +231,11 @@ void psp_for_passive(void)
     _slot_properties_update();
     
     INFO("SLOT----------------------------------------%d",MAC_GetRoundSlot());
-    INFO("SSS PASSIVE -- TIME:%u",_G_SlotStartMacrotickTime);
+    
+    INFO("agreed:%d",PV_GetCounter(AGREED_SLOTS_COUNTER));
+    INFO("failed:%d",PV_GetCounter(FAILED_SLOTS_COUNTER));
+    
+    INFO("SSS PASSIVE   -- TIME:%u",_G_SlotStartMacrotickTime);
     
     /** check MEDL configuration */
     #warning "periodic checking for MEDL has not been implemented"
@@ -283,8 +287,12 @@ void psp_for_active(void)
 
     _slot_properties_update();
     
-    INFO("SLOT----------------------------------------%d",MAC_GetRoundSlot());
-    INFO("SSS ACTIVE -- TIME:%u",_G_SlotStartMacrotickTime);
+    INFO("SLOT---------------------------------------- %d",MAC_GetRoundSlot());
+    
+    INFO("agreed:%d",PV_GetCounter(AGREED_SLOTS_COUNTER));
+    INFO("failed:%d",PV_GetCounter(FAILED_SLOTS_COUNTER));
+    
+    INFO("SSS ACTIVE    -- TIME:%u",_G_SlotStartMacrotickTime);
 
     if (MAC_IsOwnNodeSlot()) {
         //clique detection
@@ -353,8 +361,12 @@ void psp_for_coldstart(void)
     _slot_properties_update();
     
     INFO("SLOT----------------------------------------%d",MAC_GetRoundSlot());
+    
+    INFO("agreed:%d",PV_GetCounter(AGREED_SLOTS_COUNTER));
+    INFO("failed:%d",PV_GetCounter(FAILED_SLOTS_COUNTER));
+    
     INFO("SSS COLDSTART -- TIME:%u",_G_SlotStartMacrotickTime);
-
+   
     pRS = MAC_GetRoundSlotProperties();
     
     if (MAC_IsOwnNodeSlot()) {
@@ -371,7 +383,6 @@ void psp_for_coldstart(void)
             //majority clique
             PV_ClrCounter(AGREED_SLOTS_COUNTER);
             PV_ClrCounter(FAILED_SLOTS_COUNTER);
-
             //cstate valid now, the controller will notify the host in the next AT time
             //by interruption.
             CNI_SetISRBit(ISR_CV);

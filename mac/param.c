@@ -22,33 +22,23 @@
 #include "medl.h"
 #include "ttpdebug.h"
 
+static uint32_t _G_mode = 0xffffffff;
+static uint32_t _G_slot = 0xffffffff;
+static void* bufferAddr = NULL;
+
 /*********************** slot parameters configuration *************************/
 
 RoundSlotProperty_t* MAC_GetRoundSlotProperties(void)
 {
-    static void* bufferAddr = NULL;
-    static uint32_t _mode = 0xffffffff;
-    static uint32_t _slot = 0xffffffff;
-
-    uint32_t mode = CS_GetCurMode();
-    uint32_t slot = MAC_GetRoundSlot();
-
-    if(mode!=_mode || slot!=_slot)
-    {
-        uint32_t mode_num = CALC_MODE_NUM(mode);
-        bufferAddr = MEDL_GetRoundSlotAddr(mode_num, slot);
-        _mode = mode;
-        _slot = slot;
-    }
-
     return bufferAddr;
 }
 
 RoundSlotProperty_t* MAC_LoadSlotProperties(uint32_t mode, uint32_t RoundSlot)
 {
     uint32_t mode_num = CALC_MODE_NUM(mode);
-
-    return MEDL_GetRoundSlotAddr(mode_num,RoundSlot);
+    bufferAddr = MEDL_GetRoundSlotAddr(mode_num,RoundSlot);
+    
+    return bufferAddr;
 }
 
 /*********************** ID parameters access  *************************/

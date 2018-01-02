@@ -115,7 +115,7 @@ static inline uint32_t PV_GetAckState(void)
     return PV_as;
 }
 
-static inline void PV_PV_SetAckState(uint32_t state)
+static inline void PV_SetAckState(uint32_t state)
 {
     PV_as = state;
 }

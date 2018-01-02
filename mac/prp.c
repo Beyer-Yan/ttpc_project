@@ -166,9 +166,9 @@ static uint32_t _judge_valid(uint32_t* pframe_status, uint32_t channel)
     /** for FRAME_NULL checking */
     if (!MSG_CheckReceived(channel)) {
         *pframe_status = FRAME_NULL;
+        INFO("received nothing on ch:%d",channel);
         return _FRAME_INVALID_;
     }
-
     TTP_FrameDesc *pFrameDesc = MSG_GetFrameDesc();
     RoundSlotProperty_t* pRS = MAC_GetRoundSlotProperties();
     TTP_ChannelFrameDesc *pDesc = channel==CH0?pFrameDesc->pCH0:pFrameDesc->pCH1;
@@ -180,11 +180,14 @@ static uint32_t _judge_valid(uint32_t* pframe_status, uint32_t channel)
 
     if(pDesc->status==MAC_ERX_LTH || pDesc->status==MAC_ERX_COL){
         *pframe_status = FRAME_INVALID;
+        INFO("received a frame, but frame corrupted on ch:%d",channel);
         return _FRAME_INVALID_;
     }
 
-    if (!_judge_time_window(mid_axis, pDesc->rcv_timestamp))
+    if (!_judge_time_window(mid_axis, pDesc->rcv_timestamp)){
+        INFO("received a frame, but timing err. ch:%u, mid:%u, tsmp:%u",channel,mid_axis,pDesc->rcv_timestamp);
         return _FRAME_INVALID_;
+    }
 
     int actual_frame_size = 0;
     switch (type) {
@@ -204,6 +207,7 @@ static uint32_t _judge_valid(uint32_t* pframe_status, uint32_t channel)
 
     if (actual_frame_size != pDesc->length) {
         *pframe_status = FRAME_INVALID;
+        INFO("received a framem, but size error on ch:%d",channel);
         return _FRAME_INVALID_;
     }
 
@@ -211,9 +215,10 @@ static uint32_t _judge_valid(uint32_t* pframe_status, uint32_t channel)
 
     if ((header & 1) != (pRS->FrameType)) {
         *pframe_status = FRAME_INCORRECT;
+        INFO("received a frame, but type error on ch:%d",channel);
         return _FRAME_INVALID_;
     }
-
+    INFO("received a valid frame on ch:%d",channel);
     return _FRAME_VALID_;
 }
 
@@ -283,11 +288,12 @@ static inline uint32_t _is_data_frame()
 void prp_for_passive(void)
 {
     uint32_t res_ch[2];
-    uint32_t frame_status_ch[2];
+    uint32_t frame_status_ch[2]={0xffffffff,0xffffffff};
 
     uint32_t slot_status;
 
-    INFO("RRR PASSIVE -- TIME:%u",CLOCK_GetCurMacrotick());
+    INFO("RRR PASSIVE   -- TIME:%u",CLOCK_GetCurMacrotick());
+
     TTP_FrameDesc* pDesc;
     RoundSlotProperty_t* pRS = MAC_GetRoundSlotProperties();
     ScheduleParameter_t* pSP = MAC_GetScheduleParameter();
@@ -300,11 +306,12 @@ void prp_for_passive(void)
 
     if ((res_ch[0] == _FRAME_INVALID_) && (res_ch[1] == _FRAME_INVALID_)) {
         CS_ClearMemberBit(pRS->FlagPosition);
-    } else if (res_ch[0] == _FRAME_VALID_) {
-        frame_status_ch[0] = _get_valid_frame_status(pDesc->pCH0, pRS->FrameType);
-    } else {
-        frame_status_ch[1] = _get_valid_frame_status(pDesc->pCH1, pRS->FrameType);
-    }
+    } else{
+        if (res_ch[0] == _FRAME_VALID_)
+            frame_status_ch[0] = _get_valid_frame_status(pDesc->pCH0, pRS->FrameType);
+        if (res_ch[1] == _FRAME_VALID_)
+            frame_status_ch[1] = _get_valid_frame_status(pDesc->pCH1, pRS->FrameType);
+    } 
 
     slot_status = MIN(frame_status_ch[0], frame_status_ch[1]);
 
@@ -428,6 +435,7 @@ static uint32_t _ack_result(TTP_ChannelFrameDesc* pDesc, uint32_t type, uint32_t
     switch (res) {
     case 0:
         //frame corrupted, wait for the next frame
+        INFO("ack frame corrupted");
         *pframe_status = FRAME_INCORRECT;
         break;
     case 1:
@@ -457,6 +465,7 @@ static uint32_t _ack_result(TTP_ChannelFrameDesc* pDesc, uint32_t type, uint32_t
         if (frame_mcr != MCR_MODE_CLR) {
             //mode changing is carried in the frame.
             if (pRS->ModeChangePermission == MODE_CHANGE_DENY) {
+                INFO("ack frame mcr error");
                 *pframe_status = FRAME_MODE_VIOLATION;
             }
         }
@@ -471,7 +480,7 @@ void prp_for_active(void)
     RoundSlotProperty_t* pRS = MAC_GetRoundSlotProperties();
     //ScheduleParameter_t* pSP = MAC_GetScheduleParameter();
     //NodeProperty_t* pNP = MAC_GetNodeProperties();
-    INFO("RRR ACTIVE -- TIME:%u",CLOCK_GetCurMacrotick());
+    INFO("RRR ACTIVE    -- TIME:%u",CLOCK_GetCurMacrotick());
     
     if (slot_acq == SENDING_FRAME) {
         PV_SetAckState(WAIT_FIRST_SUCCESSOR);
@@ -485,7 +494,7 @@ void prp_for_active(void)
     }
 
     uint32_t res_ch[2];
-    uint32_t frame_status_ch[2];
+    uint32_t frame_status_ch[2]={0xffffffff,0xffffffff};
 
     uint32_t chosen_ch;
 
@@ -507,11 +516,12 @@ void prp_for_active(void)
 
     if ((res_ch[0] == _FRAME_INVALID_) && (res_ch[1] == _FRAME_INVALID_)) {
         CS_ClearMemberBit(pRS->FlagPosition);
-    } else if (res_ch[0] == _FRAME_VALID_) {
-        frame_status_ch[0] = _get_valid_frame_status(pDesc->pCH0, pRS->FrameType);
-    } else {
-        frame_status_ch[1] = _get_valid_frame_status(pDesc->pCH1, pRS->FrameType);
-    }
+    } else{
+        if (res_ch[0] == _FRAME_VALID_)
+            frame_status_ch[0] = _get_valid_frame_status(pDesc->pCH0, pRS->FrameType);
+        if (res_ch[1] == _FRAME_VALID_)
+            frame_status_ch[1] = _get_valid_frame_status(pDesc->pCH1, pRS->FrameType);
+    }  
 
     if(ACK_FINISHED != PV_GetAckState()){
         //perform ack algorithm
@@ -535,10 +545,10 @@ void prp_for_active(void)
             if(max_member_fail == PV_GetCounter(MEMBERSHIP_FAILED_COUNTER)){
                 //membership loss, the controller shall transmit into FREEZE state.
                 CNI_SetSRBit(SR_ME);
-                INFO("MEMBERSHIP LOSS");
+                INFO("membership loss");
                 FSM_TransitIntoState(FSM_FREEZE);
             }else{
-                //membership loss               
+                INFO("membership failed");              
                 CNI_SetISRBit(ISR_ML);
                 FSM_TransitIntoState(FSM_PASSIVE);
             }
@@ -633,7 +643,6 @@ void prp_for_coldstart(void)
 
     //No ack need to be performed
     if (slot_status == FRAME_CORRECT) {
-        INFO("CORRECT FRAME RECEIVED");
         /** for mode change processor */
         TTP_ChannelFrameDesc *pDesc_chosen = frame_status_ch[0] == FRAME_CORRECT ? pDesc->pCH0 : pDesc->pCH1;
         uint8_t header = pDesc_chosen->pFrame->hdr[0];

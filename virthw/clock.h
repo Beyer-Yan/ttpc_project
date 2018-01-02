@@ -126,6 +126,8 @@ uint32_t CLOCK_WaitAlarm(uint32_t  Macroticks, uint32_t (*fDisturb)(void));
 
 uint32_t CLOCK_WaitMicroticks(uint32_t MicrotickValue, uint32_t (fDisturb)(void));
 
+uint32_t test_x_function(uint32_t x);
+
 /**@}*/// end of group TTPC_CLOCK_Def
 
 #endif

@@ -246,10 +246,10 @@ void MAC_SetSlotTime(uint32_t ActAT, uint32_t TP,uint32_t PSP, uint32_t SD, uint
     uint16_t real_prp = ActAT + (TP & 0xffff);
     uint16_t slot_end = ActAT + (SD & 0xffff) - PSP;
 
-    INFO("--PREDISIGN TIMING--");
-    INFO("AT :%u",real_at);
-    INFO("PRP:%u",real_prp);
-    INFO("END:%u",slot_end);
+    //INFO("--PREDISIGN TIMING--");
+    //INFO("AT :%u",real_at);
+    //INFO("PRP:%u",real_prp);
+    //INFO("END:%u",slot_end);
     CLOCK_SetTriggerAT(real_at);
     CLOCK_SetTriggerPRP(real_prp);
     CLOCK_SetTriggerSlotEnd(slot_end);

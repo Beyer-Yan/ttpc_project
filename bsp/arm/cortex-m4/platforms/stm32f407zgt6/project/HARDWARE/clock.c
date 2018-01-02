@@ -49,6 +49,8 @@ static volatile uint16_t _G_TriggerArr[3] = {0};
 
 static uint16_t _G_TuningArray[CLOCK_ADJUSTING_STEPS] = {0};
 
+static uint32_t test_x = 0;
+
 /************** Functions Deffinitions ***************************************************/
 
 void CLOCK_DepInit(void)
@@ -444,6 +446,12 @@ void CLOCK_SetTriggerSlotEnd(uint32_t end)
 void CLOCK_WaitTrigger(uint32_t _ClockTrigger)
 {
     while(TIM4->CNT!=_G_TriggerArr[_ClockTrigger]);
+    test_x = TIM2->CNT;
+}
+
+uint32_t test_x_function(uint32_t x)
+{
+    return x - test_x;
 }
 /*
 void CLOCK_WaitTrigger(uint32_t ClockTrigger)
