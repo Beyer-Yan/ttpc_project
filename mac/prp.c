@@ -115,9 +115,9 @@ static uint32_t _frame_crc32_check(TTP_ChannelFrameDesc* pDesc, uint32_t type)
         _byte_copy((uint8_t*)&c_state, pDesc->pFrame->x.cstate, sizeof(c_state));
 
         if (!CS_IsSame(&c_state))
-            return 0;
+            return ACK_CHECK_F;
         else
-            return 1;
+            return ACK_CHECK_T;
     }
 
     crc_pos = (uint8_t*)(pDesc->pFrame) + pDesc->length - sizeof(frame_crc32);
@@ -127,9 +127,9 @@ static uint32_t _frame_crc32_check(TTP_ChannelFrameDesc* pDesc, uint32_t type)
 
     checked_crc32 = _frame_crc32_calc((uint8_t*)pDesc->pFrame, pDesc->length - sizeof(frame_crc32), type);
     if (checked_crc32 != frame_crc32)
-        return 0;
+        return ACK_CHECK_F;
 
-    return 1;
+    return ACK_CHECK_T;
 }
 
 /**
@@ -435,7 +435,6 @@ static uint32_t _ack_result(TTP_ChannelFrameDesc* pDesc, uint32_t type, uint32_t
     switch (res) {
     case 0:
         //frame corrupted, wait for the next frame
-        INFO("ack frame corrupted");
         *pframe_status = FRAME_INCORRECT;
         break;
     case 1:
@@ -527,33 +526,46 @@ void prp_for_active(void)
         //perform ack algorithm
         uint32_t type = pRS->FrameType;
         uint32_t ack_res[2];
-
-        if(pDesc->pCH0->pFrame != NULL){
-            ack_res[0] = _ack_result(pDesc->pCH0, type, CH0, &func[0],&frame_status_ch[0]);
-        }
-        if(pDesc->pCH1->pFrame != NULL){
-            ack_res[1] = _ack_result(pDesc->pCH1, type, CH1, &func[1], &frame_status_ch[1]);
-        }
-       
-        if (frame_status_ch[0] != frame_status_ch[1]) {
-            chosen_ch = frame_status_ch[0] < frame_status_ch[1] ? 0 : 1;
-            SVC_AckMerge(chosen_ch);
-        }
-        if(ack_res[chosen_ch] == 1){
-            //ack failed
-            uint32_t max_member_fail =  MAC_GetMaximumMembershipFailureCount();
-            if(max_member_fail == PV_GetCounter(MEMBERSHIP_FAILED_COUNTER)){
-                //membership loss, the controller shall transmit into FREEZE state.
-                CNI_SetSRBit(SR_ME);
-                INFO("membership loss");
-                FSM_TransitIntoState(FSM_FREEZE);
-            }else{
-                INFO("membership failed");              
-                CNI_SetISRBit(ISR_ML);
-                FSM_TransitIntoState(FSM_PASSIVE);
+        
+        if ((res_ch[0] == _FRAME_VALID_) || (res_ch[1] == _FRAME_VALID_)) {
+            if(res_ch[0] == _FRAME_VALID_){
+                ack_res[0] = _ack_result(pDesc->pCH0, type, CH0, &func[0],&frame_status_ch[0]);
+                INFO("perform ack for ch:0, res:%d",ack_res[0]);
             }
-        }
-        func[chosen_ch] != NULL ? func[chosen_ch]() : (void)0;
+            if(res_ch[1] == _FRAME_VALID_){
+                ack_res[1] = _ack_result(pDesc->pCH1, type, CH1, &func[1], &frame_status_ch[1]);
+                INFO("perform ack for ch:1, res:%d",ack_res[1]);
+            }
+
+            if (frame_status_ch[0] != frame_status_ch[1]) {
+                chosen_ch = frame_status_ch[0] <= frame_status_ch[1] ? 0 : 1;
+                SVC_AckMerge(chosen_ch);
+            }
+            /* for test */
+            TTP_ChannelFrameDesc *pDesc_chosen = frame_status_ch[0] == FRAME_CORRECT ? pDesc->pCH0 : pDesc->pCH1;
+            c_state_t c1,c2;        
+            CS_GetCState(&c2);
+            _byte_copy((uint8_t*)&c1, pDesc_chosen->pFrame->x.cstate, sizeof(c_state_t));        
+            INFO("cstate frame:%x,%x,%x,%x,%x,%x",c1.ClusterPosition,c1.GlobalTime,c1.Membership[0],c1.Membership[1],c1.Membership[2],c1.Membership[3]);
+            INFO("cstate local:%x,%x,%x,%x,%x,%x",c2.ClusterPosition,c2.GlobalTime,c2.Membership[0],c2.Membership[1],c2.Membership[2],c2.Membership[3]);
+            
+            if(ack_res[chosen_ch] == 1){
+                //ack failed
+                INFO("ack failed");
+                uint32_t max_member_fail =  MAC_GetMaximumMembershipFailureCount();
+                if(max_member_fail == PV_GetCounter(MEMBERSHIP_FAILED_COUNTER)){
+                    //membership loss, the controller shall transmit into FREEZE state.
+                    CNI_SetSRBit(SR_ME);
+                    INFO("membership loss");
+                    FSM_TransitIntoState(FSM_FREEZE);
+                }else{
+                    INFO("membership failed");              
+                    CNI_SetISRBit(ISR_ML);
+                    FSM_TransitIntoState(FSM_PASSIVE);
+                }
+            }
+            func[chosen_ch] != NULL ? func[chosen_ch]() : (void)0;
+        }  
     }
 
     slot_status = MIN(frame_status_ch[0], frame_status_ch[1]);

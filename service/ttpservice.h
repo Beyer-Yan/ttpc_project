@@ -158,6 +158,9 @@ uint32_t SVC_ExecSyncSchema(uint32_t Steps);
 
 /************************************************************************************/
 
+#define ACK_CHECK_T  0
+#define ACK_CHECK_F  1
+
 void     SVC_AckInit(void);
 
 void     SVC_AckMerge(uint32_t ch);
