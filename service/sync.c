@@ -131,7 +131,9 @@ void SVC_SyncCalcOffset(uint32_t FrameTsmp)
     uint32_t at_microtick = MAC_GetATMicroticks();
 	uint32_t estimate_frame_tsmp = at_microtick + _G_aligned_estimate_time_interval;
 	int32_t  offset = (int32_t)FrameTsmp - (int32_t)estimate_frame_tsmp;
-
+    
+    INFO("stack:%d,%d,%d,%d  --  diff:%d",_G_pushdown_stack[0],_G_pushdown_stack[1],_G_pushdown_stack[2],_G_pushdown_stack[3],offset);
+    
 	_stack_push(offset);
 }
 
@@ -146,9 +148,15 @@ uint32_t SVC_ExecSyncSchema(uint32_t Steps)
 	uint32_t aligned_pi = _alignment_err(precision); 
 
 	if(ABS(csct) > aligned_pi/2)
-		return 0; //SYNC ERR
-    if(csct!=0)
+    {
+        PRINT("csct:%d",csct);
+        while(1);
+        return 0; //SYNC ERR 
+    }
+		
+    if(csct!=0){
+        INFO("perform sync, csct:%d",csct);
         MAC_AdjTime(CLK_PHASE_ADJ,csct);
-    
+    }
 	return 1;
 }

@@ -127,7 +127,7 @@ I (D:\Keil_v5\ARM\ARMCC\include\stdarg.h)(0x5475F2FA)
 I (..\..\..\..\..\..\..\mac\ttpmac.h)(0x5A4A47DC)
 I (..\HARDWARE\lsens.h)(0x5A462A3E)
 I (..\..\..\..\..\..\..\mac\msg.h)(0x5A44A7D8)
-I (..\..\..\..\..\..\..\include\ttpconstants.h)(0x5A4B2BA4)
+I (..\..\..\..\..\..\..\include\ttpconstants.h)(0x5A4B34B0)
 F (..\CPU\cpu.c)(0x5A45FE4F)(--c99 -c --cpu Cortex-M4.fp -g -O0 --apcs=interwork --split_sections --asm --interleave --asm_dir ".\\Listings\\" -I..\CPU -I..\FWLIB\inc -I..\STARTUP -I..\..\..\..\..\..\..\include -I..\..\..\..\..\..\..\mac -I..\..\..\..\..\..\..\medl -I..\..\..\..\..\..\..\protocol -I..\..\..\..\..\..\..\service -I..\..\..\..\..\..\..\virthw -I..\HARDWARE -I..\..\..\..\..\..\..\dbg-I E:\zfas_project\material\TTPC_project\bsp\arm\cortex-m4\platforms\stm32f407zgt6\project\RVMDK\RTE-I D:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\1.0.8\Device\Include-I D:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="514" -DSTM32F40_41xxx -DUSE_STDPERIPH_DRIVER -DTTP_DEBUG-o .\objects\cpu.o --list_dir ".\\Listings\\" --list --omf_browse .\objects\cpu.crf --depend .\objects\cpu.d)
 I (..\FWLIB\inc\misc.h)(0x5A45FE17)
 I (..\STARTUP\stm32f4xx.h)(0x542BA483)
@@ -392,13 +392,13 @@ I (..\FWLIB\inc\stm32f4xx_dac.h)(0x5A45FE89)
 I (..\FWLIB\inc\stm32f4xx_dcmi.h)(0x5A45FE6D)
 I (..\FWLIB\inc\stm32f4xx_fsmc.h)(0x53DBAFAD)
 I (..\..\..\..\..\..\..\dbg\ttpdebug.h)(0x5A45FB39)
-I (..\..\..\..\..\..\..\include\ttpconstants.h)(0x5A4B2BA4)
+I (..\..\..\..\..\..\..\include\ttpconstants.h)(0x5A4B34B0)
 F (..\MEDL\medl_data.c)(0x5A4AF93E)(--c99 -c --cpu Cortex-M4.fp -g -O0 --apcs=interwork --split_sections --asm --interleave --asm_dir ".\\Listings\\" -I..\CPU -I..\FWLIB\inc -I..\STARTUP -I..\..\..\..\..\..\..\include -I..\..\..\..\..\..\..\mac -I..\..\..\..\..\..\..\medl -I..\..\..\..\..\..\..\protocol -I..\..\..\..\..\..\..\service -I..\..\..\..\..\..\..\virthw -I..\HARDWARE -I..\..\..\..\..\..\..\dbg-I E:\zfas_project\material\TTPC_project\bsp\arm\cortex-m4\platforms\stm32f407zgt6\project\RVMDK\RTE-I D:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\1.0.8\Device\Include-I D:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="514" -DSTM32F40_41xxx -DUSE_STDPERIPH_DRIVER -DTTP_DEBUG-o .\objects\medl_data.o --list_dir ".\\Listings\\" --list --omf_browse .\objects\medl_data.crf --depend .\objects\medl_data.d)
 I (..\..\..\..\..\..\..\include\ttpdef.h)(0x5A490B69)
 I (D:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x5475F300)
 I (D:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x5475F300)
 I (D:\Keil_v5\ARM\ARMCC\include\stdarg.h)(0x5475F2FA)
-I (..\..\..\..\..\..\..\include\ttpconstants.h)(0x5A4B2BA4)
+I (..\..\..\..\..\..\..\include\ttpconstants.h)(0x5A4B34B0)
 F (..\FWLIB\src\misc.c)(0x53DBB014)(--c99 -c --cpu Cortex-M4.fp -g -O0 --apcs=interwork --split_sections --asm --interleave --asm_dir ".\\Listings\\" -I..\CPU -I..\FWLIB\inc -I..\STARTUP -I..\..\..\..\..\..\..\include -I..\..\..\..\..\..\..\mac -I..\..\..\..\..\..\..\medl -I..\..\..\..\..\..\..\protocol -I..\..\..\..\..\..\..\service -I..\..\..\..\..\..\..\virthw -I..\HARDWARE -I..\..\..\..\..\..\..\dbg-I E:\zfas_project\material\TTPC_project\bsp\arm\cortex-m4\platforms\stm32f407zgt6\project\RVMDK\RTE-I D:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\1.0.8\Device\Include-I D:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="514" -DSTM32F40_41xxx -DUSE_STDPERIPH_DRIVER -DTTP_DEBUG-o .\objects\misc.o --list_dir ".\\Listings\\" --list --omf_browse .\objects\misc.crf --depend .\objects\misc.d)
 I (..\FWLIB\inc\misc.h)(0x5A45FE17)
 I (..\STARTUP\stm32f4xx.h)(0x542BA483)
@@ -852,7 +852,7 @@ I (D:\Keil_v5\ARM\ARMCC\include\stdarg.h)(0x5475F2FA)
 I (..\..\..\..\..\..\..\mac\ttpmac.h)(0x5A4A47DC)
 I (..\..\..\..\..\..\..\medl\medl.h)(0x5A4731A2)
 I (..\..\..\..\..\..\..\virthw\xfer.h)(0x5A44A760)
-I (..\..\..\..\..\..\..\service\ttpservice.h)(0x5A4753C5)
+I (..\..\..\..\..\..\..\service\ttpservice.h)(0x5A4B2ED9)
 I (..\..\..\..\..\..\..\protocol\protocol_data.h)(0x5A4A56D5)
 I (..\..\..\..\..\..\..\virthw\crc.h)(0x5A44A755)
 I (..\..\..\..\..\..\..\dbg\ttpdebug.h)(0x5A45FB39)
@@ -871,7 +871,7 @@ I (..\..\..\..\..\..\..\include\ttpdef.h)(0x5A490B69)
 I (D:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x5475F300)
 I (D:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x5475F300)
 I (D:\Keil_v5\ARM\ARMCC\include\stdarg.h)(0x5475F2FA)
-F (..\..\..\..\..\..\..\mac\prp.c)(0x5A4B294E)(--c99 -c --cpu Cortex-M4.fp -g -O0 --apcs=interwork --split_sections --asm --interleave --asm_dir ".\\Listings\\" -I..\CPU -I..\FWLIB\inc -I..\STARTUP -I..\..\..\..\..\..\..\include -I..\..\..\..\..\..\..\mac -I..\..\..\..\..\..\..\medl -I..\..\..\..\..\..\..\protocol -I..\..\..\..\..\..\..\service -I..\..\..\..\..\..\..\virthw -I..\HARDWARE -I..\..\..\..\..\..\..\dbg-I E:\zfas_project\material\TTPC_project\bsp\arm\cortex-m4\platforms\stm32f407zgt6\project\RVMDK\RTE-I D:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\1.0.8\Device\Include-I D:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="514" -DSTM32F40_41xxx -DUSE_STDPERIPH_DRIVER -DTTP_DEBUG-o .\objects\prp.o --list_dir ".\\Listings\\" --list --omf_browse .\objects\prp.crf --depend .\objects\prp.d)
+F (..\..\..\..\..\..\..\mac\prp.c)(0x5A4B3467)(--c99 -c --cpu Cortex-M4.fp -g -O0 --apcs=interwork --split_sections --asm --interleave --asm_dir ".\\Listings\\" -I..\CPU -I..\FWLIB\inc -I..\STARTUP -I..\..\..\..\..\..\..\include -I..\..\..\..\..\..\..\mac -I..\..\..\..\..\..\..\medl -I..\..\..\..\..\..\..\protocol -I..\..\..\..\..\..\..\service -I..\..\..\..\..\..\..\virthw -I..\HARDWARE -I..\..\..\..\..\..\..\dbg-I E:\zfas_project\material\TTPC_project\bsp\arm\cortex-m4\platforms\stm32f407zgt6\project\RVMDK\RTE-I D:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\1.0.8\Device\Include-I D:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="514" -DSTM32F40_41xxx -DUSE_STDPERIPH_DRIVER -DTTP_DEBUG-o .\objects\prp.o --list_dir ".\\Listings\\" --list --omf_browse .\objects\prp.crf --depend .\objects\prp.d)
 I (..\..\..\..\..\..\..\protocol\protocol.h)(0x5A4636EC)
 I (..\..\..\..\..\..\..\include\ttpdef.h)(0x5A490B69)
 I (D:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x5475F300)
@@ -881,7 +881,7 @@ I (..\..\..\..\..\..\..\protocol\protocol_data.h)(0x5A4A56D5)
 I (..\..\..\..\..\..\..\mac\ttpmac.h)(0x5A4A47DC)
 I (..\..\..\..\..\..\..\dbg\ttpdebug.h)(0x5A45FB39)
 I (..\..\..\..\..\..\..\virthw\led.h)(0x5A333C17)
-I (..\..\..\..\..\..\..\service\ttpservice.h)(0x5A4753C5)
+I (..\..\..\..\..\..\..\service\ttpservice.h)(0x5A4B2ED9)
 I (..\..\..\..\..\..\..\virthw\crc.h)(0x5A44A755)
 I (..\..\..\..\..\..\..\mac\msg.h)(0x5A44A7D8)
 I (..\..\..\..\..\..\..\medl\medl.h)(0x5A4731A2)
@@ -895,7 +895,7 @@ I (D:\Keil_v5\ARM\ARMCC\include\stdarg.h)(0x5475F2FA)
 I (..\..\..\..\..\..\..\protocol\protocol_data.h)(0x5A4A56D5)
 I (..\..\..\..\..\..\..\mac\ttpmac.h)(0x5A4A47DC)
 I (..\..\..\..\..\..\..\dbg\ttpdebug.h)(0x5A45FB39)
-I (..\..\..\..\..\..\..\service\ttpservice.h)(0x5A4753C5)
+I (..\..\..\..\..\..\..\service\ttpservice.h)(0x5A4B2ED9)
 I (..\..\..\..\..\..\..\virthw\clock.h)(0x5A4AF77A)
 I (..\..\..\..\..\..\..\medl\medl.h)(0x5A4731A2)
 I (..\..\..\..\..\..\..\mac\msg.h)(0x5A44A7D8)
@@ -909,7 +909,7 @@ I (D:\Keil_v5\ARM\ARMCC\include\stdarg.h)(0x5475F2FA)
 I (..\..\..\..\..\..\..\protocol\protocol_data.h)(0x5A4A56D5)
 I (..\..\..\..\..\..\..\mac\ttpmac.h)(0x5A4A47DC)
 I (..\..\..\..\..\..\..\dbg\ttpdebug.h)(0x5A45FB39)
-I (..\..\..\..\..\..\..\service\ttpservice.h)(0x5A4753C5)
+I (..\..\..\..\..\..\..\service\ttpservice.h)(0x5A4B2ED9)
 I (..\..\..\..\..\..\..\mac\msg.h)(0x5A44A7D8)
 I (..\..\..\..\..\..\..\virthw\clock.h)(0x5A4AF77A)
 I (..\..\..\..\..\..\..\virthw\xfer.h)(0x5A44A760)
@@ -923,7 +923,7 @@ I (..\..\..\..\..\..\..\dbg\ttpdebug.h)(0x5A45FB39)
 I (..\..\..\..\..\..\..\protocol\protocol_data.h)(0x5A4A56D5)
 I (..\..\..\..\..\..\..\protocol\protocol.h)(0x5A4636EC)
 I (..\..\..\..\..\..\..\virthw\led.h)(0x5A333C17)
-I (..\..\..\..\..\..\..\service\ttpservice.h)(0x5A4753C5)
+I (..\..\..\..\..\..\..\service\ttpservice.h)(0x5A4B2ED9)
 I (..\..\..\..\..\..\..\virthw\clock.h)(0x5A4AF77A)
 F (..\..\..\..\..\..\..\medl\medl.c)(0x5A49E753)(--c99 -c --cpu Cortex-M4.fp -g -O0 --apcs=interwork --split_sections --asm --interleave --asm_dir ".\\Listings\\" -I..\CPU -I..\FWLIB\inc -I..\STARTUP -I..\..\..\..\..\..\..\include -I..\..\..\..\..\..\..\mac -I..\..\..\..\..\..\..\medl -I..\..\..\..\..\..\..\protocol -I..\..\..\..\..\..\..\service -I..\..\..\..\..\..\..\virthw -I..\HARDWARE -I..\..\..\..\..\..\..\dbg-I E:\zfas_project\material\TTPC_project\bsp\arm\cortex-m4\platforms\stm32f407zgt6\project\RVMDK\RTE-I D:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\1.0.8\Device\Include-I D:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="514" -DSTM32F40_41xxx -DUSE_STDPERIPH_DRIVER -DTTP_DEBUG-o .\objects\medl.o --list_dir ".\\Listings\\" --list --omf_browse .\objects\medl.crf --depend .\objects\medl.d)
 I (..\..\..\..\..\..\..\medl\medl.h)(0x5A4731A2)
@@ -956,7 +956,7 @@ I (D:\Keil_v5\ARM\ARMCC\include\stdarg.h)(0x5475F2FA)
 I (..\..\..\..\..\..\..\protocol\protocol.h)(0x5A4636EC)
 I (..\..\..\..\..\..\..\medl\medl.h)(0x5A4731A2)
 I (..\..\..\..\..\..\..\virthw\clock.h)(0x5A4AF77A)
-I (..\..\..\..\..\..\..\service\ttpservice.h)(0x5A4753C5)
+I (..\..\..\..\..\..\..\service\ttpservice.h)(0x5A4B2ED9)
 I (..\..\..\..\..\..\..\protocol\protocol_data.h)(0x5A4A56D5)
 I (..\..\..\..\..\..\..\virthw\xfer.h)(0x5A44A760)
 I (..\..\..\..\..\..\..\dbg\ttpdebug.h)(0x5A45FB39)
@@ -1010,7 +1010,7 @@ I (..\..\..\..\..\..\..\dbg\ttpdebug.h)(0x5A45FB39)
 I (..\..\..\..\..\..\..\protocol\protocol_data.h)(0x5A4A56D5)
 I (..\..\..\..\..\..\..\protocol\protocol.h)(0x5A4636EC)
 I (..\..\..\..\..\..\..\virthw\clock.h)(0x5A4AF77A)
-I (..\..\..\..\..\..\..\service\ttpservice.h)(0x5A4753C5)
+I (..\..\..\..\..\..\..\service\ttpservice.h)(0x5A4B2ED9)
 I (..\STARTUP\host.h)(0x5A4889E6)
 F (..\..\..\..\..\..\..\protocol\init.c)(0x5A490B6C)(--c99 -c --cpu Cortex-M4.fp -g -O0 --apcs=interwork --split_sections --asm --interleave --asm_dir ".\\Listings\\" -I..\CPU -I..\FWLIB\inc -I..\STARTUP -I..\..\..\..\..\..\..\include -I..\..\..\..\..\..\..\mac -I..\..\..\..\..\..\..\medl -I..\..\..\..\..\..\..\protocol -I..\..\..\..\..\..\..\service -I..\..\..\..\..\..\..\virthw -I..\HARDWARE -I..\..\..\..\..\..\..\dbg-I E:\zfas_project\material\TTPC_project\bsp\arm\cortex-m4\platforms\stm32f407zgt6\project\RVMDK\RTE-I D:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\1.0.8\Device\Include-I D:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="514" -DSTM32F40_41xxx -DUSE_STDPERIPH_DRIVER -DTTP_DEBUG-o .\objects\init.o --list_dir ".\\Listings\\" --list --omf_browse .\objects\init.crf --depend .\objects\init.d)
 I (..\..\..\..\..\..\..\medl\medl.h)(0x5A4731A2)
@@ -1021,7 +1021,7 @@ I (D:\Keil_v5\ARM\ARMCC\include\stdarg.h)(0x5475F2FA)
 I (..\..\..\..\..\..\..\protocol\protocol.h)(0x5A4636EC)
 I (..\..\..\..\..\..\..\mac\ttpmac.h)(0x5A4A47DC)
 I (..\..\..\..\..\..\..\dbg\ttpdebug.h)(0x5A45FB39)
-I (..\..\..\..\..\..\..\service\ttpservice.h)(0x5A4753C5)
+I (..\..\..\..\..\..\..\service\ttpservice.h)(0x5A4B2ED9)
 I (..\..\..\..\..\..\..\protocol\protocol_data.h)(0x5A4A56D5)
 I (..\..\..\..\..\..\..\virthw\clock.h)(0x5A4AF77A)
 F (..\..\..\..\..\..\..\protocol\listen.c)(0x5A4B05F3)(--c99 -c --cpu Cortex-M4.fp -g -O0 --apcs=interwork --split_sections --asm --interleave --asm_dir ".\\Listings\\" -I..\CPU -I..\FWLIB\inc -I..\STARTUP -I..\..\..\..\..\..\..\include -I..\..\..\..\..\..\..\mac -I..\..\..\..\..\..\..\medl -I..\..\..\..\..\..\..\protocol -I..\..\..\..\..\..\..\service -I..\..\..\..\..\..\..\virthw -I..\HARDWARE -I..\..\..\..\..\..\..\dbg-I E:\zfas_project\material\TTPC_project\bsp\arm\cortex-m4\platforms\stm32f407zgt6\project\RVMDK\RTE-I D:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\1.0.8\Device\Include-I D:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="514" -DSTM32F40_41xxx -DUSE_STDPERIPH_DRIVER -DTTP_DEBUG-o .\objects\listen.o --list_dir ".\\Listings\\" --list --omf_browse .\objects\listen.crf --depend .\objects\listen.d)
@@ -1034,7 +1034,7 @@ I (..\..\..\..\..\..\..\protocol\protocol.h)(0x5A4636EC)
 I (..\..\..\..\..\..\..\protocol\protocol_data.h)(0x5A4A56D5)
 I (..\..\..\..\..\..\..\mac\ttpmac.h)(0x5A4A47DC)
 I (..\..\..\..\..\..\..\dbg\ttpdebug.h)(0x5A45FB39)
-I (..\..\..\..\..\..\..\service\ttpservice.h)(0x5A4753C5)
+I (..\..\..\..\..\..\..\service\ttpservice.h)(0x5A4B2ED9)
 I (..\..\..\..\..\..\..\virthw\clock.h)(0x5A4AF77A)
 I (..\..\..\..\..\..\..\mac\msg.h)(0x5A44A7D8)
 I (..\..\..\..\..\..\..\virthw\xfer.h)(0x5A44A760)
@@ -1079,7 +1079,7 @@ I (D:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x5475F300)
 I (D:\Keil_v5\ARM\ARMCC\include\stdarg.h)(0x5475F2FA)
 F (..\..\..\..\..\..\..\protocol\state_machine_direct.c)(0x5A46374B)(--c99 -c --cpu Cortex-M4.fp -g -O0 --apcs=interwork --split_sections --asm --interleave --asm_dir ".\\Listings\\" -I..\CPU -I..\FWLIB\inc -I..\STARTUP -I..\..\..\..\..\..\..\include -I..\..\..\..\..\..\..\mac -I..\..\..\..\..\..\..\medl -I..\..\..\..\..\..\..\protocol -I..\..\..\..\..\..\..\service -I..\..\..\..\..\..\..\virthw -I..\HARDWARE -I..\..\..\..\..\..\..\dbg-I E:\zfas_project\material\TTPC_project\bsp\arm\cortex-m4\platforms\stm32f407zgt6\project\RVMDK\RTE-I D:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\1.0.8\Device\Include-I D:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="514" -DSTM32F40_41xxx -DUSE_STDPERIPH_DRIVER -DTTP_DEBUG-o .\objects\state_machine_direct.o --list_dir ".\\Listings\\" --list --omf_browse .\objects\state_machine_direct.crf --depend .\objects\state_machine_direct.d)
 I (..\..\..\..\..\..\..\dbg\ttpdebug.h)(0x5A45FB39)
-I (..\..\..\..\..\..\..\service\ttpservice.h)(0x5A4753C5)
+I (..\..\..\..\..\..\..\service\ttpservice.h)(0x5A4B2ED9)
 I (..\..\..\..\..\..\..\include\ttpdef.h)(0x5A490B69)
 I (D:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x5475F300)
 I (D:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x5475F300)
@@ -1091,7 +1091,7 @@ I (..\..\..\..\..\..\..\include\ttpdef.h)(0x5A490B69)
 I (D:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x5475F300)
 I (D:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x5475F300)
 I (D:\Keil_v5\ARM\ARMCC\include\stdarg.h)(0x5475F2FA)
-F (..\..\..\..\..\..\..\service\ack.c)(0x5A38C2B9)(--c99 -c --cpu Cortex-M4.fp -g -O0 --apcs=interwork --split_sections --asm --interleave --asm_dir ".\\Listings\\" -I..\CPU -I..\FWLIB\inc -I..\STARTUP -I..\..\..\..\..\..\..\include -I..\..\..\..\..\..\..\mac -I..\..\..\..\..\..\..\medl -I..\..\..\..\..\..\..\protocol -I..\..\..\..\..\..\..\service -I..\..\..\..\..\..\..\virthw -I..\HARDWARE -I..\..\..\..\..\..\..\dbg-I E:\zfas_project\material\TTPC_project\bsp\arm\cortex-m4\platforms\stm32f407zgt6\project\RVMDK\RTE-I D:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\1.0.8\Device\Include-I D:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="514" -DSTM32F40_41xxx -DUSE_STDPERIPH_DRIVER -DTTP_DEBUG-o .\objects\ack.o --list_dir ".\\Listings\\" --list --omf_browse .\objects\ack.crf --depend .\objects\ack.d)
+F (..\..\..\..\..\..\..\service\ack.c)(0x5A4B2DAE)(--c99 -c --cpu Cortex-M4.fp -g -O0 --apcs=interwork --split_sections --asm --interleave --asm_dir ".\\Listings\\" -I..\CPU -I..\FWLIB\inc -I..\STARTUP -I..\..\..\..\..\..\..\include -I..\..\..\..\..\..\..\mac -I..\..\..\..\..\..\..\medl -I..\..\..\..\..\..\..\protocol -I..\..\..\..\..\..\..\service -I..\..\..\..\..\..\..\virthw -I..\HARDWARE -I..\..\..\..\..\..\..\dbg-I E:\zfas_project\material\TTPC_project\bsp\arm\cortex-m4\platforms\stm32f407zgt6\project\RVMDK\RTE-I D:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\1.0.8\Device\Include-I D:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="514" -DSTM32F40_41xxx -DUSE_STDPERIPH_DRIVER -DTTP_DEBUG-o .\objects\ack.o --list_dir ".\\Listings\\" --list --omf_browse .\objects\ack.crf --depend .\objects\ack.d)
 I (..\..\..\..\..\..\..\mac\ttpmac.h)(0x5A4A47DC)
 I (..\..\..\..\..\..\..\include\ttpdef.h)(0x5A490B69)
 I (D:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x5475F300)
@@ -1099,7 +1099,7 @@ I (D:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x5475F300)
 I (D:\Keil_v5\ARM\ARMCC\include\stdarg.h)(0x5475F2FA)
 I (..\..\..\..\..\..\..\dbg\ttpdebug.h)(0x5A45FB39)
 I (..\..\..\..\..\..\..\protocol\protocol_data.h)(0x5A4A56D5)
-I (..\..\..\..\..\..\..\service\ttpservice.h)(0x5A4753C5)
+I (..\..\..\..\..\..\..\service\ttpservice.h)(0x5A4B2ED9)
 I (..\..\..\..\..\..\..\protocol\protocol.h)(0x5A4636EC)
 I (..\..\..\..\..\..\..\mac\msg.h)(0x5A44A7D8)
 F (..\..\..\..\..\..\..\service\clique.c)(0x5A4A5198)(--c99 -c --cpu Cortex-M4.fp -g -O0 --apcs=interwork --split_sections --asm --interleave --asm_dir ".\\Listings\\" -I..\CPU -I..\FWLIB\inc -I..\STARTUP -I..\..\..\..\..\..\..\include -I..\..\..\..\..\..\..\mac -I..\..\..\..\..\..\..\medl -I..\..\..\..\..\..\..\protocol -I..\..\..\..\..\..\..\service -I..\..\..\..\..\..\..\virthw -I..\HARDWARE -I..\..\..\..\..\..\..\dbg-I E:\zfas_project\material\TTPC_project\bsp\arm\cortex-m4\platforms\stm32f407zgt6\project\RVMDK\RTE-I D:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\1.0.8\Device\Include-I D:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="514" -DSTM32F40_41xxx -DUSE_STDPERIPH_DRIVER -DTTP_DEBUG-o .\objects\clique.o --list_dir ".\\Listings\\" --list --omf_browse .\objects\clique.crf --depend .\objects\clique.d)
@@ -1110,9 +1110,9 @@ I (D:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x5475F300)
 I (D:\Keil_v5\ARM\ARMCC\include\stdarg.h)(0x5475F2FA)
 I (..\..\..\..\..\..\..\dbg\ttpdebug.h)(0x5A45FB39)
 I (..\..\..\..\..\..\..\protocol\protocol_data.h)(0x5A4A56D5)
-I (..\..\..\..\..\..\..\service\ttpservice.h)(0x5A4753C5)
+I (..\..\..\..\..\..\..\service\ttpservice.h)(0x5A4B2ED9)
 F (..\..\..\..\..\..\..\service\core.c)(0x5A462CE4)(--c99 -c --cpu Cortex-M4.fp -g -O0 --apcs=interwork --split_sections --asm --interleave --asm_dir ".\\Listings\\" -I..\CPU -I..\FWLIB\inc -I..\STARTUP -I..\..\..\..\..\..\..\include -I..\..\..\..\..\..\..\mac -I..\..\..\..\..\..\..\medl -I..\..\..\..\..\..\..\protocol -I..\..\..\..\..\..\..\service -I..\..\..\..\..\..\..\virthw -I..\HARDWARE -I..\..\..\..\..\..\..\dbg-I E:\zfas_project\material\TTPC_project\bsp\arm\cortex-m4\platforms\stm32f407zgt6\project\RVMDK\RTE-I D:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\1.0.8\Device\Include-I D:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="514" -DSTM32F40_41xxx -DUSE_STDPERIPH_DRIVER -DTTP_DEBUG-o .\objects\core.o --list_dir ".\\Listings\\" --list --omf_browse .\objects\core.crf --depend .\objects\core.d)
-I (..\..\..\..\..\..\..\service\ttpservice.h)(0x5A4753C5)
+I (..\..\..\..\..\..\..\service\ttpservice.h)(0x5A4B2ED9)
 I (..\..\..\..\..\..\..\include\ttpdef.h)(0x5A490B69)
 I (D:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x5475F300)
 I (D:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x5475F300)
@@ -1129,9 +1129,9 @@ I (D:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x5475F300)
 I (D:\Keil_v5\ARM\ARMCC\include\stdarg.h)(0x5475F2FA)
 I (..\..\..\..\..\..\..\mac\ttpmac.h)(0x5A4A47DC)
 I (..\..\..\..\..\..\..\dbg\ttpdebug.h)(0x5A45FB39)
-I (..\..\..\..\..\..\..\service\ttpservice.h)(0x5A4753C5)
-F (..\..\..\..\..\..\..\service\sync.c)(0x5A4A266E)(--c99 -c --cpu Cortex-M4.fp -g -O0 --apcs=interwork --split_sections --asm --interleave --asm_dir ".\\Listings\\" -I..\CPU -I..\FWLIB\inc -I..\STARTUP -I..\..\..\..\..\..\..\include -I..\..\..\..\..\..\..\mac -I..\..\..\..\..\..\..\medl -I..\..\..\..\..\..\..\protocol -I..\..\..\..\..\..\..\service -I..\..\..\..\..\..\..\virthw -I..\HARDWARE -I..\..\..\..\..\..\..\dbg-I E:\zfas_project\material\TTPC_project\bsp\arm\cortex-m4\platforms\stm32f407zgt6\project\RVMDK\RTE-I D:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\1.0.8\Device\Include-I D:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="514" -DSTM32F40_41xxx -DUSE_STDPERIPH_DRIVER -DTTP_DEBUG-o .\objects\sync.o --list_dir ".\\Listings\\" --list --omf_browse .\objects\sync.crf --depend .\objects\sync.d)
-I (..\..\..\..\..\..\..\service\ttpservice.h)(0x5A4753C5)
+I (..\..\..\..\..\..\..\service\ttpservice.h)(0x5A4B2ED9)
+F (..\..\..\..\..\..\..\service\sync.c)(0x5A4B3493)(--c99 -c --cpu Cortex-M4.fp -g -O0 --apcs=interwork --split_sections --asm --interleave --asm_dir ".\\Listings\\" -I..\CPU -I..\FWLIB\inc -I..\STARTUP -I..\..\..\..\..\..\..\include -I..\..\..\..\..\..\..\mac -I..\..\..\..\..\..\..\medl -I..\..\..\..\..\..\..\protocol -I..\..\..\..\..\..\..\service -I..\..\..\..\..\..\..\virthw -I..\HARDWARE -I..\..\..\..\..\..\..\dbg-I E:\zfas_project\material\TTPC_project\bsp\arm\cortex-m4\platforms\stm32f407zgt6\project\RVMDK\RTE-I D:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\1.0.8\Device\Include-I D:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="514" -DSTM32F40_41xxx -DUSE_STDPERIPH_DRIVER -DTTP_DEBUG-o .\objects\sync.o --list_dir ".\\Listings\\" --list --omf_browse .\objects\sync.crf --depend .\objects\sync.d)
+I (..\..\..\..\..\..\..\service\ttpservice.h)(0x5A4B2ED9)
 I (..\..\..\..\..\..\..\include\ttpdef.h)(0x5A490B69)
 I (D:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x5475F300)
 I (D:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x5475F300)

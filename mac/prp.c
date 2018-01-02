@@ -115,9 +115,9 @@ static uint32_t _frame_crc32_check(TTP_ChannelFrameDesc* pDesc, uint32_t type)
         _byte_copy((uint8_t*)&c_state, pDesc->pFrame->x.cstate, sizeof(c_state));
 
         if (!CS_IsSame(&c_state))
-            return ACK_CHECK_F;
+            return 0;
         else
-            return ACK_CHECK_T;
+            return 1;
     }
 
     crc_pos = (uint8_t*)(pDesc->pFrame) + pDesc->length - sizeof(frame_crc32);
@@ -127,9 +127,9 @@ static uint32_t _frame_crc32_check(TTP_ChannelFrameDesc* pDesc, uint32_t type)
 
     checked_crc32 = _frame_crc32_calc((uint8_t*)pDesc->pFrame, pDesc->length - sizeof(frame_crc32), type);
     if (checked_crc32 != frame_crc32)
-        return ACK_CHECK_F;
+        return 0;
 
-    return ACK_CHECK_T;
+    return 1;
 }
 
 /**
@@ -166,7 +166,7 @@ static uint32_t _judge_valid(uint32_t* pframe_status, uint32_t channel)
     /** for FRAME_NULL checking */
     if (!MSG_CheckReceived(channel)) {
         *pframe_status = FRAME_NULL;
-        INFO("received nothing on ch:%d",channel);
+        //INFO("received nothing on ch:%d",channel);
         return _FRAME_INVALID_;
     }
     TTP_FrameDesc *pFrameDesc = MSG_GetFrameDesc();
@@ -207,7 +207,7 @@ static uint32_t _judge_valid(uint32_t* pframe_status, uint32_t channel)
 
     if (actual_frame_size != pDesc->length) {
         *pframe_status = FRAME_INVALID;
-        INFO("received a framem, but size error on ch:%d",channel);
+        INFO("received a frame, but size error on ch:%d",channel);
         return _FRAME_INVALID_;
     }
 
@@ -218,7 +218,7 @@ static uint32_t _judge_valid(uint32_t* pframe_status, uint32_t channel)
         INFO("received a frame, but type error on ch:%d",channel);
         return _FRAME_INVALID_;
     }
-    INFO("received a valid frame on ch:%d",channel);
+    //INFO("received a valid frame on ch:%d",channel);
     return _FRAME_VALID_;
 }
 
@@ -391,19 +391,19 @@ static void _ack_stage(uint32_t* check_a, uint32_t* check_b, TTP_ChannelFrameDes
     uint32_t pos_flag_rs = CS_GetMemberBit(pRS->FlagPosition);
 
     if (type == FRAME_TYPE_EXPLICIT) {
-        *check_a = _frame_crc32_check(pDesc, FRAME_TYPE_EXPLICIT);
+        *check_a = _frame_crc32_check(pDesc, FRAME_TYPE_EXPLICIT)==1 ? ACK_CHECK_T : ACK_CHECK_F;
         *check_b = *check_a;
     } else {
         /** check ia or check iia */
         CS_SetMemberBit(pNP->FlagPosition);
         ack_state == WAIT_FIRST_SUCCESSOR ? CS_SetMemberBit(pRS->FlagPosition) : CS_ClearMemberBit(pRS->FlagPosition);
-        *check_a = _frame_crc32_check(pDesc, FRAME_TYPE_IMPLICIT);
+        *check_a = _frame_crc32_check(pDesc, FRAME_TYPE_IMPLICIT)==1 ? ACK_CHECK_T : ACK_CHECK_F;
 
         /** check ib or check iib */
         /** check_a and check_b can be performed paralleled */
         CS_ClearMemberBit(pNP->FlagPosition);
         CS_SetMemberBit(pRS->FlagPosition);
-        *check_b = _frame_crc32_check(pDesc, FRAME_TYPE_IMPLICIT);
+        *check_b = _frame_crc32_check(pDesc, FRAME_TYPE_IMPLICIT)==1 ? ACK_CHECK_T : ACK_CHECK_F;
     }
 
     //restore the membership pattern
@@ -530,24 +530,15 @@ void prp_for_active(void)
         if ((res_ch[0] == _FRAME_VALID_) || (res_ch[1] == _FRAME_VALID_)) {
             if(res_ch[0] == _FRAME_VALID_){
                 ack_res[0] = _ack_result(pDesc->pCH0, type, CH0, &func[0],&frame_status_ch[0]);
-                INFO("perform ack for ch:0, res:%d",ack_res[0]);
             }
             if(res_ch[1] == _FRAME_VALID_){
                 ack_res[1] = _ack_result(pDesc->pCH1, type, CH1, &func[1], &frame_status_ch[1]);
-                INFO("perform ack for ch:1, res:%d",ack_res[1]);
             }
 
             if (frame_status_ch[0] != frame_status_ch[1]) {
                 chosen_ch = frame_status_ch[0] <= frame_status_ch[1] ? 0 : 1;
                 SVC_AckMerge(chosen_ch);
             }
-            /* for test */
-            TTP_ChannelFrameDesc *pDesc_chosen = frame_status_ch[0] == FRAME_CORRECT ? pDesc->pCH0 : pDesc->pCH1;
-            c_state_t c1,c2;        
-            CS_GetCState(&c2);
-            _byte_copy((uint8_t*)&c1, pDesc_chosen->pFrame->x.cstate, sizeof(c_state_t));        
-            INFO("cstate frame:%x,%x,%x,%x,%x,%x",c1.ClusterPosition,c1.GlobalTime,c1.Membership[0],c1.Membership[1],c1.Membership[2],c1.Membership[3]);
-            INFO("cstate local:%x,%x,%x,%x,%x,%x",c2.ClusterPosition,c2.GlobalTime,c2.Membership[0],c2.Membership[1],c2.Membership[2],c2.Membership[3]);
             
             if(ack_res[chosen_ch] == 1){
                 //ack failed
@@ -600,9 +591,9 @@ void prp_for_active(void)
             MSG_PullAppData(pDesc_chosen);
         }
     }
-
+    MAC_SetSlotStatus(slot_status);
     int32_t step = (int32_t)pRS->SlotDuration;
-
+    
     /** for the assumption that channel 0 and channel 1 are the same */
     if(_is_data_frame()) { MSG_SetStatus(pRS->CNIAddressOffset, slot_status); }
 
