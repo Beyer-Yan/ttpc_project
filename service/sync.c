@@ -32,7 +32,7 @@ static inline void _stack_push(int32_t offset)
 	static int idx = 0;
 
 	_G_pushdown_stack[idx] = offset;
-	idx = (idx+1)%((int)sizeof(_G_pushdown_stack));
+	idx = (idx+1)%4;
 
 }
 
@@ -132,7 +132,7 @@ void SVC_SyncCalcOffset(uint32_t FrameTsmp)
 	uint32_t estimate_frame_tsmp = at_microtick + _G_aligned_estimate_time_interval;
 	int32_t  offset = (int32_t)FrameTsmp - (int32_t)estimate_frame_tsmp;
     
-    INFO("stack:%d,%d,%d,%d  --  diff:%d",_G_pushdown_stack[0],_G_pushdown_stack[1],_G_pushdown_stack[2],_G_pushdown_stack[3],offset);
+    //INFO("stack:%d,%d,%d,%d  --  diff:%d",_G_pushdown_stack[0],_G_pushdown_stack[1],_G_pushdown_stack[2],_G_pushdown_stack[3],offset);
     
 	_stack_push(offset);
 }
@@ -150,12 +150,11 @@ uint32_t SVC_ExecSyncSchema(uint32_t Steps)
 	if(ABS(csct) > aligned_pi/2)
     {
         PRINT("csct:%d",csct);
-        while(1);
         return 0; //SYNC ERR 
     }
 		
     if(csct!=0){
-        INFO("perform sync, csct:%d",csct);
+        INFO("perform sync, csct           --------- %d",csct);
         MAC_AdjTime(CLK_PHASE_ADJ,csct);
     }
 	return 1;

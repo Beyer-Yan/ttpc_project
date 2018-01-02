@@ -185,7 +185,8 @@ static uint32_t _judge_valid(uint32_t* pframe_status, uint32_t channel)
     }
 
     if (!_judge_time_window(mid_axis, pDesc->rcv_timestamp)){
-        INFO("received a frame, but timing err. ch:%u, mid:%u, tsmp:%u",channel,mid_axis,pDesc->rcv_timestamp);
+        //INFO("received a frame, but timing err. ch:%u, mid:%u, tsmp:%u",channel,mid_axis,pDesc->rcv_timestamp);
+        INFO("received a frame, but timing err on ch:%d",channel);
         return _FRAME_INVALID_;
     }
 
@@ -489,6 +490,14 @@ void prp_for_active(void)
             MSG_SetStatus(pRS->CNIAddressOffset,FRAME_CORRECT);
         }
         
+        int32_t step = (int32_t)pRS->SlotDuration;
+        if(pRS->ClockSynchronization == CLOCK_SYN_NEEDED){
+            if(!SVC_ExecSyncSchema(step)){
+                CNI_SetSRBit(SR_SE);
+                INFO("SYNC ERROR");
+                FSM_TransitIntoState(FSM_FREEZE);
+            }
+        }   
         return;
     }
 
@@ -613,7 +622,16 @@ void prp_for_coldstart(void)
     RoundSlotProperty_t* pRS = MAC_GetRoundSlotProperties();
 
     INFO("RRR COLDSTART -- TIME:%u",CLOCK_GetCurMacrotick());
+    
     if (slot_acq == SENDING_FRAME) {
+        int32_t step = (int32_t)pRS->SlotDuration;
+        if(pRS->ClockSynchronization == CLOCK_SYN_NEEDED){
+            if(!SVC_ExecSyncSchema(step)){
+                CNI_SetSRBit(SR_SE);
+                INFO("SYNC ERROR");
+                FSM_TransitIntoState(FSM_FREEZE);
+            }
+        }
         return;
     }
     
@@ -668,10 +686,9 @@ void prp_for_coldstart(void)
     } else {
         CS_ClearMemberBit(pRS->FlagPosition);
     }
-
-    int32_t step = (int32_t)pRS->SlotDuration;
-
     MAC_SetSlotStatus(slot_status);
+    
+    int32_t step = (int32_t)pRS->SlotDuration;
     if(pRS->ClockSynchronization == CLOCK_SYN_NEEDED){
         if(!SVC_ExecSyncSchema(step)){
             CNI_SetSRBit(SR_SE);

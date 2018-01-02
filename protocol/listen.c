@@ -27,7 +27,7 @@
 #include "stm32f4xx.h"
 
 
-#define EXE_MI_FOR_LISTEN  (3402)
+#define EXE_MI_FOR_LISTEN  (3314 + 100)
 
 extern uint32_t phase_indicator;
 
@@ -213,9 +213,9 @@ void FSM_doListen(void)
         CLOCK_SetTriggerSlotEnd(slot_end);
 
         phase_indicator = 0;        /**< point to the psp phase o the next slot */
-
-        CLOCK_Start();
         uint32_t t4 = TIM14->CNT;
+        CLOCK_Start();
+        
         INFO("%u,%u,%u",actual_ma,actual_mi,t4-t1);
         
         MAC_StartPhaseCirculation(); /**< start synchronization mode */
