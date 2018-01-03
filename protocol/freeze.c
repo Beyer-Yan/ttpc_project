@@ -21,6 +21,7 @@
  #include "clock.h"
  #include "ttpservice.h"
  #include "host.h"
+ #include "led.h"
 
 static void _error_log(void)
 {
@@ -45,13 +46,13 @@ static void _error_log(void)
     if(TTP_SR&SR_CE)
         INFO("Clique error -- Clique minority error");
     DBG_Flush();
+    LED_On(LED_ERR);
 }
 
 void FSM_toFreeze(void)
 {
 	//stop then clear the timer
 	CLOCK_Stop();
-
 	//clear the CO flag
 	TCN_ClrCO();
     //clear the CA flag
