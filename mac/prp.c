@@ -185,8 +185,7 @@ static uint32_t _judge_valid(uint32_t* pframe_status, uint32_t channel)
     }
 
     if (!_judge_time_window(mid_axis, pDesc->rcv_timestamp)){
-        //INFO("received a frame, but timing err. ch:%u, mid:%u, tsmp:%u",channel,mid_axis,pDesc->rcv_timestamp);
-        INFO("received a frame, but timing err on ch:%d",channel);
+        INFO("received a frame, but timing err. ch:%u, mid:%u, tsmp:%u",channel,mid_axis,pDesc->rcv_timestamp);
         return _FRAME_INVALID_;
     }
 
@@ -345,7 +344,7 @@ void prp_for_passive(void)
             uint32_t tsmp_frame;
 
             if ((frame_status_ch[0] == FRAME_CORRECT) && (frame_status_ch[1] == FRAME_CORRECT)) {
-                tsmp_frame = (pDesc->pCH0->rcv_timestamp + pDesc->pCH1->rcv_timestamp) / 2;
+                tsmp_frame = (pDesc->pCH0->rcv_timestamp)/2 + (pDesc->pCH1->rcv_timestamp)/2;
             } else {
                 tsmp_frame = frame_status_ch[0] == FRAME_CORRECT ? pDesc->pCH0->rcv_timestamp : 
                                                                    pDesc->pCH1->rcv_timestamp;
@@ -358,13 +357,12 @@ void prp_for_passive(void)
         CS_ClearMemberBit(pRS->FlagPosition);
     }
 
-    int32_t step = (int32_t)pRS->SlotDuration;
-
     MAC_SetSlotStatus(slot_status);
 
     if(_is_data_frame()) { MSG_SetStatus(pRS->CNIAddressOffset, slot_status); }
+    
     if(pRS->ClockSynchronization == CLOCK_SYN_NEEDED){
-        if(!SVC_ExecSyncSchema(step)){
+        if(!SVC_ExecSyncSchema(0)){
             CNI_SetSRBit(SR_SE);
             INFO("SYNC ERROR");
             FSM_TransitIntoState(FSM_FREEZE);
@@ -489,16 +487,7 @@ void prp_for_active(void)
         if(_is_data_frame()){
             MSG_SetStatus(pRS->CNIAddressOffset,FRAME_CORRECT);
         }
-        
-        int32_t step = (int32_t)pRS->SlotDuration;
-        if(pRS->ClockSynchronization == CLOCK_SYN_NEEDED){
-            if(!SVC_ExecSyncSchema(step)){
-                CNI_SetSRBit(SR_SE);
-                INFO("SYNC ERROR");
-                FSM_TransitIntoState(FSM_FREEZE);
-            }
-        }   
-        return;
+        goto __check_sync;
     }
 
     uint32_t res_ch[2];
@@ -548,6 +537,7 @@ void prp_for_active(void)
                 chosen_ch = frame_status_ch[0] <= frame_status_ch[1] ? 0 : 1;
                 SVC_AckMerge(chosen_ch);
             }
+            func[chosen_ch] != NULL ? func[chosen_ch]() : (void)0;
             
             if(ack_res[chosen_ch] == 1){
                 //ack failed
@@ -558,13 +548,13 @@ void prp_for_active(void)
                     CNI_SetSRBit(SR_ME);
                     INFO("membership loss");
                     FSM_TransitIntoState(FSM_FREEZE);
+                    return;
                 }else{
                     INFO("membership failed");              
                     CNI_SetISRBit(ISR_ML);
                     FSM_TransitIntoState(FSM_PASSIVE);
                 }
-            }
-            func[chosen_ch] != NULL ? func[chosen_ch]() : (void)0;
+            }            
         }  
     }
 
@@ -588,7 +578,7 @@ void prp_for_active(void)
             uint32_t tsmp_frame;
 
             if ((frame_status_ch[0] == FRAME_CORRECT) && (frame_status_ch[1] == FRAME_CORRECT)) {
-                tsmp_frame = (pDesc->pCH0->rcv_timestamp + pDesc->pCH1->rcv_timestamp) / 2;
+                tsmp_frame = (pDesc->pCH0->rcv_timestamp)/2 + (pDesc->pCH1->rcv_timestamp)/2;
             } else {
                 tsmp_frame = pDesc_chosen->rcv_timestamp;
             }
@@ -601,13 +591,14 @@ void prp_for_active(void)
         }
     }
     MAC_SetSlotStatus(slot_status);
-    int32_t step = (int32_t)pRS->SlotDuration;
     
     /** for the assumption that channel 0 and channel 1 are the same */
     if(_is_data_frame()) { MSG_SetStatus(pRS->CNIAddressOffset, slot_status); }
 
+    __check_sync:
+    
     if(pRS->ClockSynchronization == CLOCK_SYN_NEEDED){
-        if(!SVC_ExecSyncSchema(step)){
+        if(!SVC_ExecSyncSchema(0)){
             CNI_SetSRBit(SR_SE);
             INFO("SYNC ERROR");
             FSM_TransitIntoState(FSM_FREEZE);
@@ -624,15 +615,7 @@ void prp_for_coldstart(void)
     INFO("RRR COLDSTART -- TIME:%u",CLOCK_GetCurMacrotick());
     
     if (slot_acq == SENDING_FRAME) {
-        int32_t step = (int32_t)pRS->SlotDuration;
-        if(pRS->ClockSynchronization == CLOCK_SYN_NEEDED){
-            if(!SVC_ExecSyncSchema(step)){
-                CNI_SetSRBit(SR_SE);
-                INFO("SYNC ERROR");
-                FSM_TransitIntoState(FSM_FREEZE);
-            }
-        }
-        return;
+        goto __check_sync;
     }
     
     uint32_t res_ch[2];
@@ -642,7 +625,7 @@ void prp_for_coldstart(void)
 
     res_ch[0] = _judge_valid(&frame_status_ch[0],CH0);
     res_ch[1] = _judge_valid(&frame_status_ch[1],CH1);
-
+    
     CS_SetMemberBit(pRS->FlagPosition);
     pDesc = MSG_GetFrameDesc();
 
@@ -664,6 +647,7 @@ void prp_for_coldstart(void)
 
     //No ack need to be performed
     if (slot_status == FRAME_CORRECT) {
+      
         /** for mode change processor */
         TTP_ChannelFrameDesc *pDesc_chosen = frame_status_ch[0] == FRAME_CORRECT ? pDesc->pCH0 : pDesc->pCH1;
         uint8_t header = pDesc_chosen->pFrame->hdr[0];
@@ -676,7 +660,7 @@ void prp_for_coldstart(void)
             uint32_t tsmp_frame;
 
             if ((frame_status_ch[0] == FRAME_CORRECT) && (frame_status_ch[1] == FRAME_CORRECT)) {
-                tsmp_frame = (pDesc->pCH0->rcv_timestamp + pDesc->pCH1->rcv_timestamp) / 2;
+                tsmp_frame = (pDesc->pCH0->rcv_timestamp)/2 + (pDesc->pCH1->rcv_timestamp)/2;
             } else {
                 tsmp_frame = pDesc_chosen->rcv_timestamp;
             }
@@ -688,9 +672,10 @@ void prp_for_coldstart(void)
     }
     MAC_SetSlotStatus(slot_status);
     
-    int32_t step = (int32_t)pRS->SlotDuration;
+    __check_sync:
+
     if(pRS->ClockSynchronization == CLOCK_SYN_NEEDED){
-        if(!SVC_ExecSyncSchema(step)){
+        if(!SVC_ExecSyncSchema(0)){
             CNI_SetSRBit(SR_SE);
             INFO("SYNC ERROR");
             FSM_TransitIntoState(FSM_FREEZE);

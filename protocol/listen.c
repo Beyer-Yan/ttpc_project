@@ -220,7 +220,7 @@ void FSM_doListen(void)
         
         MAC_StartPhaseCirculation(); /**< start synchronization mode */
 
-        CNI_SetSRBit(ISR_CV); //CSATE available
+        CNI_SetISRBit(ISR_CV); //CSATE available
         FSM_TransitIntoState(FSM_PASSIVE);
 
     } else {

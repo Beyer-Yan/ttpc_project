@@ -49,8 +49,6 @@ static volatile uint16_t _G_TriggerArr[3] = {0};
 
 static uint16_t _G_TuningArray[CLOCK_ADJUSTING_STEPS] = {0};
 
-static uint32_t test_x = 0;
-
 /************** Functions Deffinitions ***************************************************/
 
 void CLOCK_DepInit(void)
@@ -198,31 +196,31 @@ void CLOCK_DepInit(void)
     DMA_InitStructure.DMA_FIFOThreshold      = DMA_FIFOThreshold_Full;
     DMA_InitStructure.DMA_MemoryBurst        = DMA_MemoryBurst_Single;
     DMA_InitStructure.DMA_PeripheralBurst    = DMA_PeripheralBurst_Single;
-    //DMA_Init(DMA1_Stream2, &DMA_InitStructure);
+    DMA_Init(DMA1_Stream2, &DMA_InitStructure);
     
     //DMA_ITConfig(DMA1_Stream2,DMA_IT_TC,ENABLE);
     
-    //TIM_DMAConfig(TIM3,TIM_DMABase_ARR,TIM_DMABurstLength_1Transfer);
-    //TIM_DMACmd(TIM3,TIM_DMA_Update,ENABLE);
+    TIM_DMAConfig(TIM3,TIM_DMABase_ARR,TIM_DMABurstLength_1Transfer);
+    TIM_DMACmd(TIM3,TIM_DMA_Update,ENABLE);
     
     //interruption configuration 
     /*******************************************************************/
-    //NVIC_InitTypeDef NVIC_InitStructure;
+    NVIC_InitTypeDef NVIC_InitStructure;
     /*
     NVIC_InitStructure.NVIC_IRQChannel = DMA1_Stream2_IRQn;
     NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
     NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1;
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init(&NVIC_InitStructure);
-    
+    */
     
     NVIC_InitStructure.NVIC_IRQChannel                   = TIM5_IRQn;
     NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
     NVIC_InitStructure.NVIC_IRQChannelSubPriority        = 2;
     NVIC_InitStructure.NVIC_IRQChannelCmd                = ENABLE;
     NVIC_Init(&NVIC_InitStructure);
-    */
-    //TIM_ITConfig(TIM5,TIM_IT_Update,ENABLE);
+    
+    TIM_ITConfig(TIM5,TIM_IT_Update,ENABLE);
     
     /* for system time measuring */
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM14,ENABLE);
@@ -233,16 +231,16 @@ void CLOCK_DepInit(void)
     TIM_TimeBaseInit(TIM14,&TIM_TimeBaseInitStructure);
     TIM14->CR1 |= TIM_CR1_CEN; 
 }
-
-//void DMA1_Stream2_IRQHandler(void)
-//{
-    //if(DMA_GetITStatus(DMA1_Stream2,DMA_IT_TCIF2)==SET)
-    //{
-        //DMA_ClearITPendingBit(DMA1_Stream2,DMA_IT_TCIF2);
-        //INFO("adj finished");
-    //} 
-//}
-
+/*
+void DMA1_Stream2_IRQHandler(void)
+{
+    if(DMA_GetITStatus(DMA1_Stream2,DMA_IT_TCIF2)==SET)
+    {
+        DMA_ClearITPendingBit(DMA1_Stream2,DMA_IT_TCIF2);
+        INFO("adj finished");
+    } 
+}
+*/
 void TIM5_IRQHandler(void)
 {
     if(TIM_GetITStatus(TIM5,TIM_IT_Update)==SET)
@@ -348,8 +346,12 @@ void CLOCK_ClearCaptureAll(void)
 static inline void _start_adjust(void)
 {
     //start adjusting
+    
     DMA_Cmd(DMA1_Stream2, DISABLE);
-    DMA1->LISR = 0;
+    DMA_ClearFlag(DMA1_Stream2,DMA_FLAG_TCIF2);
+    
+    while (DMA_GetCmdStatus(DMA1_Stream2) != DISABLE);
+      
     DMA1_Stream2->NDTR = (uint16_t)CLOCK_ADJUSTING_STEPS;
     DMA_Cmd(DMA1_Stream2, ENABLE);
 }
@@ -389,20 +391,21 @@ void CLOCK_SetStateCorrectionTerm(int16_t value)
     }
     */
     //configuration with DMA
-    //int16_t quotient = -value/(CLOCK_ADJUSTING_STEPS-1);
-    //int16_t remain   = -value%(CLOCK_ADJUSTING_STEPS-1);
-    //int i = 0;
+    int16_t quotient = value/(CLOCK_ADJUSTING_STEPS-1);
+    int16_t remain   = value%(CLOCK_ADJUSTING_STEPS-1);
+    int i = 0;
     
-    //for(;i<CLOCK_ADJUSTING_STEPS-1;i++)
-    //    _G_TuningArray[i] = (uint16_t)(DEFAULT_DIV + quotient);
+    for(;i<CLOCK_ADJUSTING_STEPS-1;i++)
+        _G_TuningArray[i] = (uint16_t)(DEFAULT_DIV + quotient);
         
-    //_G_TuningArray[0] = (uint16_t)((int16_t)_G_TuningArray[0] + remain);
+    _G_TuningArray[0] = (uint16_t)((int16_t)_G_TuningArray[0] + remain);
     
     //INFO("correction ram:%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",_G_TuningArray[0],_G_TuningArray[1],_G_TuningArray[2],_G_TuningArray[3],_G_TuningArray[4],
                                                         //_G_TuningArray[5],_G_TuningArray[6],_G_TuningArray[7],_G_TuningArray[8],_G_TuningArray[9]);
     
-    //_start_adjust();
-    
+    _start_adjust();
+    //phase adjusting with software implementation
+    /*
     if(value<0){
         uint32_t tmp = TIM3->CNT;
         while(TIM3->CNT==tmp);
@@ -411,6 +414,7 @@ void CLOCK_SetStateCorrectionTerm(int16_t value)
     else{
         TIM3->CNT -= value;
     }
+    */
 }
 void CLOCK_SetFrequencyDiv(uint16_t div)
 {
@@ -447,13 +451,8 @@ void CLOCK_SetTriggerSlotEnd(uint32_t end)
 void CLOCK_WaitTrigger(uint32_t _ClockTrigger)
 {
     while(TIM4->CNT!=_G_TriggerArr[_ClockTrigger]);
-    test_x = TIM2->CNT;
 }
 
-uint32_t test_x_function(uint32_t x)
-{
-    return x - test_x;
-}
 /*
 void CLOCK_WaitTrigger(uint32_t ClockTrigger)
 {

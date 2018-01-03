@@ -57,9 +57,9 @@ typedef struct mac_slot
 	uint32_t PSPDuration;               /**< in unit of macroticks */
 	uint32_t TransmissionDuration;      /**< in unit of macroticks */
 
-	uint32_t DelayCorrectionTerms;		/**< in unit of ns */
-	uint32_t CNIAddressOffset;			/**< offset relative to CNI base addr */
+	uint32_t DelayCorrectionTerms;		/**< in unit of ns */	
 	uint32_t AppDataLength;
+    uint32_t CNIAddressOffset;			/**< offset relative to CNI base addr */
 	uint32_t FlagPosition;				/**< flag position in membership vector of 
 	                                         the current sending node*/
 	uint32_t FrameType;					/**<  implicit or explicit */
@@ -127,8 +127,8 @@ uint32_t  MAC_GetAppID(void);
 
 typedef struct mac_node
 {
-	uint32_t LogicalNameSlotPosition;
-	uint32_t LogicalNameMultiplexedID;
+    uint32_t LogicalNameMultiplexedID;
+	uint32_t LogicalNameSlotPosition;	
 	uint32_t PassiveFlag;				/**< Marks the node as a permanent passive */
 	uint32_t MultiplexedMembershipFlag;
 	uint32_t FlagPosition;				/**< flag position in membership vector */

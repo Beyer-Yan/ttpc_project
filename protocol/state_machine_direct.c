@@ -221,7 +221,7 @@ static void _set_ps(uint32_t _ps_num)
 		return;
 	
 	uint32_t ps = _num_to_ps[_ps_num];
-	SET_PS(ps);
+	CNI_SetPS(ps);
 }
 
 void FSM_TransitIntoState(uint32_t NextState)
@@ -359,7 +359,7 @@ void FSM_Start()
 		__G_cur_state  = FSM_FREEZE;
 		__G_start_flag = FSM_RUNNING;
 		__G_state_changed = 1;
-		SET_PS(PS_FREEZE);
+		CNI_SetPS(PS_FREEZE);
 	}
 	__protocol();
 }

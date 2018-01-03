@@ -22,6 +22,31 @@
  #include "ttpservice.h"
  #include "host.h"
 
+static void _error_log(void)
+{
+    if(TTP_SR&SR_MC)
+        INFO("MEDL error");
+    if(TTP_SR&SR_CC)
+        INFO("Concurrent control error");
+    if(TTP_SR&SR_NR)
+        INFO("Frame not ready error");
+    if(TTP_SR&SR_MV)
+        INFO("Mode violation error");
+    if(TTP_SR&SR_SO)
+        INFO("Slot occupied error");
+    if(TTP_SR&SR_BE)
+        INFO("Bus Guardian error");
+    if(TTP_SR&SR_CB)
+        INFO("Clique no activity -- Communication blackout error");
+    if(TTP_SR&SR_ME)
+        INFO("Membership error");
+    if(TTP_SR&SR_SE)
+        INFO("Synchronization error");
+    if(TTP_SR&SR_CE)
+        INFO("Clique error -- Clique minority error");
+    DBG_Flush();
+}
+
 void FSM_toFreeze(void)
 {
 	//stop then clear the timer
@@ -34,16 +59,21 @@ void FSM_toFreeze(void)
     //clear the BIST flag
     TCN_ClrBIST();
     
-    
-	
+    //protocol error happened, just for test;
+    if(TTP_SR&0xfffffff0)
+    {
+        _error_log();
+        TTP_CR0 &= ~CR_CO;
+    }
+    else
+        TTP_CR0 |= CR_CO;
 }
 
 void FSM_doFreeze(void)
 {
-    TTP_CR0 |= CR_CO; //just for test;
     while(!(TTP_CR0&CR_CO))
     {
-        SVC_Sleep();
+        //SVC_Sleep();
     }
     //now the controller is on
     if( (TTP_CR0&CR_BIST) && (TTP_CR0&CR_CO) )

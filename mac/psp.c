@@ -342,6 +342,7 @@ void psp_for_active(void)
         if (_is_data_frame()) {
             if (!MSG_CheckMsgRF(pRS->CNIAddressOffset)) {
                 CNI_SetSRBit(SR_NR);
+                #warning "Should the controller transite into PASSIVE state ??"
                 CS_ClearMemberBit(pRS->FlagPosition);
                 goto _end;             
             }

@@ -85,10 +85,10 @@ static void __medl_role_extract(void)
 	const uint8_t* buf = __G_medl_base_addr + ROLE_REGION_OFFSET;
 
 	_byte_copy(&__G_role.LogicalNameMultiplexedID, buf,2);
-	__G_role.LogicalNameSlotPosition &= 0x0000ffff;
+    __G_role.LogicalNameMultiplexedID &= 0x0000ffff;
 
 	_byte_copy(&__G_role.LogicalNameSlotPosition, buf+2,2);
-	__G_role.LogicalNameMultiplexedID &= 0x0000ffff;
+	__G_role.LogicalNameSlotPosition &= 0x0000ffff;
 
 	__G_role.PassiveFlag               	   = buf[4]&0x01;				
 	__G_role.MultiplexedMembershipFlag 	   = (buf[4]&0x02)>>1;
@@ -118,10 +118,10 @@ static inline void _slot_property_extract(const uint8_t* buf)
 	 * mode and round_slot.
 	 */
 	_byte_copy(&__G_slot.LogicalSenderMultiplexID, buf,2);
-	__G_slot.LogicalSenderSlot &= 0x0000ffff;
+    __G_slot.LogicalSenderMultiplexID &= 0x0000ffff;
 
 	_byte_copy(&__G_slot.LogicalSenderSlot, buf+2,2);
-	__G_slot.LogicalSenderMultiplexID &= 0x0000ffff;
+	__G_slot.LogicalSenderSlot &= 0x0000ffff;
 
 	_byte_copy(&__G_slot.SlotDuration, buf+4,2);
 	__G_slot.SlotDuration &= 0x0000ffff;

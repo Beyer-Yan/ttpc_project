@@ -1460,7 +1460,6 @@ static inline uint32_t CALC_MODE_NUM(uint32_t mode)
 								 ((PS) == PS_AWAIT)     || \
 								 ((PS) == PS_TEST)      || \
 								 ((PS) == PS_DOWNLOAD))
-#define SET_PS(ps) 				(TTP_SR = (TTP_SR&SR_PS)|(ps))
 
 #define SR_MC 					((uint32_t)0x00000010)	/**< MEDL error flag bit */
 #define SR_CC 					((uint32_t)0x00000100)	/**< Concurrency control error flag bit */

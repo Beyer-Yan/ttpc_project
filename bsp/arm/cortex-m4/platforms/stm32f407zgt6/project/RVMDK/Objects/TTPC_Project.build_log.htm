@@ -32,49 +32,14 @@ compiling xfer.c...
       static uint8_t Rx_Buff1[ETH_RX_BUF_SIZE];
 ..\HARDWARE\xfer.c(52): warning:  #550-D: variable "Tx_Buff1" was set but never used
       static uint8_t Tx_Buff1[ETH_TX_BUF_SIZE];
-..\HARDWARE\xfer.c(193): warning:  #177-D: function "_gpio_config" was declared but never referenced
-  static inline void _gpio_config(void)
+..\HARDWARE\xfer.c(121): warning:  #177-D: function "_gpio_config_x" was declared but never referenced
+  static inline void _gpio_config_x(void)
 ..\HARDWARE\xfer.c: 3 warnings, 0 errors
 compiling medl_data.c...
-compiling prp.c...
-..\..\..\..\..\..\..\virthw\crc.h(25): warning:  #1215-D: #warning directive: "Incompatible CRC bits with AS6003 "
-  #warning "Incompatible CRC bits with AS6003 "
-..\..\..\..\..\..\..\mac\prp.c: 1 warning, 0 errors
-compiling psp.c...
-..\..\..\..\..\..\..\mac\psp.c(241): warning:  #1215-D: #warning directive: "periodic checking for MEDL has not been implemented"
-      #warning "periodic checking for MEDL has not been implemented"
-..\..\..\..\..\..\..\mac\psp.c(130): warning:  #177-D: function "_check_clique" was declared but never referenced
-  static inline uint32_t _check_clique(void)
-..\..\..\..\..\..\..\mac\psp.c: 2 warnings, 0 errors
-compiling slots.c...
-..\..\..\..\..\..\..\mac\slots.c(173): warning:  #1215-D: #warning directive: "Formal verification needed to be performed"
-  #warning "Formal verification needed to be performed"
-..\..\..\..\..\..\..\mac\slots.c: 1 warning, 0 errors
-compiling tp.c...
-compiling cold_start.c...
-compiling listen.c...
-..\..\..\..\..\..\..\protocol\listen.c(102): warning:  #550-D: variable "pNP" was set but never used
-      NodeProperty_t* pNP;
-..\..\..\..\..\..\..\protocol\listen.c(117): warning:  #177-D: variable "t1" was declared but never referenced
-      uint32_t t1,t2,t3,t4;
-..\..\..\..\..\..\..\protocol\listen.c(117): warning:  #177-D: variable "t2" was declared but never referenced
-      uint32_t t1,t2,t3,t4;
-..\..\..\..\..\..\..\protocol\listen.c(117): warning:  #177-D: variable "t3" was declared but never referenced
-      uint32_t t1,t2,t3,t4;
-..\..\..\..\..\..\..\protocol\listen.c(117): warning:  #177-D: variable "t4" was declared but never referenced
-      uint32_t t1,t2,t3,t4;
-..\..\..\..\..\..\..\protocol\listen.c: 5 warnings, 0 errors
-compiling ack.c...
-compiling sync.c...
-..\..\..\..\..\..\..\service\sync.c(75): warning:  #1215-D: #warning directive: "some errors happen in the current implementation"
-  #warning "some errors happen in the current implementation"
-..\..\..\..\..\..\..\service\sync.c(76): warning:  #177-D: function "_alignment_err_accumulated_bugs" was declared but never referenced
-  static int32_t _alignment_err_accumulated_bugs(int32_t value)
-..\..\..\..\..\..\..\service\sync.c: 2 warnings, 0 errors
 linking...
-Program Size: Code=28508 RO-data=18944 RW-data=1600 ZI-data=19632  
+Program Size: Code=29292 RO-data=18944 RW-data=1596 ZI-data=19632  
 FromELF: creating hex file...
-".\Objects\TTPC_Project.axf" - 0 Error(s), 14 Warning(s).
+".\Objects\TTPC_Project.axf" - 0 Error(s), 3 Warning(s).
 
 <h2>Collection of Component include folders:</h2>
   E:\zfas_project\material\TTPC_project\bsp\arm\cortex-m4\platforms\stm32f407zgt6\project\RVMDK\RTE
