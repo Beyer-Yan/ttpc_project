@@ -364,7 +364,7 @@ void prp_for_passive(void)
     if(pRS->ClockSynchronization == CLOCK_SYN_NEEDED){
         if(!SVC_ExecSyncSchema(0)){
             CNI_SetSRBit(SR_SE);
-            INFO("SYNC ERROR");
+            //INFO("SYNC ERROR");
             FSM_TransitIntoState(FSM_FREEZE);
         }
     } 
@@ -463,7 +463,7 @@ static uint32_t _ack_result(TTP_ChannelFrameDesc* pDesc, uint32_t type, uint32_t
         if (frame_mcr != MCR_MODE_CLR) {
             //mode changing is carried in the frame.
             if (pRS->ModeChangePermission == MODE_CHANGE_DENY) {
-                INFO("ack frame mcr error");
+                //INFO("ack frame mcr error");
                 *pframe_status = FRAME_MODE_VIOLATION;
             }
         }
@@ -541,12 +541,12 @@ void prp_for_active(void)
             
             if(ack_res[chosen_ch] == 1){
                 //ack failed
-                INFO("ack failed");
+                //INFO("ack failed");
                 uint32_t max_member_fail =  MAC_GetMaximumMembershipFailureCount();
                 if(max_member_fail == PV_GetCounter(MEMBERSHIP_FAILED_COUNTER)){
                     //membership loss, the controller shall transmit into FREEZE state.
                     CNI_SetSRBit(SR_ME);
-                    INFO("membership loss");
+                    //INFO("membership loss");
                     FSM_TransitIntoState(FSM_FREEZE);
                     return;
                 }else{
@@ -600,7 +600,7 @@ void prp_for_active(void)
     if(pRS->ClockSynchronization == CLOCK_SYN_NEEDED){
         if(!SVC_ExecSyncSchema(0)){
             CNI_SetSRBit(SR_SE);
-            INFO("SYNC ERROR");
+            //INFO("SYNC ERROR");
             FSM_TransitIntoState(FSM_FREEZE);
         }
     }
@@ -677,7 +677,7 @@ void prp_for_coldstart(void)
     if(pRS->ClockSynchronization == CLOCK_SYN_NEEDED){
         if(!SVC_ExecSyncSchema(0)){
             CNI_SetSRBit(SR_SE);
-            INFO("SYNC ERROR");
+            //INFO("SYNC ERROR");
             FSM_TransitIntoState(FSM_FREEZE);
         }
     }

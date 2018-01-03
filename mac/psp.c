@@ -232,8 +232,8 @@ void psp_for_passive(void)
     
     INFO("SLOT----------------------------------------%d",MAC_GetRoundSlot());
     
-    INFO("agreed:%d",PV_GetCounter(AGREED_SLOTS_COUNTER));
-    INFO("failed:%d",PV_GetCounter(FAILED_SLOTS_COUNTER));
+    //INFO("agreed:%d",PV_GetCounter(AGREED_SLOTS_COUNTER));
+    //INFO("failed:%d",PV_GetCounter(FAILED_SLOTS_COUNTER));
     
     INFO("SSS PASSIVE   -- TIME:%u",_G_SlotStartMacrotickTime);
     
@@ -244,12 +244,12 @@ void psp_for_passive(void)
         uint32_t clique_res = SVC_CliqueDetect();
         if(clique_res == CLIQUE_MINORITY){
             CNI_SetSRBit(SR_CE);
-            INFO("CLIQUE_MINORITY");
+            //INFO("CLIQUE_MINORITY");
             FSM_TransitIntoState(FSM_FREEZE);
             return;
         }else if(clique_res == CLIQUE_NO_ACTIVITY){
             CNI_SetSRBit(SR_CB);
-            INFO("CLIQUE_NO_ACTIVITY");
+            //INFO("CLIQUE_NO_ACTIVITY");
             FSM_TransitIntoState(FSM_FREEZE);
             return;
         }else{
@@ -289,8 +289,8 @@ void psp_for_active(void)
     
     INFO("SLOT---------------------------------------- %d",MAC_GetRoundSlot());
     
-    INFO("agreed:%d",PV_GetCounter(AGREED_SLOTS_COUNTER));
-    INFO("failed:%d",PV_GetCounter(FAILED_SLOTS_COUNTER));
+    //INFO("agreed:%d",PV_GetCounter(AGREED_SLOTS_COUNTER));
+    //INFO("failed:%d",PV_GetCounter(FAILED_SLOTS_COUNTER));
     
     INFO("SSS ACTIVE    -- TIME:%u",_G_SlotStartMacrotickTime);
 
@@ -299,12 +299,12 @@ void psp_for_active(void)
         uint32_t clique_res = SVC_CliqueDetect();
         if(clique_res == CLIQUE_MINORITY){
             CNI_SetSRBit(SR_CE);
-            INFO("CLIQUE_MINORITY");
+            //INFO("CLIQUE_MINORITY");
             FSM_TransitIntoState(FSM_FREEZE);
             return;
         }else if(clique_res == CLIQUE_NO_ACTIVITY){
             CNI_SetSRBit(SR_CB);
-            INFO("CLIQUE_NO_ACTIVITY");
+            //INFO("CLIQUE_NO_ACTIVITY");
             FSM_TransitIntoState(FSM_FREEZE);
             return;
         }else{
@@ -363,8 +363,8 @@ void psp_for_coldstart(void)
     
     INFO("SLOT----------------------------------------%d",MAC_GetRoundSlot());
     
-    INFO("agreed:%d",PV_GetCounter(AGREED_SLOTS_COUNTER));
-    INFO("failed:%d",PV_GetCounter(FAILED_SLOTS_COUNTER));
+    //INFO("agreed:%d",PV_GetCounter(AGREED_SLOTS_COUNTER));
+    //INFO("failed:%d",PV_GetCounter(FAILED_SLOTS_COUNTER));
     
     INFO("SSS COLDSTART -- TIME:%u",_G_SlotStartMacrotickTime);
    
