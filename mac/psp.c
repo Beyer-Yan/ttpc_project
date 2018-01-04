@@ -30,6 +30,8 @@
 #include "msg.h"
 #include "xfer.h"
 
+#include "host.h"
+
 uint32_t _G_ModeChanged = 0;
 static volatile uint32_t _G_SlotStartMacrotickTime = 0; 
 static volatile uint32_t _G_SlotStartMicrotickTime = 0;
@@ -41,7 +43,7 @@ static volatile uint32_t _G_TDMARoundStartTimeOffset = 0;
  * This function shall be called at the start time of a slot.
  */
 
-static inline void _update_time()
+static inline void _update_time(void)
 {
     _G_SlotStartMacrotickTime = CLOCK_GetCurMacrotick();
     _G_SlotStartMicrotickTime = CLOCK_GetCurMicrotick();
@@ -78,8 +80,30 @@ static inline void _update_mode(void)
 		_G_ModeChanged = 0;
 	}
 }
+/** 
+ * update and check the slot indicator.
+ * @return 1, indicate a cluster-start point
+ *         0, not cluster start
+ */
+static inline int _update_slot_indicator(void)
+{
+    uint32_t ret_val = 0;
+    uint32_t res = MAC_UpdateSlot();
+    if (res == FIRST_SLOT_OF_CURRENT_CLUSTER) {
+        _G_ClusterCycleStartTime    = _G_SlotStartMacrotickTime;
+        _G_TDMARoundStartTimeOffset = 0;
+        ret_val = 1;
+    }
 
-static inline void _load_slot_configuration(void)
+    if(res==FIRST_SLOT_OF_SUCCESSOR_TDMAROUND)
+    {
+        _G_TDMARoundStartTimeOffset = _G_SlotStartMacrotickTime - _G_ClusterCycleStartTime;
+    }
+    
+    return ret_val;
+}
+
+static inline RoundSlotProperty_t* _update_slot_configuration(void)
 {
     /**
 	 * ensure that this function shall be called after updating the slot and the 
@@ -102,37 +126,28 @@ static inline void _load_slot_configuration(void)
 	}
     pRS = MAC_LoadSlotProperties(mode, round_slot);
     TTP_ASSERT(pRS!=NULL);
+    return pRS;
 }
 
-static inline void _slot_properties_update()
+static inline RoundSlotProperty_t* _slot_property_update(void)
 {
-    uint32_t res;
     RoundSlotProperty_t *pRS;
-    
     _update_time();
-    res = MAC_UpdateSlot();
-    if (res == FIRST_SLOT_OF_CURRENT_CLUSTER) {
+    if(_update_slot_indicator())
         _update_mode();
-        _G_ClusterCycleStartTime    = _G_SlotStartMacrotickTime;
-        _G_TDMARoundStartTimeOffset = 0;
-    }
 
-    if(res==FIRST_SLOT_OF_SUCCESSOR_TDMAROUND)
-    {
-        _G_TDMARoundStartTimeOffset = _G_SlotStartMacrotickTime - _G_ClusterCycleStartTime;
-    }
-    _load_slot_configuration();
-
-    pRS = MAC_GetRoundSlotProperties();
+    pRS = _update_slot_configuration();
     CS_SetGTF(_G_ClusterCycleStartTime + _G_TDMARoundStartTimeOffset + pRS->AtTime);
+    return pRS;
 }
 
+/*
 static inline uint32_t _check_clique(void)
 {
     uint32_t res = 0;
     uint32_t clique_res = 0;
 
-    /**  clique detecting */
+    
     clique_res = SVC_CliqueDetect();
 
     switch (clique_res) {
@@ -151,6 +166,7 @@ static inline uint32_t _check_clique(void)
 
     return res;
 }
+*/
 
 static inline void _prepare_for_receive(void)
 {
@@ -226,12 +242,10 @@ static inline uint32_t _is_data_frame()
 
 void psp_for_passive(void)
 {
-    RoundSlotProperty_t* pRS;
-    
-    _slot_properties_update();
+    RoundSlotProperty_t* pRS = _slot_property_update();
     
     INFO("SLOT----------------------------------------%d",MAC_GetRoundSlot());
-    
+    //INFO("mode:%d",CALC_MODE_NUM(CS_GetCurMode()));
     //INFO("agreed:%d",PV_GetCounter(AGREED_SLOTS_COUNTER));
     //INFO("failed:%d",PV_GetCounter(FAILED_SLOTS_COUNTER));
     
@@ -259,7 +273,6 @@ void psp_for_passive(void)
         }
     }
 
-    pRS = MAC_GetRoundSlotProperties();
     if (!MAC_IsSendSlot())
         goto _end;
     
@@ -269,12 +282,23 @@ void psp_for_passive(void)
     if(CNI_IsModeChangeRequested()){
         if(pRS->ModeChangePermission == MODE_CHANGE_DENY){
             CNI_SetSRBit(SR_MV);
+            CNI_ClrMCR();
             goto _end;
         }
     }
-     /**< now, membership acquired */
-    _prepare_for_transmit();
+     /**< now, membership acquired, the controller shall transite into ACTIVE state*/
     FSM_TransitIntoState(FSM_ACTIVE);
+    if (_is_data_frame()) {
+        
+        #warning "just for system testing"
+        HOST_PrepareData();
+        
+        if (!MSG_CheckMsgRF(pRS->CNIAddressOffset)) {
+            CNI_SetSRBit(SR_NR);
+            goto _end;             
+        }
+    }
+    _prepare_for_transmit();
     return;
 
     _end:
@@ -283,12 +307,10 @@ void psp_for_passive(void)
 
 void psp_for_active(void)
 {
-    RoundSlotProperty_t* pRS;
+    RoundSlotProperty_t* pRS = _slot_property_update();
 
-    _slot_properties_update();
-    
     INFO("SLOT---------------------------------------- %d",MAC_GetRoundSlot());
-    
+    //INFO("mode:%d",CALC_MODE_NUM(CS_GetCurMode()));
     //INFO("agreed:%d",PV_GetCounter(AGREED_SLOTS_COUNTER));
     //INFO("failed:%d",PV_GetCounter(FAILED_SLOTS_COUNTER));
     
@@ -314,8 +336,6 @@ void psp_for_active(void)
         }
     }
 
-    pRS = MAC_GetRoundSlotProperties();
-
     if (MAC_IsSendSlot()) {
         if (SVC_CheckHostLifeSign()) {
             //host life updated during active state
@@ -340,6 +360,10 @@ void psp_for_active(void)
 
         //check whether the data is ready, if there is a data frame is to be send
         if (_is_data_frame()) {
+            
+            #warning "just for system testing"
+            HOST_PrepareData();
+            
             if (!MSG_CheckMsgRF(pRS->CNIAddressOffset)) {
                 CNI_SetSRBit(SR_NR);
                 #warning "Should the controller transite into PASSIVE state ??"
@@ -357,19 +381,15 @@ void psp_for_active(void)
 
 void psp_for_coldstart(void)
 {
-    RoundSlotProperty_t* pRS;
-
-    _slot_properties_update();
+    RoundSlotProperty_t* pRS = _slot_property_update();
     
     INFO("SLOT----------------------------------------%d",MAC_GetRoundSlot());
-    
+    //INFO("mode:%d",CALC_MODE_NUM(CS_GetCurMode()));
     //INFO("agreed:%d",PV_GetCounter(AGREED_SLOTS_COUNTER));
     //INFO("failed:%d",PV_GetCounter(FAILED_SLOTS_COUNTER));
     
     INFO("SSS COLDSTART -- TIME:%u",_G_SlotStartMacrotickTime);
-   
-    pRS = MAC_GetRoundSlotProperties();
-    
+       
     if (MAC_IsOwnNodeSlot()) {
         uint32_t clique_res = SVC_CliqueDetect();
         if(clique_res == CLIQUE_MINORITY){

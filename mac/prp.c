@@ -114,8 +114,9 @@ static uint32_t _frame_crc32_check(TTP_ChannelFrameDesc* pDesc, uint32_t type)
          */
         _byte_copy((uint8_t*)&c_state, pDesc->pFrame->x.cstate, sizeof(c_state));
 
-        if (!CS_IsSame(&c_state))
+        if (!CS_IsSame(&c_state)){
             return 0;
+        }
         else
             return 1;
     }
@@ -294,7 +295,7 @@ void prp_for_passive(void)
 
     INFO("RRR PASSIVE   -- TIME:%u",CLOCK_GetCurMacrotick());
 
-    TTP_FrameDesc* pDesc;
+    TTP_FrameDesc* pDesc = NULL;
     RoundSlotProperty_t* pRS = MAC_GetRoundSlotProperties();
     ScheduleParameter_t* pSP = MAC_GetScheduleParameter();
 
@@ -351,9 +352,11 @@ void prp_for_passive(void)
             }
             SVC_SyncCalcOffset(tsmp_frame);
         }
-        /** Should the data carried by frame be pulled into CNI in passive state ?? */
-        _is_data_frame() ? MSG_PullAppData(pDesc_chosen) : (void)0;
-    } else {
+        #warning "Should the data carried by frame be pulled into CNI in PASSIVE state ?? "
+        if(_is_data_frame())
+            MSG_PullAppData(pDesc_chosen);
+        
+    }else{
         CS_ClearMemberBit(pRS->FlagPosition);
     }
 
@@ -497,7 +500,7 @@ void prp_for_active(void)
 
     uint32_t slot_status;
 
-    TTP_FrameDesc* pDesc;
+    TTP_FrameDesc* pDesc = NULL;
 
     res_ch[0] = _judge_valid(&frame_status_ch[0], CH0);
     res_ch[1] = _judge_valid(&frame_status_ch[1], CH1);
@@ -589,8 +592,17 @@ void prp_for_active(void)
         if (_is_data_frame()) {
             MSG_PullAppData(pDesc_chosen);
         }
+    }else{
+        #warning "Shall the controller clear the memberbit when a TENTATIVE frame ?"
+        CS_ClearMemberBit(pRS->FlagPosition);
     }
     MAC_SetSlotStatus(slot_status);
+    
+    c_state_t cstate,cx;
+    CS_GetCState(&cstate);
+    _byte_copy((uint8_t*)&cx,pDesc->pCH0->pFrame->x.cstate,sizeof(c_state_t));
+    INFO("local:%x,%x,%x,%x,%x,%x",cstate.GlobalTime,cstate.ClusterPosition,cstate.Membership[0],cstate.Membership[1],cstate.Membership[2],cstate.Membership[3]);
+    INFO("frame:%x,%x,%x,%x,%x,%x",cx.GlobalTime,cx.ClusterPosition,cx.Membership[0],cx.Membership[1],cx.Membership[2],cx.Membership[3]);
     
     /** for the assumption that channel 0 and channel 1 are the same */
     if(_is_data_frame()) { MSG_SetStatus(pRS->CNIAddressOffset, slot_status); }
@@ -621,7 +633,7 @@ void prp_for_coldstart(void)
     uint32_t res_ch[2];
     uint32_t frame_status_ch[2]={0xffffffff,0xffffffff};
     uint32_t slot_status;
-    TTP_FrameDesc* pDesc;
+    TTP_FrameDesc* pDesc = NULL;
 
     res_ch[0] = _judge_valid(&frame_status_ch[0],CH0);
     res_ch[1] = _judge_valid(&frame_status_ch[1],CH1);
@@ -670,6 +682,7 @@ void prp_for_coldstart(void)
     } else {
         CS_ClearMemberBit(pRS->FlagPosition);
     }
+
     MAC_SetSlotStatus(slot_status);
     
     __check_sync:
