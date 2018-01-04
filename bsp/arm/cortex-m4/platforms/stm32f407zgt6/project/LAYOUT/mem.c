@@ -26,4 +26,4 @@ uint8_t msg_pool[MSG_POOL_LENGTH] __SECTION("CNI_MSG_SECTION") = {0};
 
 /** Protocol data region  */
 /*****************************************************************************/
-uint8_t PV_data[20] = {0};
+uint8_t PV_data[20] __SECTION("PV_SECTION")  = {0};

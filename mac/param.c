@@ -22,9 +22,9 @@
 #include "medl.h"
 #include "ttpdebug.h"
 
-static uint32_t _G_mode = 0xffffffff;
-static uint32_t _G_slot = 0xffffffff;
-static void* bufferAddr = NULL;
+static uint32_t _G_mode __SECTION("PV_SECTION") = 0xffffffff;
+static uint32_t _G_slot __SECTION("PV_SECTION") = 0xffffffff;
+static void* bufferAddr __SECTION("PV_SECTION") = NULL;
 
 /*********************** slot parameters configuration *************************/
 

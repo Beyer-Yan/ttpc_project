@@ -21,22 +21,22 @@
  * This variable is used to record the current state where the controller situates at
  * present.
  */
-static  int volatile __G_cur_state = FSM_ERROR;
+static  int volatile __G_cur_state __SECTION("PV_SECTION") = FSM_ERROR;
 
 /**
  * This variable is used to record the urgent state, which occurs normally in interruption.
  * ex. the controller on and the controller off signal; 
  */
-static  int volatile __G_urgent_state = FSM_ERROR; 
+static  int volatile __G_urgent_state __SECTION("PV_SECTION") = FSM_ERROR; 
 
-static int  volatile __G_state_changed = 0;
+static int  volatile __G_state_changed __SECTION("PV_SECTION") = 0;
 
 /**
  * hook functions specified by users will be called when state transition is activated
  * @param       hook 		the pointer of the hook function.
  * @return      null
  */
-static void (*__Gf_hook)(uint32_t ps) = NULL;
+static void (*__Gf_hook)(uint32_t ps) __SECTION("PV_SECTION") = NULL;
 
 
 #define FSM_RUNNING		1
@@ -46,7 +46,7 @@ static void (*__Gf_hook)(uint32_t ps) = NULL;
  * @arg FSM_RUNNING
  * @arg FSM_STOPPED
  */
-static volatile char __G_start_flag = FSM_STOPPED;
+static volatile char __G_start_flag __SECTION("PV_SECTION") = FSM_STOPPED;
 
 /** extern definition for three phases circulation of the corresponding states */
 extern struct SubSeqRoutine SSR_active;
@@ -56,7 +56,7 @@ extern struct SubSeqRoutine SSR_coldstart;
 /**
  * schedule table filling
  */
-static const FSM_State __G_state[MAX_STATE_NUM] = 
+static const FSM_State __G_state[MAX_STATE_NUM] __SECTION("PV_SECTION") = 
 {
 	/* FREEZE  */
 	{
@@ -181,7 +181,7 @@ static const FSM_State __G_state[MAX_STATE_NUM] =
 };
 
 
-static const int  __PermissionTable[MAX_STATE_NUM][MAX_STATE_NUM] = 
+static const uint8_t  __PermissionTable[MAX_STATE_NUM][MAX_STATE_NUM] __SECTION("PV_SECTION") = 
 {
  /*                 0       1      2       3        4       5      6       7      8     9      x */
 /*                FREEZE   INIT  LISTEN  COL_ST  SUB_CS  ACTIVE  PASSIV  AWAIT  TEST  DOWNL  ERROR  */
@@ -212,7 +212,7 @@ static const int  __PermissionTable[MAX_STATE_NUM][MAX_STATE_NUM] =
 
 static void _set_ps(uint32_t _ps_num)
 {
-	static int _num_to_ps[10] =
+	static int _num_to_ps[10] __SECTION("PV_SECTION") =
 	{
 		PS_FREEZE,PS_INIT,PS_LISTEN,PS_COLDSTART,PS_COLDSTART,PS_ACTIVE,PS_PASSIVE,PS_AWAIT,PS_TEST,PS_DOWNLOAD
 	};

@@ -206,7 +206,7 @@ void FSM_doListen(void)
         CLOCK_SetCurMacrotick(actual_ma);
         CLOCK_SetCurMicrotick(actual_mi);
         
-        #error "some bugs to be fixed"
+        //#error "some bugs to be fixed"
         MAC_SetPhaseCycleStartPoint(CS_GetCurGTF()-pRS->AtTime,0);
         
         //attention that the AT and the PRP time have expired at this time.

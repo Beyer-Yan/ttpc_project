@@ -22,4 +22,4 @@
 /**
  * 0 for PSP, 1 for TP, 2 for PRP
  */
-volatile uint32_t phase_indicator = 0;
+volatile uint32_t phase_indicator __SECTION("PV_SECTION") = 0;

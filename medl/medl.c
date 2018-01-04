@@ -21,21 +21,21 @@
 
 //#error "to be tested"
 
-static volatile medl_header_t       __G_medl_header;
-static volatile mode_discriptor_t   __G_mode_discriptor;
+static volatile medl_header_t       __G_medl_header __SECTION("PV_SECTION");
+static volatile mode_discriptor_t   __G_mode_discriptor __SECTION("PV_SECTION");
 
-static const uint8_t*               __G_medl_base_addr;
+static const uint8_t*               __G_medl_base_addr __SECTION("PV_SECTION");
 
 /**
  * variables below are used to buffer the frequently-used parameters.
  */
-static volatile ScheduleParameter_t __G_sched;
-static volatile NodeProperty_t      __G_role;
+static volatile ScheduleParameter_t __G_sched __SECTION("PV_SECTION");
+static volatile NodeProperty_t      __G_role __SECTION("PV_SECTION");
 
-static volatile RoundSlotProperty_t __G_slot;
+static volatile RoundSlotProperty_t __G_slot __SECTION("PV_SECTION");
 
-static volatile uint32_t            __G_sched_id;
-static volatile uint32_t            __G_app_id;
+static volatile uint32_t            __G_sched_id __SECTION("PV_SECTION");
+static volatile uint32_t            __G_app_id __SECTION("PV_SECTION");
 
 /**
  * this function is declared in the low-level hardware-relative file and is used to 

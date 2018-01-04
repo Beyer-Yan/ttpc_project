@@ -23,7 +23,7 @@
 #include "clock.h"
 
 //in unit of microticks
-static volatile uint32_t _G_ATStartMicrotickTime = 0;
+static volatile uint32_t _G_ATStartMicrotickTime __SECTION("PV_SECTION") = 0;
 
 void tp(void)
 {

@@ -26,20 +26,20 @@
 
 /************* global variables definitions ***********************************/
 
-static TTP_ChannelFrameDesc _ch0 = 
+static TTP_ChannelFrameDesc _ch0 __SECTION("PV_SECTION") = 
 {
     .rcv_timestamp = 0,
     .length        = 0,
     .pFrame        = NULL
 };
-static TTP_ChannelFrameDesc _ch1 = 
+static TTP_ChannelFrameDesc __SECTION("PV_SECTION") _ch1 = 
 {
     .rcv_timestamp = 0,
     .length        = 0,
     .pFrame        = NULL   
 };
 
-static TTP_FrameDesc _G_TTP_FrameDesc =
+static TTP_FrameDesc _G_TTP_FrameDesc __SECTION("PV_SECTION") =
 {
     .pCH0 = &_ch0,
     .pCH1 = &_ch1

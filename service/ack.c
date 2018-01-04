@@ -303,7 +303,7 @@ static void _process_FTFF(void)
 }
 
 
-static void (*process[7])(void) = 
+static void (*process[7])(void) __SECTION("PV_SECTION") = 
 {
     NULL,
     _process_FT,
@@ -322,7 +322,7 @@ struct dnode
 };
 
 /** decision node definition */
-static const struct dnode dtree[9] = 
+static const struct dnode dtree[9] __SECTION("PV_SECTION") = 
 {
     {TYPE_DECISION,  0, { 1, 2}},    /*0*/
     {TYPE_POSITIVE,  2, {END,END}},  /*1*/
@@ -342,7 +342,7 @@ struct ack_db
     const struct dnode *tree; 
 };
 
-static struct ack_db adb[2] = 
+static struct ack_db adb[2] __SECTION("PV_SECTION") = 
 {
     {
         .cur_pos   = 0,

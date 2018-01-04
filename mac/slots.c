@@ -40,24 +40,24 @@
  * Attention that round_slots = _G_TDMARound * _G_TDMASlots + _G_Slot
  */
 /** slots assignment */
-static volatile uint32_t _G_Slot      = 0;
-static volatile uint32_t _G_TDMARound = 0;
+static volatile uint32_t _G_Slot      __SECTION("PV_SECTION") = 0;
+static volatile uint32_t _G_TDMARound __SECTION("PV_SECTION") = 0;
 
-static uint32_t _G_ClusterCycleLength = 0;
-static uint32_t _G_TDMACycleLength    = 0;
+static uint32_t _G_ClusterCycleLength __SECTION("PV_SECTION") = 0;
+static uint32_t _G_TDMACycleLength    __SECTION("PV_SECTION") = 0;
 
 // /** slots timing parameters */
 // static volatile uint32_t _G_ActualAT; /**< actual action time in unit of macrotick */
 // static volatile uint32_t _G_PRP; /**< prp start time in unit of macrotick */
 
 /** status of a slot, which is used for the clique detection */
-static volatile uint8_t _G_SlotStatus;
+static volatile uint8_t _G_SlotStatus __SECTION("PV_SECTION");
 
 /** SENDING_FRAME or RECEIVING_FRAME */
-static volatile uint8_t _G_SlotAcquisitionFlag;
+static volatile uint8_t _G_SlotAcquisitionFlag __SECTION("PV_SECTION");
 
 /** indicate the current updating status of the slot */
-static volatile uint32_t _G_slot_pointer;
+static volatile uint32_t _G_slot_pointer __SECTION("PV_SECTION");
 
 /*********************************************************************************/
 

@@ -32,12 +32,12 @@
 
 #include "host.h"
 
-uint32_t _G_ModeChanged = 0;
-static volatile uint32_t _G_SlotStartMacrotickTime = 0; 
-static volatile uint32_t _G_SlotStartMicrotickTime = 0;
+uint32_t _G_ModeChanged                              __SECTION("PV_SECTION") = 0;
+static volatile uint32_t _G_SlotStartMacrotickTime   __SECTION("PV_SECTION") = 0; 
+static volatile uint32_t _G_SlotStartMicrotickTime   __SECTION("PV_SECTION") = 0;
 
-static volatile uint32_t _G_ClusterCycleStartTime    = 0;
-static volatile uint32_t _G_TDMARoundStartTimeOffset = 0;
+static volatile uint32_t _G_ClusterCycleStartTime    __SECTION("PV_SECTION") = 0;
+static volatile uint32_t _G_TDMARoundStartTimeOffset __SECTION("PV_SECTION") = 0;
 
 /**
  * This function shall be called at the start time of a slot.

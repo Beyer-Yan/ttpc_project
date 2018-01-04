@@ -22,6 +22,6 @@ LR_IROM 0x08000000 0x00100000           ;1M load region
         .ANY (CNI_STATUS_SECTION)
         .ANY (CNI_NOTIFY_SECTION)
         .ANY (CNI_INFO_SECTION)
-        .ANY (CNI_MSG_SECTION)
+        .ANY (CNI_MSG_SECTION)      
     }
 }

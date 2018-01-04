@@ -22,10 +22,10 @@
 #include "clock.h"
 
 /** @see "Time Triggered Protocol Spec", page 56*/
-static volatile int32_t _G_pushdown_stack[4] = {0};
+static volatile int32_t _G_pushdown_stack[4] __SECTION("PV_SECTION") = {0};
 
 /** the estimate arival time interval of the frame aligned to local microtick */
-static volatile int32_t _G_aligned_estimate_time_interval = 0;
+static volatile int32_t _G_aligned_estimate_time_interval __SECTION("PV_SECTION") = 0;
 
 static inline void _stack_push(int32_t offset)
 {
@@ -33,7 +33,6 @@ static inline void _stack_push(int32_t offset)
 
 	_G_pushdown_stack[idx] = offset;
 	idx = (idx+1)%4;
-
 }
 
 void SVC_ClrClockSyncFIFO(void)
