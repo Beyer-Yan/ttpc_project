@@ -27,14 +27,15 @@
 #define MEDL_HEADER_SIZE    8    /**< 8 bytes */
 #define SCHED_REGION_SIZE   28
 #define ROLE_REGION_SIZE    8
-#define ID_REGION_SIZE      8  
-#define MODE_DSCR_SIZE      8
-#define SLOT_SIZE           20 
+#define ID_REGION_SIZE      8 
+#define MODE_ENTRY_SIZE     4
+#define SLOT_SIZE           24
+#define CRC_SIZE            4
 
 #define SCHED_REGION_OFFSET 8
 #define ROLE_REGION_OFFSET  36
 #define ID_REGION_OFFSET    44
-#define MODE_DSCR_OFFSET    52
+#define MODE_ENTRY_OFFSET   52
 
 /**
  *                                                                                 
@@ -94,11 +95,13 @@ typedef struct medl_header
 
 typedef struct mode_discriptor
 {
-    uint32_t mode_addr;
     uint16_t round_slots;
     uint16_t tdma_slots;
-
-}mode_discriptor_t;
+    uint32_t slot_addr;
+    
+    //at least two TDMA for each round cycle
+    uint16_t tdma_offset[2]; 
+} __PACK mode_discriptor_t;
 
 /** region type definition */
 #define SCHEDULE_REGION       (uint32_t)0x00000001
@@ -116,6 +119,8 @@ uint32_t  MEDL_GetAppID(void);
 
 uint32_t  MEDL_GetRoundCycleLength(uint32_t ModeNum);
 uint32_t  MEDL_GetTDMACycleLength(uint32_t ModeNum);
+
+uint32_t MEDL_GetTDMAOffsetValue(uint32_t ModeNum, uint32_t TDMARound);
 
 void* MEDL_GetRoleAddr(void);
 void* MEDL_GetScheduleAddr(void);

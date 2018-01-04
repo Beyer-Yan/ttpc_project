@@ -48,18 +48,6 @@ typedef struct
 }DataPacketTypeDef;
 
 /**
- * status macro definitions
- */
-#define DRV_OK          0
-#define DRV_ERR         1  /**< error */
-
-#define TXD_COL         2
-#define RXD_COL         3
-#define CRC_ERR         4
-#define PHY_ERR         5
-#define LTH_ERR         6
-#define DRV_INV         7 /**< invalid tx/rx time */
-/**
  * /@todo The other errors to be expanded
  */
 
@@ -80,7 +68,7 @@ void DRV_StopReception(void);
  */
 void DRV_RxClear(void);
 
-int DRV_PushData(const uint8_t* DataAddr,int size);
+uint32_t DRV_PushData(const uint8_t* DataAddr,int size);
 void DRV_PrepareToTransmit(void);
 
 //void DRV_PrepareToTransmitOfCH0(uint8_t* BufferAddr, int length);
@@ -91,20 +79,20 @@ void DRV_PrepareToTransmit(void);
  * the status of the controller's transfer hardware
  * @return DRV_OK:transmission success, DRV_ERR:transmission failed.
  */
-int DRV_CheckTransmitted(void);
+uint32_t DRV_CheckTransmitted(void);
 
 /**
  * This function polls for a frame reception
  * @return 1:received farmes, 0:received nothing.
  */
-int DRV_CheckReceived(int channel); 
+uint32_t DRV_CheckReceived(int channel); 
 
 /**
  * This function polls for a channel activity
  * @return !0: channel is active(a frame is receiving on any one of the two channels).
  *          0: channel is silent.
  */
-int DRV_IsChannelActive(void);
+uint32_t DRV_IsChannelActive(void);
 
 DataPacketTypeDef* DRV_PullData(void);
 

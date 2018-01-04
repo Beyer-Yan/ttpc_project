@@ -40,16 +40,16 @@ uint32_t SVC_SlotAcquirement(void)
     mode = CS_GetCurMode();
     int_counter = PV_GetCounter(INTEGRATION_COUNTER);
 
-    if (pNP->PassiveFlag == PERMANENT_PASSIVE)
+    if (pNP->NodeFlags & NodeFlags_PermanentPassive)
         goto _end;
-    if (pRS->ReintegrationAllow == REINTEGRATION_NOT_ALLOWED)
+    if (!(pRS->SlotFlags & SlotFlags_ReintegrationAllowed))
         goto _end;
 
     if (SVC_CheckHostLifeSign() || (FREE_SHOT_ENABLE == PV_GetFreeShotFlag() && mode == MODE_CS_ID)) {
         if (int_counter == pSP->MinimumIntegrationCount) {
             
             //@see Time-Triggered Protocol Spec, page 53.
-            if(pNP->MultiplexedMembershipFlag == MULTIPLEXED_MEMBERSHIP){
+            if(pNP->NodeFlags & NodeFlags_MultiplexedMembership){
                 res = 1;
             }else if (!CS_GetMemberBit(mmp)) {
                 res = 1;

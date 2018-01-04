@@ -19,23 +19,24 @@
 #include "ttpdebug.h"
 #include "crc.h"
 
-//#error "to be tested"
-
-static volatile medl_header_t       __G_medl_header __SECTION("PV_SECTION");
+/* 
+ * @see MEDL specification document
+ */
+static volatile medl_header_t       __G_medl_header     __SECTION("PV_SECTION");
 static volatile mode_discriptor_t   __G_mode_discriptor __SECTION("PV_SECTION");
 
-static const uint8_t*               __G_medl_base_addr __SECTION("PV_SECTION");
+static const uint8_t*               __G_medl_base_addr  __SECTION("PV_SECTION");
 
 /**
  * variables below are used to buffer the frequently-used parameters.
  */
-static volatile ScheduleParameter_t __G_sched __SECTION("PV_SECTION");
-static volatile NodeProperty_t      __G_role __SECTION("PV_SECTION");
+static volatile ScheduleParameter_t __G_sched    __SECTION("PV_SECTION");
+static volatile NodeProperty_t      __G_role     __SECTION("PV_SECTION");
 
-static volatile RoundSlotProperty_t __G_slot __SECTION("PV_SECTION");
+static volatile RoundSlotProperty_t __G_slot     __SECTION("PV_SECTION");
 
 static volatile uint32_t            __G_sched_id __SECTION("PV_SECTION");
-static volatile uint32_t            __G_app_id __SECTION("PV_SECTION");
+static volatile uint32_t            __G_app_id   __SECTION("PV_SECTION");
 
 /**
  * this function is declared in the low-level hardware-relative file and is used to 
@@ -64,37 +65,15 @@ static inline void __medl_header_extract(void)
 static void __medl_sched_extract(void)
 {
 	const uint8_t *buf = __G_medl_base_addr + SCHED_REGION_OFFSET; //28 bytes
-
-	__G_sched.ColdStartAllow               =  buf[0]&0x01;
-	__G_sched.ColdStartIntegrationAllow    = (buf[0]&0x02)>>1;
-	__G_sched.ExternalRateCorrectionAllow  = (buf[0]&0x04)>>2;
-	__G_sched.MinimumIntegrationCount      = buf[1];
-	__G_sched.MaximumColdStartEntry        = buf[2];
-	__G_sched.MaximumMembershipFailureCount= buf[3];
-
-	_byte_copy(&__G_sched.MacrotickParameter, buf + 4, 4);
-	_byte_copy(&__G_sched.Precision, buf + 8, 4);
-	_byte_copy(&__G_sched.ArrivalTimingWindow, buf + 12,4);
-	_byte_copy(&__G_sched.StartupTimeout, buf + 16,4);
-	_byte_copy(&__G_sched.ListenTimeout, buf + 20,4);
-	_byte_copy(&__G_sched.ColdStartTimeout, buf + 24,4);
+    
+	_byte_copy(&__G_sched, buf,SCHED_REGION_SIZE);
 }
 
 static void __medl_role_extract(void)
 {
 	const uint8_t* buf = __G_medl_base_addr + ROLE_REGION_OFFSET;
 
-	_byte_copy(&__G_role.LogicalNameMultiplexedID, buf,2);
-    __G_role.LogicalNameMultiplexedID &= 0x0000ffff;
-
-	_byte_copy(&__G_role.LogicalNameSlotPosition, buf+2,2);
-	__G_role.LogicalNameSlotPosition &= 0x0000ffff;
-
-	__G_role.PassiveFlag               	   = buf[4]&0x01;				
-	__G_role.MultiplexedMembershipFlag 	   = (buf[4]&0x02)>>1;
-	__G_role.FlagPosition              	   = buf[5];		
-
-	_byte_copy(&__G_role.SendDelay, buf+6,2);
+	_byte_copy(&__G_role, buf,ROLE_REGION_SIZE);
 }
 
 static void __medl_id_extract(void)
@@ -105,10 +84,18 @@ static void __medl_id_extract(void)
 	_byte_copy(&__G_app_id, buf+4, 4);
 }
 
-static void __medl_mode_extract(uint32_t mode)
+static void __medl_mode_extract(uint32_t mode_num)
 {
-	const uint8_t* buf = __G_medl_base_addr + MODE_DSCR_OFFSET + MODE_DSCR_SIZE*mode;
-	_byte_copy(&__G_mode_discriptor,buf,MODE_DSCR_SIZE);
+    uint32_t _mode_discritor_addr;
+	const uint8_t* buf = __G_medl_base_addr + MODE_ENTRY_OFFSET + MODE_ENTRY_SIZE*mode_num;
+    
+    _byte_copy(&_mode_discritor_addr,buf,MODE_ENTRY_SIZE);
+
+    //get the base address of the mode_discriptor
+    buf = __G_medl_base_addr + _mode_discritor_addr;
+    
+    //at least 12 bytes, including al least two tdma_offsets
+    _byte_copy(&__G_mode_discriptor,buf,12);
 }
 
 static inline void _slot_property_extract(const uint8_t* buf)
@@ -117,39 +104,13 @@ static inline void _slot_property_extract(const uint8_t* buf)
 	 * @attention upper program should guarantee the legality of the parameters,
 	 * mode and round_slot.
 	 */
-	_byte_copy(&__G_slot.LogicalSenderMultiplexID, buf,2);
-    __G_slot.LogicalSenderMultiplexID &= 0x0000ffff;
-
-	_byte_copy(&__G_slot.LogicalSenderSlot, buf+2,2);
-	__G_slot.LogicalSenderSlot &= 0x0000ffff;
-
-	_byte_copy(&__G_slot.SlotDuration, buf+4,2);
-	__G_slot.SlotDuration &= 0x0000ffff;
-
-	__G_slot.PSPDuration              = buf[6];
-	__G_slot.TransmissionDuration     = buf[7];
-
-	_byte_copy(&__G_slot.DelayCorrectionTerms, buf+8,2);
-	__G_slot.DelayCorrectionTerms &= 0x0000ffff;
-
-	__G_slot.AppDataLength            = buf[10];
-	_byte_copy(&__G_slot.CNIAddressOffset, buf+12,2);
-	
-	__G_slot.FlagPosition             = buf[16];	
-	__G_slot.FrameType                = buf[17]&0x01;
-	__G_slot.ModeChangePermission     = (buf[17]&0x02)>>1;
-	__G_slot.ReintegrationAllow       = (buf[17]&0x04)>>2;
-	__G_slot.ClockSynchronization     = (buf[17]&0x08)>>3;
-	__G_slot.SynchronizationFrame     = (buf[17]&0x10)>>4;
-	
-	_byte_copy(&__G_slot.AtTime, buf+18,2);
-	__G_slot.AtTime  &= 0x0000ffff;
+	_byte_copy(&__G_slot, buf,SLOT_SIZE);
 }
 
 /** be sure that the current mode is updated */
 static inline const uint8_t* __medl_get_slot_entry(uint32_t mode, uint32_t round_slot)
 {
-	return __G_medl_base_addr + __G_mode_discriptor.mode_addr + SLOT_SIZE*round_slot;
+	return __G_medl_base_addr + __G_mode_discriptor.slot_addr + SLOT_SIZE*round_slot;
 }
 
 static uint32_t __medl_crc32_check(void)
@@ -235,19 +196,49 @@ uint32_t MEDL_GetAppID(void)
 {
 	return (__G_app_id); 
 }
-
+#warning "legality of parameters passed in shall be checked outside the function"
 uint32_t MEDL_GetRoundCycleLength(uint32_t ModeNum)
 {
-	uint16_t len;
-	const uint8_t* buf = __G_medl_base_addr + MODE_DSCR_OFFSET + MODE_DSCR_SIZE*ModeNum;
-	_byte_copy(&len,buf+4,2);
-	return len;
-}
+	uint32_t _mode_discritor_addr;
+    uint16_t length; 
+	const uint8_t* buf;
 
+    buf = __G_medl_base_addr + MODE_ENTRY_OFFSET + MODE_ENTRY_SIZE*ModeNum;
+    _byte_copy(&_mode_discritor_addr,buf,MODE_ENTRY_SIZE);
+
+    buf = __G_medl_base_addr + _mode_discritor_addr;
+    
+	_byte_copy(&length,buf,2);
+	return length;
+}
+#warning "legality of parameters passed in shall be checked outside the function"
 uint32_t MEDL_GetTDMACycleLength(uint32_t ModeNum)
 {
-	uint16_t len;
-	const uint8_t* buf = __G_medl_base_addr + MODE_DSCR_OFFSET + MODE_DSCR_SIZE*ModeNum;
-	_byte_copy(&len,buf+6,2);
-	return len;
+	uint32_t _mode_discritor_addr;
+    uint16_t length; 
+	const uint8_t* buf;
+
+    buf = __G_medl_base_addr + MODE_ENTRY_OFFSET + MODE_ENTRY_SIZE*ModeNum;
+    _byte_copy(&_mode_discritor_addr,buf,MODE_ENTRY_SIZE);
+
+    buf = __G_medl_base_addr + _mode_discritor_addr;
+    
+	_byte_copy(&length,buf+2,2);
+	return length;
+}
+
+#warning "legality of parameters passed in shall be checked outside the function"
+uint32_t MEDL_GetTDMAOffsetValue(uint32_t ModeNum, uint32_t TDMARound)
+{
+    uint32_t _mode_discritor_addr;
+    uint16_t offset; 
+	const uint8_t* buf;
+
+    buf = __G_medl_base_addr + MODE_ENTRY_OFFSET + MODE_ENTRY_SIZE*ModeNum;
+    _byte_copy(&_mode_discritor_addr,buf,MODE_ENTRY_SIZE);
+
+    //get the tdma_offset address
+    buf = __G_medl_base_addr + _mode_discritor_addr + 8 + TDMARound*2;
+    _byte_copy(&offset,buf,2);
+    return offset;
 }

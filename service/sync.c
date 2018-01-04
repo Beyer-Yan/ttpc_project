@@ -25,7 +25,8 @@
 static volatile int32_t _G_pushdown_stack[4] __SECTION("PV_SECTION") = {0};
 
 /** the estimate arival time interval of the frame aligned to local microtick */
-static volatile int32_t _G_aligned_estimate_time_interval __SECTION("PV_SECTION") = 0;
+static volatile int32_t _G_aligned_estimate_time_interval_ch0 __SECTION("PV_SECTION") = 0;
+static volatile int32_t _G_aligned_estimate_time_interval_ch1 __SECTION("PV_SECTION") = 0;
 
 static inline void _stack_push(int32_t offset)
 {
@@ -111,25 +112,35 @@ static int32_t _alignment_err_accumulated(int32_t value)
 	return value*lmi/1000 + theta; 
 }
 
-void SVC_SetEstimateArivalTimeInterval(uint32_t EstimateTimeInterval)
+void SVC_SetEstimateArivalTimeInterval(uint32_t EstimateTimeIntervalOfCH0, uint32_t EstimateTimeIntervalOfCH1)
 {
 	/** value too large */
-	TTP_ASSERT(!(EstimateTimeInterval&0x80000000));
+	TTP_ASSERT(!(EstimateTimeIntervalOfCH0&0x80000000) && !(EstimateTimeIntervalOfCH1&0x80000000));
 
-	int32_t _eti = (int32_t)EstimateTimeInterval;
-	_G_aligned_estimate_time_interval = _alignment_err_accumulated(_eti);
+	int32_t _eti_ch0 = (int32_t)EstimateTimeIntervalOfCH0;
+	int32_t _eti_ch1 = (int32_t)EstimateTimeIntervalOfCH1;
+	_G_aligned_estimate_time_interval_ch0 = _alignment_err_accumulated(_eti_ch0);
+	_G_aligned_estimate_time_interval_ch1 = _alignment_err_accumulated(_eti_ch1);
 }
 
-uint32_t SVC_GetAlignedEstimateArivalTimeInterval()
+uint32_t SVC_GetAlignedEstimateArivalTimeInterval(uint32_t Channel)
 {
-	return _G_aligned_estimate_time_interval;
+	return Channel==CH0 ? _G_aligned_estimate_time_interval_ch0 : _G_aligned_estimate_time_interval_ch1;
 }
 
-void SVC_SyncCalcOffset(uint32_t FrameTsmp)
+void SVC_SyncCalcOffset(uint32_t FrameTsmpOfCH0, uint32_t FrameTsmpOfCH1, uint32_t ValidityOfCH0, uint32_t ValidityOfCH1)
 {
     uint32_t at_microtick = MAC_GetATMicroticks();
-	uint32_t estimate_frame_tsmp = at_microtick + _G_aligned_estimate_time_interval;
-	int32_t  offset = (int32_t)(FrameTsmp - estimate_frame_tsmp);
+	uint32_t estimate_frame_tsmp_ch0 = at_microtick + _G_aligned_estimate_time_interval_ch0;
+	uint32_t estimate_frame_tsmp_ch1 = at_microtick + _G_aligned_estimate_time_interval_ch1;
+
+	int32_t  offset = 0;
+	if(ValidityOfCH0 && ValidityOfCH1)
+		offset = (int32_t)(FrameTsmpOfCH0-estimate_frame_tsmp_ch0)/2 + (int32_t)(FrameTsmpOfCH1-estimate_frame_tsmp_ch1)/2;
+	else if(ValidityOfCH0)
+		offset = (int32_t)(FrameTsmpOfCH0-estimate_frame_tsmp_ch0);
+	else if(ValidityOfCH1)
+		offset = (int32_t)(FrameTsmpOfCH1-estimate_frame_tsmp_ch1);
     
     //INFO("stack:%d,%d,%d,%d",_G_pushdown_stack[0],_G_pushdown_stack[1],_G_pushdown_stack[2],_G_pushdown_stack[3]);
     //INFO("tsmp:%u",FrameTsmp);
@@ -160,7 +171,7 @@ uint32_t SVC_ExecSyncSchema(uint32_t Steps)
 		
     if(csct!=0){
         INFO("perform sync, csct           --------- %d",csct);
-        MAC_AdjTime(CLK_PHASE_ADJ,csct);
+        MAC_AdjTime(CLK_FREQ_ADJ,csct);
     }
 	return 1;
 }

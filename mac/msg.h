@@ -184,10 +184,11 @@ typedef struct
  * The setting of the two interfaces below needs negotiating. MAC_PrepareSCFrame
  * function should be called at startup time and DO NOT CALL IT AT NORMAL OPERATION
  * MODE OF THE CONTROLLER. The MAC_PushFrame function only assembles the frame I,X and
- * N.
+ * N. 
+ * @return ttp_error_code
  */
-MAC_err_t MSG_PushFrame(void);
-MAC_err_t MSG_PrepareCSFrame(void);
+uint32_t MSG_PushFrame(void);
+uint32_t MSG_PrepareCSFrame(void);
 
 /**
  * Push the data of the frame received to the corresponding CNI address. The frame

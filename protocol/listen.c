@@ -27,7 +27,7 @@
 #include "stm32f4xx.h"
 
 
-#define EXE_MI_FOR_LISTEN  (3314 + 100)
+#define COMPENSATE_MI_TIME  (280)
 
 extern uint32_t phase_indicator;
 
@@ -99,7 +99,7 @@ static uint32_t _listen_disturb(void)
 void FSM_doListen(void)
 {
     ScheduleParameter_t* pSP;
-    NodeProperty_t* pNP;
+    //NodeProperty_t* pNP;
     RoundSlotProperty_t* pRS;
 
     TTP_FrameDesc* pDesc;
@@ -107,7 +107,7 @@ void FSM_doListen(void)
     uint8_t header;
 
     pSP = MAC_GetScheduleParameter();
-    pNP = MAC_GetNodeProperties();
+    //pNP = MAC_GetNodeProperties();
 
     //break when timeout or received a valid frame.
     uint32_t freq_div = CLOCK_GetFrequencyDiv(); 
@@ -118,15 +118,17 @@ void FSM_doListen(void)
     
     DBG_Flush();
     if (CLOCK_WaitAlarm(pSP->ListenTimeout, _listen_disturb)) {
-        uint32_t t1 = TIM14->CNT;
+        //uint32_t t1 = TIM14->CNT;
         CLOCK_WaitMicroticks(ATW,NULL);
         
         uint32_t ch0_res = MSG_CheckReceived(CH0);
         uint32_t ch1_res = MSG_CheckReceived(CH1);
+        
+        uint32_t chosen_ch = CH0;
 
         if(ch0_res==0 && ch1_res==0 )
         {
-            //perform the ATW algorithm 
+            //noise on channels, perform the ATW algorithm 
             PV_DisableBigBang();
             goto _end;
         }
@@ -151,10 +153,12 @@ void FSM_doListen(void)
         if(ch0_res){
             header = pDesc->pCH0->pFrame->hdr[0];
             _byte_copy((uint8_t*)&cstate, pDesc->pCH0->pFrame->x.cstate, sizeof(c_state_t));
+            chosen_ch = CH0;
         } 
         else{
             header = pDesc->pCH1->pFrame->hdr[0];
             _byte_copy((uint8_t*)&cstate, pDesc->pCH1->pFrame->x.cstate, sizeof(c_state_t));
+            chosen_ch = CH1;
         }
 
         //in case of a cold start frame
@@ -165,22 +169,22 @@ void FSM_doListen(void)
             }
             if ((cstate.ClusterPosition & CS_CP_DMC) != DMC_NO_REQ)
                 goto _end;
-            if (pSP->ColdStartIntegrationAllow != COLD_START_INTEGRATION_ALLOWED)
+            if (!(pSP->ScheduleFlags & ScheduleFlags_ColdStartIntegrationAllowed))
                 goto _end;
         }
         
         // now the frame received is taken into consideration
         CS_SetCState(&cstate);
-        uint32_t t2 = TIM14->CNT;
+        //uint32_t t2 = TIM14->CNT;
         //set current slot parameter according the sender's c-state
         if(!_process_slot_parameters())
             goto _end;
-        uint32_t t3 = TIM14->CNT;
+        //uint32_t t3 = TIM14->CNT;
         
         pRS = MAC_GetRoundSlotProperties();
 
         // mode error, desert the received frame
-        if (header >> 1 != 0 && pRS->ModeChangePermission == MODE_CHANGE_DENY)
+        if (header >> 1 != 0 && !(pRS->SlotFlags & SlotFlags_ModeChangePermission))
             goto _end;
 
         uint32_t int_cnt = (cstate.ClusterPosition & CS_CP_MODE) == MODE_CS_ID ? pSP->MinimumIntegrationCount : 1;
@@ -190,24 +194,34 @@ void FSM_doListen(void)
         SVC_ClrClockSyncFIFO();
         CNI_ResetHLFS(); /**< more reasonable Op interface shall be negotiated */
         
+        uint32_t t3 = TIM14->CNT;
         // cluster time correcting.
         //perform "correction" + "precision" of "sender", meaning cps_value
-        uint32_t cps_value = pRS->DelayCorrectionTerms + pSP->Precision;
-        uint32_t cps_mi = cps_value*frequency/1000+1;
-        uint32_t y = TIM14->CNT;
+        uint32_t cur_time            = CLOCK_GetCurMacrotick();
+        uint32_t exe_time_from_start = cur_time - (chosen_ch==CH0 ? pDesc->pCH0->rcv_timestamp : pDesc->pCH1->rcv_timestamp);
+        
+        uint32_t correction_term     = chosen_ch==CH0 ? pRS->DelayCorrectionTerms0 : pRS->DelayCorrectionTerms1;
+        uint32_t cps_value           = correction_term + pSP->Precision;
+        uint32_t cps_mi              = cps_value*frequency/1000+1;
+        
         //stop then clear the clock
         CLOCK_Clear();
         
-        uint32_t AT_time = CS_GetCurGTF()&0xffff;
- 
-        uint32_t actual_ma = AT_time + (EXE_MI_FOR_LISTEN + cps_mi) / freq_div;
-        uint32_t actual_mi = (EXE_MI_FOR_LISTEN + cps_mi) % freq_div;
+        uint32_t AT_time   = CS_GetCurGTF()&0xffff;
+        
+        uint32_t delta     = exe_time_from_start + COMPENSATE_MI_TIME + cps_mi;
+        uint32_t actual_ma = AT_time + delta / freq_div;
+        uint32_t actual_mi = delta % freq_div;
 
         CLOCK_SetCurMacrotick(actual_ma);
         CLOCK_SetCurMicrotick(actual_mi);
         
-        //#error "some bugs to be fixed"
-        MAC_SetPhaseCycleStartPoint(CS_GetCurGTF()-pRS->AtTime,0);
+        uint32_t mode_num   = CALC_MODE_NUM(CS_GetCurMode());
+        uint32_t tdma_round = MAC_GetTDMARound();
+        uint32_t tdma_offset = MEDL_GetTDMAOffsetValue(mode_num,tdma_round);
+        uint32_t cycle_start = CS_GetCurGTF()-pRS->AtTime - tdma_offset;
+        
+        MAC_SetPhaseCycleStartPoint(cycle_start,tdma_offset);
         
         //attention that the AT and the PRP time have expired at this time.
         //MAC_SetSlotTime(AT_time,pRS->TransmissionDuration,pRS->PSPDuration,pRS->SlotDuration, 0);
@@ -218,7 +232,7 @@ void FSM_doListen(void)
         uint32_t t4 = TIM14->CNT;
         CLOCK_Start();
         
-        INFO("%u,%u,%u",actual_ma,actual_mi,t4-t1);
+        INFO("%u,%u,%u,%u",actual_ma,actual_mi,t4-t3,exe_time_from_start);
         
         MAC_StartPhaseCirculation(); /**< start synchronization mode */
 
@@ -228,7 +242,7 @@ void FSM_doListen(void)
     } else {
         //Listening timeout expired, check if the cold start conditions are fullfilled.
         
-        if (pSP->ColdStartAllow == COLD_START_NOT_ALLOWED)
+        if (!(pSP->ScheduleFlags & ScheduleFlags_ColdStartAllowed))
             goto _end;
         if (pSP->MaximumColdStartEntry == 0)
             goto _end;

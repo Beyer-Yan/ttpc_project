@@ -61,17 +61,17 @@ NodeProperty_t* MAC_GetNodeProperties(void)
 
 uint32_t MAC_IsPassiveNode(void)
 {
-    NodeProperty_t* pNS = MAC_GetNodeProperties();
+    NodeProperty_t* pNP = MAC_GetNodeProperties();
 
-    if(pNS->PassiveFlag == PERMANENT_PASSIVE)
+    if(pNP->NodeFlags & NodeFlags_PermanentPassive)
         return 1;
     return 0;
 }
 uint32_t MAC_IsMultiplexedMembershipNode(void)
 {
-    NodeProperty_t* pNS = MAC_GetNodeProperties();
+    NodeProperty_t* pNP = MAC_GetNodeProperties();
 
-    if(pNS->MultiplexedMembershipFlag == MULTIPLEXED_MEMBERSHIP)
+    if(pNP->NodeFlags & NodeFlags_MultiplexedMembership)
         return 1;
     return 0;
 }

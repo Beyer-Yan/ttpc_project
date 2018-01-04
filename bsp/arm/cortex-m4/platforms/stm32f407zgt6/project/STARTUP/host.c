@@ -52,7 +52,7 @@ void HOST_Alive(void)
 void HOST_PrepareData(void)
 {
     RoundSlotProperty_t *pRS = MAC_GetRoundSlotProperties();
-    uint16_t val = Lsens_GetVal();
+    uint16_t val = LSENSE_GetVal();
     
     uint8_t* addr = MSG_GetMsgAddr(pRS->CNIAddressOffset);
     

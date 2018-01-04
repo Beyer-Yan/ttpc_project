@@ -122,23 +122,25 @@ uint32_t SVC_Integration(void*param);
 /**
  * This function calculates the clock offset between the estimate arival time and the 
  * actual arival time.
- * @param  FrameTsmp the arival timestamp of the frame, in unit of microtick
+ * @param  FrameTsmp the arival timestamp of the frame, in unit of microtick, respectively for
+ *                   channel 0 and channel 1
+ * @param  Legality  the validity of the timestamp of the corresponding channel, 0 invalid, 1 valid
  * @return           non
  */
-void     SVC_SyncCalcOffset(uint32_t FrameTsmp);
+void SVC_SyncCalcOffset(uint32_t FrameTsmpOfCH0, uint32_t FrameTsmpOfCH1, uint32_t ValidityOfCH0, uint32_t ValidityOfCH1);
 
 /**
  * This function sets the estimate time duration of a frame between the start point of 
  * PSP and the arival time of the frame during a node slot, in unit of ns
- * @param  EstimateTimeInterval the estimate arival time interval, in unit of ns
+ * @param  EstimateTimeInterval the estimate arival time interval, in unit of ns, respectively for ch0 and ch1
  * @return              non
  * 
  * @attention  the function shall be called in PSP phase, when the frame receiving is
  * marked as SYNCRONIZATION FRAME. In syncronization node slot, the sync-algorithm shall
  * be performed.
  */
-void     SVC_SetEstimateArivalTimeInterval(uint32_t EstimateTimeInterval);
-uint32_t SVC_GetAlignedEstimateArivalTimeInterval(void);
+void     SVC_SetEstimateArivalTimeInterval(uint32_t EstimateTimeIntervalOfCH0, uint32_t EstimateTimeIntervalOfCH1);
+uint32_t SVC_GetAlignedEstimateArivalTimeInterval(uint32_t Channel);
 
 /**
  * This function clears the value of the correction term.

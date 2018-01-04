@@ -75,6 +75,28 @@ typedef enum {FALSE=0,TRUE} 		bool_t;
 #else
 	#error "not supported tool chain"
 #endif
+    
+enum ttp_error_code{
+	TTP_EOK=0,				/**< No errors happens */
+	TTP_ESLOT_NUM,			/**< Current slot > MAX_SLOT_NUMBER */
+	TTP_ENON_DATA,			/**< No data to be transmitted  */
+	TTP_ESIZE_OVER,			/**< The size of the message oversizes */
+	TTP_ERS,				/**< The message is not be confirmed by the host */
+	TTP_EMODE, 				/**< detect a mode violation */
+
+	TTP_ETX_COL,			/**< collision detected during transmitting */
+	TTP_ETX_INV,			/**< invalid transmission time */
+	TTP_ETX_ERR,            /**< Tx error by internal hardware error */
+
+	TTP_ERX_NON,			/**< nothing has been received */
+	TTP_ERX_COL,			/**< collision detected during receiving */
+	TTP_ERX_INV,			/**< invalid frames has been received */
+	TTP_ERX_CRC,            /**< received a frame with crc failed */
+	TTP_ERX_LTH,            /**< received a frame with length error */
+	TTP_EPHY,				/**< physical hardware fault */
+	TTP_EOTHER				/**< Other unknown errors */
+};
+
 /** compiler related definitions end, but need to be completed later for GCC,IARCC,TICC and so on  */ 
 
 /** definitions for  */

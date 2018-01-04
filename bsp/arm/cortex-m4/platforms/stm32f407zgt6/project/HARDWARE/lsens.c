@@ -1,7 +1,7 @@
 #include "lsens.h"
 #include <stm32f4xx.h>
 
-void Lsens_DepInit(void)
+void LSENSE_DepInit(void)
 {
     GPIO_InitTypeDef  GPIO_InitStructure;
     RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOF, ENABLE);
@@ -41,7 +41,7 @@ void Lsens_DepInit(void)
 }
 
 //0~100 : dark to light 
-uint8_t Lsens_GetVal(void)
+uint8_t LSENSE_GetVal(void)
 {
 	uint32_t temp_val=0;
 

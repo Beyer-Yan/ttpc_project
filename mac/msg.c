@@ -53,7 +53,7 @@ static inline uint32_t __calc_frame_type(void)
 
     pSlot = MAC_GetRoundSlotProperties();
 
-    if(pSlot->FrameType==FRAME_TYPE_IMPLICIT)
+    if(!(pSlot->SlotFlags & SlotFlags_FrameTypeExplicit))
     {
         return FRAME_N;
     }
@@ -96,7 +96,7 @@ static uint32_t __assemble_ttp_frame(void)
     //  * AS6003 8.6.1, page 38/56
     //  */ 
     
-    header = ((mcr)>>2)|(pSlot->FrameType&1);
+    header = ((mcr)>>2)|((pSlot->SlotFlags & SlotFlags_FrameTypeExplicit)?1:0);
 
     CRC_PushData(&header,1);   
     DRV_PushData(&header,1);
@@ -150,32 +150,32 @@ static uint32_t __assemble_ttp_frame(void)
             DRV_PushData((uint8_t*)&crc32_res,4);
         }    
     }
-    return MAC_EOK;     
+    return TTP_EOK;     
 }
 
 /**
  * This function assembles cold start frame.
  * @return  [description]
  */
-MAC_err_t MSG_PrepareCSFrame(void)
+uint32_t MSG_PrepareCSFrame(void)
 {
     uint8_t header;
     uint32_t crc32;
 
     c_state_t c_state;
-    ScheduleParameter_t* pSch;
-    NodeProperty_t*      pNode;
+    ScheduleParameter_t* pSP;
+    NodeProperty_t*      pNP;
 
-    header = (MCR_NO_REQ>>2)|FRAME_TYPE_EXPLICIT;
+    header = (MCR_NO_REQ>>2)|1;
 
-    pSch = MAC_GetScheduleParameter();
-    pNode= MAC_GetNodeProperties();
+    pSP = MAC_GetScheduleParameter();
+    pNP= MAC_GetNodeProperties();
     CS_GetCState(&c_state);
 
     /** check if the node has the qualification to cold-start */
-    TTP_ASSERT(pSch->ColdStartAllow==COLD_START_ALLOWED);
-    TTP_ASSERT(pNode->MultiplexedMembershipFlag==MONOPOLIZED_MEMBERSHIP);
-    TTP_ASSERT(pNode->PassiveFlag==NOT_PASSIVE);
+    TTP_ASSERT(pSP->ScheduleFlags & ScheduleFlags_ColdStartAllowed);
+    TTP_ASSERT(!(pNP->NodeFlags & NodeFlags_MultiplexedMembership));
+    TTP_ASSERT(!(pNP->NodeFlags & NodeFlags_PermanentPassive));
 
     CRC_ResetData();
     uint32_t id = MEDL_GetSchedID();
@@ -189,7 +189,7 @@ MAC_err_t MSG_PrepareCSFrame(void)
     DRV_PushData((uint8_t*)&c_state,sizeof(c_state));
     DRV_PushData((uint8_t*)&crc32,4);
 
-    return MAC_EOK;
+    return TTP_EOK;
 }
 
 /**
@@ -199,10 +199,10 @@ MAC_err_t MSG_PrepareCSFrame(void)
  * be taken consideration for the next version.
  * @return  MAC_err_t
  */
-MAC_err_t MSG_PushFrame(void)
+uint32_t MSG_PushFrame(void)
 {
     __assemble_ttp_frame();
-    return MAC_EOK;
+    return TTP_EOK;
 }
 
 void MSG_PullAppData(TTP_ChannelFrameDesc* pDesc)
@@ -233,22 +233,6 @@ void MSG_PullAppData(TTP_ChannelFrameDesc* pDesc)
         msg_addr[i] = payload_addr[i];
 }
 
-static inline uint32_t _status_adapter(uint32_t drv_status)
-{
-    uint32_t res;
-    switch(drv_status)
-    {
-        case DRV_OK  : res = MAC_EOK;       break;
-        case RXD_COL : res = MAC_ERX_COL;   break;
-        case CRC_ERR : res = MAC_ERX_ECRC;  break;
-        case PHY_ERR : res = MAC_EPHY;      break;
-        case LTH_ERR : res = MAC_ERX_LTH;   break;
-        case DRV_INV : res = MAC_ERX_INV;   break;
-        default : res = MAC_EOTHER;    break;
-    }
-    return res;
-}
-
 TTP_FrameDesc* MSG_GetFrameDesc(void)
 {
     DataPacketTypeDef* pDataPacket;
@@ -260,7 +244,7 @@ TTP_FrameDesc* MSG_GetFrameDesc(void)
     _G_TTP_FrameDesc.pCH0->length = pDataPacket->ch0->length;
     _G_TTP_FrameDesc.pCH0->pFrame = (TTP_FrameStructDesc*)pDataPacket->ch0->BufferAddr;
     _G_TTP_FrameDesc.pCH0->rcv_timestamp = CLOCK_GetCaptureRX0();
-    _G_TTP_FrameDesc.pCH0->status = _status_adapter(pDataPacket->ch0->status);
+    _G_TTP_FrameDesc.pCH0->status = pDataPacket->ch0->status;
 
     //_G_TTP_FrameDesc.pCH1->length = pDataPacket->ch1->length;
     //_G_TTP_FrameDesc.pCH1->pFrame = (TTP_FrameStructDesc*)pDataPacket->ch1->BufferAddr;
@@ -287,15 +271,7 @@ uint32_t  MSG_GetFrameTimestamp(uint32_t channel)
  */
 uint32_t MSG_GetTransmittedFlags(void)
 {
-    uint32_t res = DRV_CheckTransmitted();
-
-    switch(res)
-    {
-        case DRV_OK : res = MAC_EOK;      break;
-        case PHY_ERR: res = MAC_EPHY;     break;
-        default: res = MAC_EOTHER;        break;
-    }
-    return res;
+    return DRV_CheckTransmitted();
 }
 
 uint32_t  MSG_CheckReceived(uint32_t Channel)

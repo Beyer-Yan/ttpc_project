@@ -40,7 +40,7 @@ struct SubSeqRoutine SSR_active =
 void FSM_toActive(void)
 {
     //for testing
-    //HOST_ModeChange(DMC_MODE_1);
+    HOST_ModeChange(DMC_MODE_1);
 }
 
 void FSM_doActive(void)

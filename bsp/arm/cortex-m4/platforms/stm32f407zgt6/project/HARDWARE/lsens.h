@@ -2,8 +2,8 @@
 #define __LSENS_H__	
 #include <stdint.h>
  
-void Lsens_DepInit(void); 
-uint8_t Lsens_GetVal(void);		
+void LSENSE_DepInit(void); 
+uint8_t LSENSE_GetVal(void);		
 #endif 
 
 

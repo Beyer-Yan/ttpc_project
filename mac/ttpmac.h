@@ -20,27 +20,6 @@
 
 #include "ttpdef.h"
 
-typedef enum Mac_err{
-	MAC_EOK=0,				/**< No errors happens */
-	MAC_ESLOT_NUM,			/**< Current slot > MAX_SLOT_NUMBER */
-	MAC_ENON_DATA,			/**< No data to be transmitted  */
-	MAC_ESIZE_OVER,			/**< The size of the message oversizes */
-	MAC_ERS,				/**< The message is not be confirmed by the host */
-	MAC_EMODE, 				/**< detect a mode violation */
-
-	MAC_ETX_COL,			/**< collision detected during transmitting */
-	MAC_ETX_INV,			/**< invalid transmission time */
-
-	MAC_ERX_NON,			/**< nothing has been received */
-	MAC_ERX_COL,			/**< collision detected during receiving */
-	MAC_ERX_INV,			/**< invalid frames has been received */
-	MAC_ERX_ECRC,           /**< received a frame with crc failed */
-	MAC_ERX_LTH,            /**< received a frame with length error */
-
-	MAC_EPHY,				/**< physical hardware fault */
-	MAC_EOTHER				/**< Other unknown errors */
-}MAC_err_t;
-
 /******************************* parameters access interface **************************/
 
 /**
@@ -48,56 +27,38 @@ typedef enum Mac_err{
  */
 /**@{*/
 
-typedef struct mac_slot 
+typedef struct mac_slot
 {
-	uint32_t LogicalSenderMultiplexID;
-	uint32_t LogicalSenderSlot;
+	uint16_t LogicalSenderMultiplexID;
+	uint16_t LogicalSenderSlot;
 
-	uint32_t SlotDuration;				/**< in unit of macroticks */
-	uint32_t PSPDuration;               /**< in unit of macroticks */
-	uint32_t TransmissionDuration;      /**< in unit of macroticks */
+	uint16_t SlotDuration;          /**< in unit of macroticks */
+	uint16_t PSPDuration;           /**< in unit of macroticks */
+	uint16_t TransmissionDuration;  /**< in unit of macroticks */
+	
+	uint16_t DelayCorrectionTerms0; /**< delay correction term for channel 0, in unit of ns */
+	uint16_t DelayCorrectionTerms1; /**< delay correction term for channel 1, in unit of ns */
 
-	uint32_t DelayCorrectionTerms;		/**< in unit of ns */	
-	uint32_t AppDataLength;
-    uint32_t CNIAddressOffset;			/**< offset relative to CNI base addr */
-	uint32_t FlagPosition;				/**< flag position in membership vector of 
-	                                         the current sending node*/
-	uint32_t FrameType;					/**<  implicit or explicit */
-	uint32_t ModeChangePermission;      
-	uint32_t ReintegrationAllow;
-	uint32_t ClockSynchronization;
-	uint32_t SynchronizationFrame;
-	/* the time for action in unit of macrotick relative to the start of round slot*/
-	uint32_t AtTime;					
+	uint8_t  AppDataLength;
+	uint8_t  RESV0;
 
-}RoundSlotProperty_t;
+	uint32_t CNIAddressOffset;     /**< offset relative to CNI base addr */
 
-/** RoundSlotProperty_t.ModeChangePermission */
-#define MODE_CHANGE_PERMIT 				(uint32_t)0x00000001
-#define MODE_CHANGE_DENY				(uint32_t)0x00000000
 
-/** RoundSlotProperty_t.ReintegrationAllow */
-#define REINTEGRATION_ALLOWED 			(uint32_t)0x00000001
-#define REINTEGRATION_NOT_ALLOWED 		(uint32_t)0x00000000
+	uint8_t  FlagPosition;          /**< flag position in membership vector of e current sending node*/
+	uint8_t  SlotFlags;
+	uint16_t AtTime;               /* the time for action in unit of macrotick relative to the start of round slot*/
+} __PACK RoundSlotProperty_t;
 
-/** RoundSlotProperty_t.ClockSynchronization */
-#define CLOCK_SYN_NEEDED 				(uint32_t)0x00000001
-#define CLOCK_SYN_NOT_NEEDED			(uint32_t)0x00000000
 
-/** RoundSlotProperty_t.SynchronizationFrame */
-#define SYN_FRAME 						(uint32_t)0x00000001
-#define NOT_SYN_FRAME					(uint32_t)0x00000000
+#define SlotFlags_FrameTypeExplicit      ((uint8_t)0x01)
+#define SlotFlags_ModeChangePermission   ((uint8_t)0x02)
+#define SlotFlags_ReintegrationAllowed   ((uint8_t)0x04)
+#define SlotFlags_ClockSynchronization   ((uint8_t)0x08)
+#define SlotFlags_SynchronizationFrame   ((uint8_t)0x10)
 
-/** RoundSlotProperty_t.FrameType */
-#define FRAME_TYPE_IMPLICIT 			(uint32_t)0x00000000
-#define FRAME_TYPE_EXPLICIT 			(uint32_t)0x00000001
-
-#define SLOT_PHASE_PSP 					1
-#define SLOT_PHASE_AT 					2
-#define SLOT_PHASE_PRP 					3
-
-#define SENDING_FRAME 					1
-#define RECEIVING_FRAME  				2
+#define SENDING_FRAME 					 1
+#define RECVING_FRAME                    0
 
 /**
  * Get the round slot of the current slot.
@@ -124,24 +85,17 @@ uint32_t  MAC_GetAppID(void);
 /**
  * The properties below are specified for the node at initialization phase
  */
-
 typedef struct mac_node
 {
-    uint32_t LogicalNameMultiplexedID;
-	uint32_t LogicalNameSlotPosition;	
-	uint32_t PassiveFlag;				/**< Marks the node as a permanent passive */
-	uint32_t MultiplexedMembershipFlag;
-	uint32_t FlagPosition;				/**< flag position in membership vector */
-	uint32_t SendDelay;					/**< int unit of macrotick */
-}NodeProperty_t;
+	uint16_t LogicalNameMultiplexedID;
+	uint16_t LogicalNameSlotPosition;
+	uint8_t NodeFlags;
+	uint8_t FlagPosition;
+	uint16_t SendDelay;
+} __PACK NodeProperty_t;
 
-/** NodeProperty_t.PassiveFlag */
-#define PERMANENT_PASSIVE				(uint32_t)0x00000001
-#define NOT_PASSIVE						(uint32_t)0x00000000
-
-/** NodeProperty_t.MultiplexedMembershipFlag */
-#define MULTIPLEXED_MEMBERSHIP			(uint32_t)0x00000001
-#define MONOPOLIZED_MEMBERSHIP			(uint32_t)0x00000000
+#define NodeFlags_PermanentPassive        ((uint8_t)0x01)
+#define NodeFlags_MultiplexedMembership   ((uint8_t)0x02)
 
 NodeProperty_t* MAC_GetNodeProperties(void);
 
@@ -156,34 +110,24 @@ uint32_t 	MAC_IsMultiplexedMembershipNode(void);
 
 typedef struct mac_schedule
 {
-	uint32_t ColdStartAllow;
-	uint32_t ColdStartIntegrationAllow;
-	uint32_t ExternalRateCorrectionAllow;
-	uint32_t MinimumIntegrationCount;
-	uint32_t MaximumColdStartEntry;
-	uint32_t MaximumMembershipFailureCount;
-	uint32_t MacrotickParameter;
-	uint32_t Precision;
-	uint32_t ArrivalTimingWindow;
+	uint8_t ScheduleFlags;
 
-	uint32_t StartupTimeout;
-	uint32_t ListenTimeout;
-	uint32_t ColdStartTimeout;
-}ScheduleParameter_t;
+	uint8_t MinimumIntegrationCount;
+	uint8_t MaximumColdStartEntry;
+	uint8_t MaximumMembershipFailureCount;
 
-/** ScheduleParameter_t.ColdStartAllow */
-#define COLD_START_ALLOWED 				(uint32_t)0x00000001
-#define COLD_START_NOT_ALLOWED 			(uint32_t)0x00000000
+	uint32_t MacrotickParameter; // in unit of ns
+	uint32_t Precision;          // in uint of ns
+	uint32_t ArrivalTimingWindow;// in unit of ns
 
-/** ScheduleParameter_t.ColdStartIntegrationAllow */
-#define COLD_START_INTEGRATION_ALLOWED 	(uint32_t)0x00000001
-#define COLD_START_INTEGRATION_NOT_ALLOWED (uint32_t)0x00000000
+	uint32_t StartupTimeout;     // in unit of macrotick
+	uint32_t ListenTimeout;      // in unit of macrotick
+	uint32_t ColdStartTimeout;   // in unit of macrotick
+} __PACK ScheduleParameter_t;
 
-/** ScheduleParameter_t.ExternalRateCorrectionAllow */
-#define EXTERNAL_CORRECTION_ALLOWED 	(uint32_t)0x00000001
-#define EXTERNAL_CORRECTION_NOT_ALLOWED (uint32_t)0x00000000
-
-/** ScheduleParameter_t.CommunicationRate */
+#define ScheduleFlags_ColdStartAllowed             ((uint8_t)0x01)
+#define ScheduleFlags_ColdStartIntegrationAllowed  ((uint8_t)0x02)
+#define ScheduleFlags_ExternalCorrectionAllowed    ((uint8_t)0x04)
 
 ScheduleParameter_t* MAC_GetScheduleParameter(void);
 uint32_t 	MAC_GetMinimumIntegrationCount(void);

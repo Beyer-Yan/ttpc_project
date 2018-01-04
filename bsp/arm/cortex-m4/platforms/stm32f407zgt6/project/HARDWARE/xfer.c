@@ -20,7 +20,7 @@
 #include "stm32f4x7_eth.h"
 #include "stm32f4x7_eth_conf.h"
 #include "ttpdebug.h"
-
+#include "ttpdef.h"
 #include "ttpconstants.h"
 
 #if defined (TTP_NODE0) || defined (TTP_NODE1)
@@ -92,7 +92,7 @@ static inline void _buffer_config(void)
 {
     Rx_CH0.BufferAddr = 0;
     Rx_CH0.length     = 0;
-    Rx_CH0.status     = DRV_INV;
+    Rx_CH0.status     = TTP_ERX_INV;
     
     Rx_CH1 = Rx_CH0;
     
@@ -359,7 +359,7 @@ void DRV_RxClear(void)
     DMARxDscrTab1.Status = 0;
 }
 
-int DRV_PushData(const uint8_t* DataAddr, int size)
+uint32_t DRV_PushData(const uint8_t* DataAddr, int size)
 {
     int i = Tx_CurPointer;
     while(size--)
@@ -372,10 +372,10 @@ int DRV_PushData(const uint8_t* DataAddr, int size)
         if(Tx_CurPointer>ETH_TX_BUF_SIZE)
         {
             Tx_CurPointer = ETH_HEADER;
-            return DRV_ERR;
+            return TTP_ESIZE_OVER;
         }
     }
-    return DRV_OK;
+    return TTP_EOK;
 }
 
 void DRV_PrepareToTransmit(void)
@@ -398,17 +398,17 @@ void DRV_PrepareToTransmit(void)
     //todo for Tx_Buffer1  
 }
 
-int DRV_CheckTransmitted(void)
+uint32_t DRV_CheckTransmitted(void)
 {
     TTP_TGUARD((DMATxDscrTab0.Status & ETH_DMATxDesc_OWN) == (uint32_t)RESET);
     
     if(ETH_GetDMATxDescFlagStatus(&DMATxDscrTab0,ETH_DMATxDesc_ES)==SET)
-        return DRV_ERR;
+        return TTP_ETX_ERR;
     
-    return DRV_OK;
+    return TTP_EOK;
 }
 
-int DRV_CheckReceived(int channel)
+uint32_t DRV_CheckReceived(int channel)
 {
     //todo for different channels checking
     FrameTypeDef frame;
@@ -423,20 +423,20 @@ int DRV_CheckReceived(int channel)
             Rx_CH0.length     = 0;
             
             if(ETH_GetDMARxDescFlagStatus(&DMARxDscrTab0,ETH_DMARxDesc_LE)==SET)
-                Rx_CH0.status = LTH_ERR;
+                Rx_CH0.status = TTP_ERX_LTH;
             else if(ETH_GetDMARxDescFlagStatus(&DMARxDscrTab0,ETH_DMARxDesc_CE)==SET)
-                Rx_CH0.status = CRC_ERR;
+                Rx_CH0.status = TTP_ERX_CRC;
             else if(ETH_GetDMARxDescFlagStatus(&DMARxDscrTab0,ETH_DMARxDesc_LC)==SET)
-                Rx_CH0.status = RXD_COL;
+                Rx_CH0.status = TTP_ERX_COL;
             else
-                Rx_CH0.status = PHY_ERR;
+                Rx_CH0.status = TTP_EOTHER;
         }
         else
         {
             frame = ETH_Get_Received_Frame();
             Rx_CH0.BufferAddr = Rx_Buff0 + ETH_HEADER; //substruct the 14 bytes of the ETH header
-            Rx_CH0.length = frame.length - 10; // 
-            Rx_CH0.status = DRV_OK;
+            Rx_CH0.length = frame.length - 14;         //6 bytes eth_src + 6 bytes eth_dst + 2bytes type/length        
+            Rx_CH0.status = TTP_EOK;
         }
         
         Rx_CH1 = Rx_CH0;
@@ -471,7 +471,7 @@ int DRV_CheckReceived(int channel)
     return res;
 }
 
-int DRV_IsChannelActive()
+uint32_t DRV_IsChannelActive(void)
 {
     // to do for channel 1
     return (GPIOA->IDR & GPIO_Pin_6);

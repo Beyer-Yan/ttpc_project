@@ -173,14 +173,14 @@ static inline void _prepare_for_receive(void)
     RoundSlotProperty_t* pRS = MAC_GetRoundSlotProperties();
     uint32_t mai = MAC_GetMacrotickParameter();
 
-    if (pRS->SynchronizationFrame == SYN_FRAME) {
-        SVC_SetEstimateArivalTimeInterval(pRS->DelayCorrectionTerms +  mai);
+    if (pRS->SlotFlags & SlotFlags_SynchronizationFrame) {
+        SVC_SetEstimateArivalTimeInterval(pRS->DelayCorrectionTerms0+mai,pRS->DelayCorrectionTerms1+mai);
     }
 
     uint32_t actual_at = pRS->AtTime + _G_ClusterCycleStartTime + _G_TDMARoundStartTimeOffset;
 
     MAC_SetSlotTime(actual_at, pRS->TransmissionDuration,pRS->PSPDuration, pRS->SlotDuration,0);
-    MAC_SetSlotAcquisition(RECEIVING_FRAME);
+    MAC_SetSlotAcquisition(RECVING_FRAME);
 }
 
 static inline void _prepare_for_transmit(void)
@@ -237,7 +237,7 @@ static inline uint32_t _is_data_frame()
     // the legality of the slot configuration shall be checked upper application
     RoundSlotProperty_t* pRS = MAC_GetRoundSlotProperties();
 
-    return ((pRS->FrameType == FRAME_TYPE_IMPLICIT) || (pRS->AppDataLength) ? 1 : 0);
+    return ( !(pRS->SlotFlags & SlotFlags_FrameTypeExplicit) || (pRS->AppDataLength) ? 1 : 0);
 }
 
 void psp_for_passive(void)
@@ -280,7 +280,7 @@ void psp_for_passive(void)
         goto _end;
 
     if(CNI_IsModeChangeRequested()){
-        if(pRS->ModeChangePermission == MODE_CHANGE_DENY){
+        if(pRS->SlotFlags & SlotFlags_ModeChangePermission){
             CNI_SetSRBit(SR_MV);
             CNI_ClrMCR();
             goto _end;
@@ -349,7 +349,7 @@ void psp_for_active(void)
 
         //check the mode request field
         if (CNI_IsModeChangeRequested()) {
-            if (pRS->ModeChangePermission == MODE_CHANGE_DENY) {
+            if (!(pRS->SlotFlags & SlotFlags_ModeChangePermission)) {
                 CNI_SetSRBit(SR_MV);
                 CNI_ClrMCR();
                 CS_ClearMemberBit(pRS->FlagPosition);
@@ -424,7 +424,7 @@ void psp_for_coldstart(void)
 
         //check the mode request field
         if (CNI_IsModeChangeRequested()) {
-            if (pRS->ModeChangePermission == MODE_CHANGE_DENY) {
+            if (!(pRS->SlotFlags & SlotFlags_ModeChangePermission)) {
                 CNI_SetSRBit(SR_MV);
                 CNI_ClrMCR();
                 CS_ClearMemberBit(pRS->FlagPosition);
@@ -452,5 +452,5 @@ uint32_t  MAC_GetSlotStartMicroticks(void)
 void MAC_SetPhaseCycleStartPoint(uint32_t CycleStartTime, uint32_t TDMAStartOffset)
 {
     _G_ClusterCycleStartTime    = CycleStartTime;
-    _G_TDMARoundStartTimeOffset = 0;
+    _G_TDMARoundStartTimeOffset = TDMAStartOffset;
 }
