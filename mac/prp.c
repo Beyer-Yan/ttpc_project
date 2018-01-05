@@ -41,6 +41,16 @@
 #define _FRAME_VALID_   1
 #define _FRAME_INVALID_ 0
 
+static const char* _slot_status_name[6] = 
+{
+    "FRAME_CORRECT",
+    "FRAME_TENTATIVE",
+    "FRAME_MODE_VIOLATION",
+    "FRAME_INCORRECT",
+    "FRAME_NULL",
+    "FRAME_INVALID"
+};
+
 /**
  * byte copy for inner use.
  * @param dst  the destination address
@@ -115,6 +125,7 @@ static uint32_t _frame_crc32_check(TTP_ChannelFrameDesc* pDesc, uint32_t type)
         _byte_copy((uint8_t*)&c_state, pDesc->pFrame->x.cstate, sizeof(c_state));
 
         if (!CS_IsSame(&c_state)){
+            INFO("explicit cstate disagreement");
             return 0;
         }
         else
@@ -171,7 +182,7 @@ static uint32_t _judge_valid(uint32_t* pframe_status, uint32_t channel)
     /** for FRAME_NULL checking */
     if (!MSG_CheckReceived(channel)) {
         *pframe_status = FRAME_NULL;
-        //INFO("received nothing on ch:%d",channel);
+        INFO("received nothing on ch:%d",channel);
         return _FRAME_INVALID_;
     }
     TTP_FrameDesc *pFrameDesc = MSG_GetFrameDesc();
@@ -270,9 +281,9 @@ static uint32_t _get_valid_frame_status(TTP_ChannelFrameDesc* pDesc, uint32_t ty
         header = pDesc->pFrame->hdr[0];
         frame_mcr = (header & ~1) << 2;
 
-        if (frame_mcr != MCR_MODE_CLR) {
+        if (frame_mcr != MCR_NO_REQ) {
             //mode changing is carried in the frame.
-            if (pRS->SlotFlags & SlotFlags_ModeChangePermission) {
+            if (!(pRS->SlotFlags & SlotFlags_ModeChangePermission)) {
                 frame_status = FRAME_MODE_VIOLATION;
             }
         }
@@ -374,6 +385,11 @@ void prp_for_passive(void)
 
     MAC_SetSlotStatus(slot_status);
 
+    INFO("slot_status:%s",_slot_status_name[slot_status]);
+    //INFO("mode:%d",CALC_MODE_NUM(CS_GetCurMode()));
+    //INFO("agreed:%d",PV_GetCounter(AGREED_SLOTS_COUNTER));
+    //INFO("failed:%d",PV_GetCounter(FAILED_SLOTS_COUNTER)); 
+    
     if(_is_data_frame()) { MSG_SetStatus(pRS->CNIAddressOffset, slot_status); }
     
     if(pRS->SlotFlags & SlotFlags_ClockSynchronization){
@@ -382,7 +398,7 @@ void prp_for_passive(void)
             //INFO("SYNC ERROR");
             FSM_TransitIntoState(FSM_FREEZE);
         }
-    } 
+    }    
 }
 
 /**
@@ -473,16 +489,18 @@ static uint32_t _ack_result(TTP_ChannelFrameDesc* pDesc, uint32_t type, uint32_t
         uint32_t frame_mcr;
 
         header = pDesc->pFrame->hdr[0];
-        frame_mcr = ((header & ~1) << 2) & 0xf;
+        frame_mcr = ((header & ~0x01) << 2) & 0xf;
 
-        if (frame_mcr != MCR_MODE_CLR) {
+        if (frame_mcr != MCR_NO_REQ) {
             //mode changing is carried in the frame.
-            if (pRS->SlotFlags & SlotFlags_ModeChangePermission) {
-                //INFO("ack frame mcr error");
+            if (!(pRS->SlotFlags & SlotFlags_ModeChangePermission)) {
+                INFO("ack frame mcr error");
                 *pframe_status = FRAME_MODE_VIOLATION;
             }
         }
     }
+    if(*pframe_status == FRAME_INCORRECT)
+        INFO("ack result incorrect");
 
     return res;
 }
@@ -578,7 +596,7 @@ void prp_for_active(void)
         //@see "Time Triggered Protocol Spec, Page 72"
         slot_status = FRAME_NULL;
     }
-
+    
     if (slot_status == FRAME_CORRECT) {
 
         TTP_ChannelFrameDesc *pDesc_chosen = frame_status_ch[0] == FRAME_CORRECT ? pDesc->pCH0 : pDesc->pCH1;
@@ -617,17 +635,21 @@ void prp_for_active(void)
     }
     MAC_SetSlotStatus(slot_status);
     
+    INFO("slot_status:%s",_slot_status_name[slot_status]);
+    //INFO("mode:%d",CALC_MODE_NUM(CS_GetCurMode()));
+    //INFO("agreed:%d",PV_GetCounter(AGREED_SLOTS_COUNTER));
+    //INFO("failed:%d",PV_GetCounter(FAILED_SLOTS_COUNTER)); 
+    
     c_state_t cstate,cx;
     CS_GetCState(&cstate);
     _byte_copy((uint8_t*)&cx,pDesc->pCH0->pFrame->x.cstate,sizeof(c_state_t));
-    INFO("local:%x,%x,%x,%x,%x,%x",cstate.GlobalTime,cstate.ClusterPosition,cstate.Membership[0],cstate.Membership[1],cstate.Membership[2],cstate.Membership[3]);
-    INFO("frame:%x,%x,%x,%x,%x,%x",cx.GlobalTime,cx.ClusterPosition,cx.Membership[0],cx.Membership[1],cx.Membership[2],cx.Membership[3]);
-    
+    //INFO("headr:%x",pDesc->pCH0->pFrame->hdr[0]);
+    //INFO("local:%x,%x,%x,%x,%x,%x",cstate.GlobalTime,cstate.ClusterPosition,cstate.Membership[0],cstate.Membership[1],cstate.Membership[2],cstate.Membership[3]);
+    //INFO("frame:%x,%x,%x,%x,%x,%x",cx.GlobalTime,cx.ClusterPosition,cx.Membership[0],cx.Membership[1],cx.Membership[2],cx.Membership[3]);
     /** for the assumption that channel 0 and channel 1 are the same */
     if(_is_data_frame()) { MSG_SetStatus(pRS->CNIAddressOffset, slot_status); }
 
     __check_sync:
-    
     if(pRS->SlotFlags & SlotFlags_ClockSynchronization){
         if(!SVC_ExecSyncSchema(0)){
             CNI_SetSRBit(SR_SE);
@@ -712,8 +734,12 @@ void prp_for_coldstart(void)
 
     MAC_SetSlotStatus(slot_status);
     
+    INFO("slot_status:%s",_slot_status_name[slot_status]);
+    //INFO("mode:%d",CALC_MODE_NUM(CS_GetCurMode()));
+    //INFO("agreed:%d",PV_GetCounter(AGREED_SLOTS_COUNTER));
+    //INFO("failed:%d",PV_GetCounter(FAILED_SLOTS_COUNTER)); 
+    
     __check_sync:
-
     if(pRS->SlotFlags & SlotFlags_ClockSynchronization){
         if(!SVC_ExecSyncSchema(0)){
             CNI_SetSRBit(SR_SE);

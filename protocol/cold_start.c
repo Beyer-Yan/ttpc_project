@@ -98,10 +98,14 @@ void FSM_toColdStart(void)
     //SVC synchronization setting
     SVC_ClrClockSyncFIFO();
 
-    //counters setting
+    /** 
+     * counters setting。
+     * At least two listening nodes that are live is needed for cold-start.
+     * So, the cold-start node shall set its AGREED_SLOTS_COUNTER to zero
+     */
     PV_IncCounter(COLD_START_COUNTER);
     PV_SetCounter(FAILED_SLOTS_COUNTER,0);
-    PV_SetCounter(AGREED_SLOTS_COUNTER,1);
+    PV_SetCounter(AGREED_SLOTS_COUNTER,0);
     PV_SetCounter(INTEGRATION_COUNTER,pSP->MinimumIntegrationCount);
     PV_DisableFreeShot();
 

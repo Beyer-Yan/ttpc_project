@@ -23,7 +23,7 @@
  */
 /**@{*/
 
-#define TTP_NODE0
+#define TTP_NODE3
 
 /**@}*/// end of the group Exported_Constants
 

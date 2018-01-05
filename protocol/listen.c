@@ -27,7 +27,7 @@
 #include "stm32f4xx.h"
 
 
-#define COMPENSATE_MI_TIME  (280)
+#define COMPENSATE_MI_TIME  (306)
 
 extern uint32_t phase_indicator;
 
@@ -184,7 +184,7 @@ void FSM_doListen(void)
         pRS = MAC_GetRoundSlotProperties();
 
         // mode error, desert the received frame
-        if (header >> 1 != 0 && !(pRS->SlotFlags & SlotFlags_ModeChangePermission))
+        if ((header >> 1) != 0 && !(pRS->SlotFlags & SlotFlags_ModeChangePermission))
             goto _end;
 
         uint32_t int_cnt = (cstate.ClusterPosition & CS_CP_MODE) == MODE_CS_ID ? pSP->MinimumIntegrationCount : 1;
@@ -197,7 +197,7 @@ void FSM_doListen(void)
         uint32_t t3 = TIM14->CNT;
         // cluster time correcting.
         //perform "correction" + "precision" of "sender", meaning cps_value
-        uint32_t cur_time            = CLOCK_GetCurMacrotick();
+        uint32_t cur_time            = CLOCK_GetCurMicrotick();
         uint32_t exe_time_from_start = cur_time - (chosen_ch==CH0 ? pDesc->pCH0->rcv_timestamp : pDesc->pCH1->rcv_timestamp);
         
         uint32_t correction_term     = chosen_ch==CH0 ? pRS->DelayCorrectionTerms0 : pRS->DelayCorrectionTerms1;
@@ -232,7 +232,11 @@ void FSM_doListen(void)
         uint32_t t4 = TIM14->CNT;
         CLOCK_Start();
         
+        c_state_t cstate;
+        _byte_copy((uint8_t*)&cstate,pDesc->pCH0->pFrame->x.cstate,sizeof(c_state_t));
         INFO("%u,%u,%u,%u",actual_ma,actual_mi,t4-t3,exe_time_from_start);
+        INFO("headr:%x",pDesc->pCH0->pFrame->hdr[0]);
+        INFO("local:%u,%x,%x,%x,%x,%x",cstate.GlobalTime,cstate.ClusterPosition,cstate.Membership[0],cstate.Membership[1],cstate.Membership[2],cstate.Membership[3]);
         
         MAC_StartPhaseCirculation(); /**< start synchronization mode */
 

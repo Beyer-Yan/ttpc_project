@@ -65,6 +65,6 @@ void HOST_PrepareData(void)
 
 void HOST_ModeChange(uint32_t mode)
 {
-    TTP_CR0 &=~ CR_MCR; 
-    TTP_CR0 |=  MCR_MODE_1;
+    //TTP_CR0 &=~ CR_MCR; 
+    //TTP_CR0 |=  MCR_MODE_1;
 }

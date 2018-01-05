@@ -84,7 +84,7 @@ void MAC_AdjTime(uint16_t AdjMode, int16_t Offset)
     //     cor_val[i] += ratio;
     // }
 
-    if(AdjMode == CLK_PHASE_ADJ)
+    if(AdjMode == CLK_FREQ_ADJ)
     {
         CLOCK_SetStateCorrectionTerm(Offset);
     }

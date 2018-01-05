@@ -245,9 +245,6 @@ void psp_for_passive(void)
     RoundSlotProperty_t* pRS = _slot_property_update();
     
     INFO("SLOT----------------------------------------%d",MAC_GetRoundSlot());
-    //INFO("mode:%d",CALC_MODE_NUM(CS_GetCurMode()));
-    //INFO("agreed:%d",PV_GetCounter(AGREED_SLOTS_COUNTER));
-    //INFO("failed:%d",PV_GetCounter(FAILED_SLOTS_COUNTER));
     
     INFO("SSS PASSIVE   -- TIME:%u",_G_SlotStartMacrotickTime);
     
@@ -280,7 +277,7 @@ void psp_for_passive(void)
         goto _end;
 
     if(CNI_IsModeChangeRequested()){
-        if(pRS->SlotFlags & SlotFlags_ModeChangePermission){
+        if(!(pRS->SlotFlags & SlotFlags_ModeChangePermission)){
             CNI_SetSRBit(SR_MV);
             CNI_ClrMCR();
             goto _end;

@@ -32,12 +32,12 @@
 #define FRAME_X             	2
 
 /** for frame status field: the least significant 8-bits valid*/
-#define FRAME_CORRECT 			(uint32_t)0x00000001
-#define FRAME_TENTATIVE			(uint32_t)0x00000002
-#define FRAME_MODE_VIOLATION	(uint32_t)0x00000003
-#define FRAME_INCORRECT 		(uint32_t)0x00000004
-#define FRAME_NULL				(uint32_t)0x00000005
-#define FRAME_INVALID			(uint32_t)0x00000006
+#define FRAME_CORRECT 			(uint32_t)0x00000000
+#define FRAME_TENTATIVE			(uint32_t)0x00000001
+#define FRAME_MODE_VIOLATION	(uint32_t)0x00000002
+#define FRAME_INCORRECT 		(uint32_t)0x00000003
+#define FRAME_NULL				(uint32_t)0x00000004
+#define FRAME_INVALID			(uint32_t)0x00000005
 
 
 typedef uint32_t crc32_t;

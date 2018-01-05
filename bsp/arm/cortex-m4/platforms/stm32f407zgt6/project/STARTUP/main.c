@@ -20,7 +20,7 @@ static inline void __board_init(void)
     IO_DepInit();
     
     LED_DepInit();
-    Lsens_DepInit();
+    LSENSE_DepInit();
 	CLOCK_DepInit();   
     CRC_DepInit();
     DRV_DepInit();
