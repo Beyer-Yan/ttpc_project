@@ -57,7 +57,7 @@ static volatile uint8_t _G_SlotStatus __SECTION("PV_SECTION");
 static volatile uint8_t _G_SlotAcquisitionFlag __SECTION("PV_SECTION");
 
 /** indicate the current updating status of the slot */
-static volatile uint32_t _G_slot_pointer __SECTION("PV_SECTION");
+//static volatile uint32_t _G_slot_pointer __SECTION("PV_SECTION");
 
 /*********************************************************************************/
 
@@ -109,8 +109,7 @@ uint32_t MAC_UpdateSlot(void)
     else if(_G_Slot==0)
         res = FIRST_SLOT_OF_SUCCESSOR_TDMAROUND;
     else
-        res = NORMAL_SLOT;
-    
+        res = NORMAL_SLOT;    
     /* 
     if(rs==0)
     {
@@ -146,7 +145,7 @@ uint32_t MAC_UpdateSlot(void)
     */
 
     CS_SetRoundSlot(rs);
-    _G_slot_pointer = res;
+    //_G_slot_pointer = res;
     return res;
 }
 
@@ -234,19 +233,27 @@ uint32_t MAC_GetRoundSlot(void)
     return (_G_TDMARound * _G_TDMACycleLength + _G_Slot);
 }
 
-uint32_t MAC_CheckSlot(void)
-{
-    return _G_slot_pointer;
-}
+//uint32_t MAC_CheckSlot(void)
+//{
+    //return _G_slot_pointer;
+//}
 
-void MAC_SetSlotTime(uint32_t ActAT, uint32_t TP,uint32_t PSP, uint32_t SD, uint32_t delay)
+void MAC_SetSlotTime(uint32_t AT, uint32_t TP,uint32_t PSP, uint32_t SD, uint32_t Delay)
 {
-    ActAT = ActAT & 0xffff;
-    uint16_t real_at =  ActAT + (delay & 0xffff);
-    uint16_t real_prp = ActAT + (TP & 0xffff);
-    uint16_t slot_end = ActAT + (SD & 0xffff) - PSP;
+    //uint32_t x = MAC_GetRoundSlot();
+    //uint32_t y = CS_GetCurRoundSlot();
+    
+    //INFO("x:%d,y:%d",x,y);
+    
+    AT = AT & 0xffff;
+    uint16_t real_at =  AT + (Delay & 0xffff);
+    uint16_t real_prp = AT + (TP & 0xffff);
+    uint16_t slot_end = AT + (SD & 0xffff) - PSP;
 
     //INFO("--PREDISIGN TIMING--");
+    //INFO("SD:%u",SD);
+    //INFO("PSP:%u",PSP);
+    //INFO("TP:%u",TP);
     //INFO("AT :%u",real_at);
     //INFO("PRP:%u",real_prp);
     //INFO("END:%u",slot_end);

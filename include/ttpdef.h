@@ -1519,6 +1519,24 @@ static inline uint32_t CALC_MODE_NUM(uint32_t mode)
 								 ((mcr) == MCR_MODE_3) || \
 								 ((mcr) == MCR_MODE_CLR))
 
+static inline uint32_t MCR_TO_DMC(uint32_t ValidMCR)
+{
+	uint32_t dmc = DMC_NO_REQ;
+	if(ValidMCR==MCR_MODE_1)
+		dmc = DMC_MODE_1;
+	else if(ValidMCR==MCR_MODE_2)
+		dmc = DMC_MODE_2;
+	else if(ValidMCR==MCR_MODE_3)
+		dmc = DMC_MODE_3;
+	else if(ValidMCR==MCR_MODE_CLR)
+		dmc = DMC_NO_REQ;
+	
+	return dmc;
+}
+
+#define FRAME_MCR_TO_CNI_MCR(header)	( (((uint8_t)(header)&0x0e)<<2 )
+#define CNI_MCR_TO_FRAME_MCR(cni_mcr)   ( ((cni_mcr)&CR_MCR)>>2 )
+
 #define CR_BIST					((uint32_t)0x00000004)	/**< Built-in test enable flag */
 #define CR_CA					((uint32_t)0x00000002)	/**< Control await enable flag */
 #define CR_CO					((uint32_t)0x00000001)	/**< Controller on */

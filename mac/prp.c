@@ -51,6 +51,7 @@ static const char* _slot_status_name[6] =
     "FRAME_INVALID"
 };
 
+
 /**
  * byte copy for inner use.
  * @param dst  the destination address
@@ -63,6 +64,30 @@ static inline void _byte_copy(uint8_t* dst, uint8_t* src, int size)
         *dst++ = *src++;
     }
 }
+
+static void data_print_for_test(void)
+{
+    uint16_t data1,data2,data3,data4,data5,data6;
+    
+    uint8_t* addr1,*addr2,*addr3,*addr4,*addr5,*addr6;
+    
+    addr1 = MSG_GetMsgAddr(0);
+    addr2 = MSG_GetMsgAddr(4);
+    addr3 = MSG_GetMsgAddr(8);
+    addr4 = MSG_GetMsgAddr(12);
+    addr5 = MSG_GetMsgAddr(16);
+    addr6 = MSG_GetMsgAddr(20);
+    
+    _byte_copy((uint8_t*)&data1,addr1,2);
+    _byte_copy((uint8_t*)&data2,addr2,2);
+    _byte_copy((uint8_t*)&data3,addr3,2);
+    _byte_copy((uint8_t*)&data4,addr4,2);
+    _byte_copy((uint8_t*)&data5,addr5,2);
+    _byte_copy((uint8_t*)&data6,addr6,2);
+    
+    INFO("value:%u,%u,%u,%u,%u,%u",data1,data3,data3,data3,data5,data6);  
+}
+
 
 /**
  * The function check the crc32 of the frame received according the parameters.
@@ -126,6 +151,8 @@ static uint32_t _frame_crc32_check(TTP_ChannelFrameDesc* pDesc, uint32_t type)
 
         if (!CS_IsSame(&c_state)){
             INFO("explicit cstate disagreement");
+            INFO("local:%x,%x,%x,%x,%x,%x",(uint16_t)C_STATE_GT,(uint16_t)C_STATE_CP,(uint16_t)C_STATE_MV0,(uint16_t)C_STATE_MV1,(uint16_t)C_STATE_MV2,(uint16_t)C_STATE_MV3);
+            INFO("frame:%x,%x,%x,%x,%x,%x",c_state.GlobalTime,c_state.ClusterPosition,c_state.Membership[0],c_state.Membership[1],c_state.Membership[2],c_state.Membership[3]);
             return 0;
         }
         else
@@ -182,7 +209,7 @@ static uint32_t _judge_valid(uint32_t* pframe_status, uint32_t channel)
     /** for FRAME_NULL checking */
     if (!MSG_CheckReceived(channel)) {
         *pframe_status = FRAME_NULL;
-        INFO("received nothing on ch:%d",channel);
+        //INFO("received nothing on ch:%d",channel);
         return _FRAME_INVALID_;
     }
     TTP_FrameDesc *pFrameDesc = MSG_GetFrameDesc();
@@ -244,26 +271,10 @@ static inline void _process_mcr(uint32_t mcr)
     //invalid mode error is not considerated here
     uint32_t dmc = DMC_NO_REQ;
 
-    TTP_ASSERT(IS_TTP_MCR(mcr));
-
-    switch (mcr) {
-    case MCR_MODE_1:
-        dmc = DMC_MODE_1;
-        break;
-    case MCR_MODE_2:
-        dmc = DMC_MODE_2;
-        break;
-    case MCR_MODE_3:
-        dmc = DMC_MODE_3;
-        break;
-    case MCR_MODE_CLR:
-        dmc = DMC_NO_REQ;
-        break;
-    default:
-        dmc = DMC_NO_REQ;
-        break;
+    if(IS_TTP_MCR(mcr)){
+        dmc = MCR_TO_DMC(mcr);
+        CS_SetDMC(dmc); 
     }
-    CS_SetDMC(dmc);
 }
 //The function shall be called when the frame of the corresponding channel is valid
 static uint32_t _get_valid_frame_status(TTP_ChannelFrameDesc* pDesc, uint32_t type)
@@ -283,7 +294,9 @@ static uint32_t _get_valid_frame_status(TTP_ChannelFrameDesc* pDesc, uint32_t ty
 
         if (frame_mcr != MCR_NO_REQ) {
             //mode changing is carried in the frame.
-            if (!(pRS->SlotFlags & SlotFlags_ModeChangePermission)) {
+            if(!IS_TTP_MCR(frame_mcr)){
+                frame_status = FRAME_MODE_VIOLATION; 
+            }else if (!(pRS->SlotFlags & SlotFlags_ModeChangePermission)) {
                 frame_status = FRAME_MODE_VIOLATION;
             }
         }
@@ -345,10 +358,12 @@ void prp_for_passive(void)
 
         pDesc_chosen = frame_status_ch[0] == FRAME_CORRECT ? pDesc->pCH0 : pDesc->pCH1;
         uint8_t header = pDesc_chosen->pFrame->hdr[0];
-        uint32_t frame_mcr = (header & ~1) << 2;
-
-        _process_mcr(frame_mcr);
-
+        uint32_t frame_mcr = (header & 0x0e) << 2;
+        
+        if(frame_mcr){
+            _process_mcr(frame_mcr);
+            INFO("frame mcr requested");
+        }
         /** for maintaining the integration counter */
         uint32_t integration_cnt = PV_GetCounter(INTEGRATION_COUNTER);
         uint32_t integration_min = pSP->MinimumIntegrationCount;
@@ -484,6 +499,7 @@ static uint32_t _ack_result(TTP_ChannelFrameDesc* pDesc, uint32_t type, uint32_t
         break;
     }
 
+    /*
     if ((*pframe_status == FRAME_CORRECT) || (*pframe_status == FRAME_TENTATIVE)) {
         uint8_t header;
         uint32_t frame_mcr;
@@ -499,8 +515,7 @@ static uint32_t _ack_result(TTP_ChannelFrameDesc* pDesc, uint32_t type, uint32_t
             }
         }
     }
-    if(*pframe_status == FRAME_INCORRECT)
-        INFO("ack result incorrect");
+    */
 
     return res;
 }
@@ -601,9 +616,12 @@ void prp_for_active(void)
 
         TTP_ChannelFrameDesc *pDesc_chosen = frame_status_ch[0] == FRAME_CORRECT ? pDesc->pCH0 : pDesc->pCH1;
         uint8_t header = pDesc_chosen->pFrame->hdr[0];
-        uint32_t frame_mcr = (header & ~1) << 2;
+        uint32_t frame_mcr = (header & 0x0e) << 2;
 
-        _process_mcr(frame_mcr);
+        if(frame_mcr){
+            _process_mcr(frame_mcr);
+            INFO("frame mcr requested");
+        }
 
         /** for syncronization operation */
         if (pRS->SlotFlags & SlotFlags_SynchronizationFrame) {
@@ -638,17 +656,18 @@ void prp_for_active(void)
     INFO("slot_status:%s",_slot_status_name[slot_status]);
     //INFO("mode:%d",CALC_MODE_NUM(CS_GetCurMode()));
     //INFO("agreed:%d",PV_GetCounter(AGREED_SLOTS_COUNTER));
-    //INFO("failed:%d",PV_GetCounter(FAILED_SLOTS_COUNTER)); 
-    
-    c_state_t cstate,cx;
-    CS_GetCState(&cstate);
-    _byte_copy((uint8_t*)&cx,pDesc->pCH0->pFrame->x.cstate,sizeof(c_state_t));
+    //INFO("failed:%d",PV_GetCounter(FAILED_SLOTS_COUNTER));     
+    //c_state_t cstate,cx;
+    //CS_GetCState(&cstate);
+    //_byte_copy((uint8_t*)&cx,pDesc->pCH0->pFrame->x.cstate,sizeof(c_state_t));
     //INFO("headr:%x",pDesc->pCH0->pFrame->hdr[0]);
     //INFO("local:%x,%x,%x,%x,%x,%x",cstate.GlobalTime,cstate.ClusterPosition,cstate.Membership[0],cstate.Membership[1],cstate.Membership[2],cstate.Membership[3]);
     //INFO("frame:%x,%x,%x,%x,%x,%x",cx.GlobalTime,cx.ClusterPosition,cx.Membership[0],cx.Membership[1],cx.Membership[2],cx.Membership[3]);
     /** for the assumption that channel 0 and channel 1 are the same */
     if(_is_data_frame()) { MSG_SetStatus(pRS->CNIAddressOffset, slot_status); }
 
+    data_print_for_test();
+    
     __check_sync:
     if(pRS->SlotFlags & SlotFlags_ClockSynchronization){
         if(!SVC_ExecSyncSchema(0)){
@@ -704,9 +723,12 @@ void prp_for_coldstart(void)
         /** for mode change processor */
         TTP_ChannelFrameDesc *pDesc_chosen = frame_status_ch[0] == FRAME_CORRECT ? pDesc->pCH0 : pDesc->pCH1;
         uint8_t header = pDesc_chosen->pFrame->hdr[0];
-        uint32_t frame_mcr = (header & ~1) << 2;
+        uint32_t frame_mcr = (header & 0x0e) << 2;
 
-        _process_mcr(frame_mcr);
+        if(frame_mcr){
+            _process_mcr(frame_mcr);
+            INFO("frame mcr requested");
+        }
 
         /** for syncronization operation */
         if (pRS->SlotFlags & SlotFlags_SynchronizationFrame) {

@@ -42,6 +42,8 @@ void HOST_Init(void)
     #ifdef TTP_NODE0
         TTP_CR4 |= (300<<16);
     #endif
+    
+    HOST_ModeChange(DMC_MODE_1);
 }
 
 void HOST_Alive(void)
@@ -65,6 +67,6 @@ void HOST_PrepareData(void)
 
 void HOST_ModeChange(uint32_t mode)
 {
-    //TTP_CR0 &=~ CR_MCR; 
-    //TTP_CR0 |=  MCR_MODE_1;
+    TTP_CR0 &=~ CR_MCR; 
+    TTP_CR0 |=  MCR_MODE_1;
 }

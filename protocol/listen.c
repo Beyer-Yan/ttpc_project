@@ -24,10 +24,12 @@
 #include "msg.h"
 #include "xfer.h"
 
+#include "host.h"
+
 #include "stm32f4xx.h"
 
 
-#define COMPENSATE_MI_TIME  (306)
+#define COMPENSATE_MI_TIME  (298)
 
 extern uint32_t phase_indicator;
 
@@ -160,6 +162,12 @@ void FSM_doListen(void)
             _byte_copy((uint8_t*)&cstate, pDesc->pCH1->pFrame->x.cstate, sizeof(c_state_t));
             chosen_ch = CH1;
         }
+        
+        uint32_t frame_mcr = (header & ~1) << 2;
+        if(frame_mcr!=MCR_NO_REQ){
+            if(!IS_TTP_MCR(frame_mcr))
+                goto _end;                
+        }
 
         //in case of a cold start frame
         if ((cstate.ClusterPosition & CS_CP_MODE) == MODE_CS_ID) {           
@@ -172,7 +180,6 @@ void FSM_doListen(void)
             if (!(pSP->ScheduleFlags & ScheduleFlags_ColdStartIntegrationAllowed))
                 goto _end;
         }
-        
         // now the frame received is taken into consideration
         CS_SetCState(&cstate);
         //uint32_t t2 = TIM14->CNT;
@@ -183,9 +190,7 @@ void FSM_doListen(void)
         
         pRS = MAC_GetRoundSlotProperties();
 
-        // mode error, desert the received frame
-        if ((header >> 1) != 0 && !(pRS->SlotFlags & SlotFlags_ModeChangePermission))
-            goto _end;
+        //mcr error, desert the received frame
 
         uint32_t int_cnt = (cstate.ClusterPosition & CS_CP_MODE) == MODE_CS_ID ? pSP->MinimumIntegrationCount : 1;
         PV_SetCounter(INTEGRATION_COUNTER, int_cnt);
@@ -225,6 +230,7 @@ void FSM_doListen(void)
         
         //attention that the AT and the PRP time have expired at this time.
         //MAC_SetSlotTime(AT_time,pRS->TransmissionDuration,pRS->PSPDuration,pRS->SlotDuration, 0);
+        
         uint16_t slot_end = AT_time + (pRS->SlotDuration & 0xffff) - pRS->PSPDuration;
         CLOCK_SetTriggerSlotEnd(slot_end);
 
@@ -241,6 +247,13 @@ void FSM_doListen(void)
         MAC_StartPhaseCirculation(); /**< start synchronization mode */
 
         CNI_SetISRBit(ISR_CV); //CSATE available
+        
+        #warning "just for test, when the cstate is valid, the host shall raise a mode change request if necessary"
+        uint32_t mode = CS_GetCurMode();
+        if(mode == MODE_CS_ID){
+            HOST_ModeChange(DMC_MODE_1);
+        }
+        
         FSM_TransitIntoState(FSM_PASSIVE);
 
     } else {

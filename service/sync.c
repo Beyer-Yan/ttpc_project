@@ -142,7 +142,7 @@ void SVC_SyncCalcOffset(uint32_t FrameTsmpOfCH0, uint32_t FrameTsmpOfCH1, uint32
 	else if(ValidityOfCH1)
 		offset = (int32_t)(FrameTsmpOfCH1-estimate_frame_tsmp_ch1);
     
-    INFO("stack:%d,%d,%d,%d, diff",_G_pushdown_stack[0],_G_pushdown_stack[1],_G_pushdown_stack[2],_G_pushdown_stack[3],offset);
+    INFO("stack:%d,%d,%d,%d, diff:%d",_G_pushdown_stack[0],_G_pushdown_stack[1],_G_pushdown_stack[2],_G_pushdown_stack[3],offset);
     //INFO("tsmp:%u",FrameTsmp);
     //INFO("at  :%u",at_microtick);
     //INFO("agn :%u",_G_aligned_estimate_time_interval);

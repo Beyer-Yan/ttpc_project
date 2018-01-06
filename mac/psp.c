@@ -33,11 +33,11 @@
 #include "host.h"
 
 uint32_t _G_ModeChanged                              __SECTION("PV_SECTION") = 0;
-static volatile uint32_t _G_SlotStartMacrotickTime   __SECTION("PV_SECTION") = 0; 
+static volatile uint16_t _G_SlotStartMacrotickTime   __SECTION("PV_SECTION") = 0; 
 static volatile uint32_t _G_SlotStartMicrotickTime   __SECTION("PV_SECTION") = 0;
 
-static volatile uint32_t _G_ClusterCycleStartTime    __SECTION("PV_SECTION") = 0;
-static volatile uint32_t _G_TDMARoundStartTimeOffset __SECTION("PV_SECTION") = 0;
+static volatile uint16_t _G_ClusterCycleStartTime    __SECTION("PV_SECTION") = 0;
+static volatile uint16_t _G_TDMARoundStartTimeOffset __SECTION("PV_SECTION") = 0;
 
 /**
  * This function shall be called at the start time of a slot.
@@ -52,7 +52,7 @@ static inline void _update_time(void)
 static inline void _update_mode(void)
 {
     uint32_t dmc = CS_GetCurDMC();
-	uint16_t mode = MODE_1;
+	uint16_t mode = CS_GetCurMode();
 
     TTP_ASSERT(IS_TTP_DMC(dmc));
 
@@ -199,33 +199,22 @@ static inline void _prepare_for_transmit(void)
     CS_SetMemberBit(pRS->FlagPosition);
     PV_SetCounter(AGREED_SLOTS_COUNTER, 1);
 
-    MAC_SetSlotTime(actual_at, pRS->TransmissionDuration,pRS->PSPDuration, pRS->SlotDuration, pNP->SendDelay);
-    MSG_PushFrame();
+    MAC_SetSlotTime(actual_at, pRS->TransmissionDuration,pRS->PSPDuration, pRS->SlotDuration, pNP->SendDelay);   
     MAC_SetSlotAcquisition(SENDING_FRAME);
 
-    if(CNI_IsModeChangeRequested())
-    {
-        uint32_t mcr = CNI_GetCurMCR();
-        uint32_t dmc;
-        switch (mcr) {
-        case MCR_MODE_1:
-            dmc = DMC_MODE_1;
-            break;
-        case MCR_MODE_2:
-            dmc = DMC_MODE_2;
-            break;
-        case MCR_MODE_3:
-            dmc = DMC_MODE_3;
-            break;
-        case MCR_MODE_CLR:
-            dmc = DMC_NO_REQ;
-            break;
-        default:
-            dmc = DMC_NO_REQ;
-            break;
-        }
-        CS_SetDMC(dmc);
+    uint32_t mcr = CNI_GetCurMCR();
+    if(!IS_TTP_MCR(mcr)){
+        CNI_SetSRBit(SR_MV);
+        CNI_SetISRBit(ISR_HE);
         CNI_ClrMCR();
+    }
+    
+    MSG_PushFrame();
+    
+    if(CNI_IsModeChangeRequested()){
+        uint32_t dmc = MCR_TO_DMC(mcr);
+        CS_SetDMC(dmc);
+        CNI_ClrMCR();        
     }
     DRV_PrepareToTransmit();
     /** init the ack state, only if the node plans to send in this slot */
@@ -247,7 +236,7 @@ void psp_for_passive(void)
     INFO("SLOT----------------------------------------%d",MAC_GetRoundSlot());
     
     INFO("SSS PASSIVE   -- TIME:%u",_G_SlotStartMacrotickTime);
-    
+    INFO("mode:%d",CALC_MODE_NUM(CS_GetCurMode()));
     /** check MEDL configuration */
     #warning "periodic checking for MEDL has not been implemented"
 
@@ -285,6 +274,7 @@ void psp_for_passive(void)
     }
      /**< now, membership acquired, the controller shall transite into ACTIVE state*/
     FSM_TransitIntoState(FSM_ACTIVE);
+
     if (_is_data_frame()) {
         
         #warning "just for system testing"
@@ -307,9 +297,13 @@ void psp_for_active(void)
     RoundSlotProperty_t* pRS = _slot_property_update();
 
     INFO("SLOT---------------------------------------- %d",MAC_GetRoundSlot());
-    //INFO("mode:%d",CALC_MODE_NUM(CS_GetCurMode()));
+    INFO("mode:%d",CALC_MODE_NUM(CS_GetCurMode()));
     //INFO("agreed:%d",PV_GetCounter(AGREED_SLOTS_COUNTER));
     //INFO("failed:%d",PV_GetCounter(FAILED_SLOTS_COUNTER));
+    //INFO("cluster start:%u",_G_ClusterCycleStartTime);
+    //INFO("tdma offset  :%u",_G_TDMARoundStartTimeOffset);
+    //INFO("slot start   :%u",_G_SlotStartMacrotickTime);
+    //INFO("at time      :%u",pRS->AtTime);
     
     INFO("SSS ACTIVE    -- TIME:%u",_G_SlotStartMacrotickTime);
 
@@ -404,6 +398,11 @@ void psp_for_coldstart(void)
             //cstate valid now, the controller will notify the host in the next AT time
             //by interruption.
             CNI_SetISRBit(ISR_CV);
+            
+            #warning "just for test, when the cstate is valid, the host shall raise a mode change request if necessary"
+            uint32_t dmc = CS_GetCurDMC();
+            if(dmc==DMC_NO_REQ)
+                HOST_ModeChange(DMC_MODE_1);
         }
     }
 

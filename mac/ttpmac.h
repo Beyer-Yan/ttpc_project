@@ -243,14 +243,14 @@ uint32_t MAC_GetSlotAcquisition(void);
 
 /**
  * Set the time properties of the slot.
- * @param  ActAT the actual trigger point time for TP phase
+ * @param  AT    the actual trigger point time for TP phase of the MEDL
  * @param  TP    the time duration of TP phase in unit of macrotick
  * @param  SD    the slot duration time for a slot in unit of macrotick
  * @param  PSP   the psp time duration of the slot in unit if macrotick
  * @param  delay the delayed Action Time
  * @return       non
  */
-void     MAC_SetSlotTime(uint32_t ActAT,uint32_t TP, uint32_t PSP,uint32_t SD,uint32_t delay);
+void     MAC_SetSlotTime(uint32_t AT,uint32_t TP, uint32_t PSP,uint32_t SD,uint32_t Delay);
 
 uint32_t  MAC_GetSlotStartMacroticks(void);
 uint32_t  MAC_GetSlotStartMicroticks(void);
