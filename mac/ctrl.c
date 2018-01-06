@@ -90,6 +90,6 @@ void MAC_AdjTime(uint16_t AdjMode, int16_t Offset)
     }
     else
     {
-        //TIM_RatioAdj(cor_val);
+        #warning "phase adjusting is removed"
     }
 }

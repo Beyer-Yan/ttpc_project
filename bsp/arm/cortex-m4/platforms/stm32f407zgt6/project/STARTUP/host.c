@@ -62,7 +62,7 @@ void HOST_PrepareData(void)
 
     _byte_copy(addr,&val,2);
     
-    INFO("val:%d",val);
+    //INFO("val:%d",val);
 }
 
 void HOST_ModeChange(uint32_t mode)

@@ -236,7 +236,7 @@ void psp_for_passive(void)
     INFO("SLOT----------------------------------------%d",MAC_GetRoundSlot());
     
     INFO("SSS PASSIVE   -- TIME:%u",_G_SlotStartMacrotickTime);
-    INFO("mode:%d",CALC_MODE_NUM(CS_GetCurMode()));
+    //INFO("mode:%d",CALC_MODE_NUM(CS_GetCurMode()));
     /** check MEDL configuration */
     #warning "periodic checking for MEDL has not been implemented"
 
@@ -297,7 +297,7 @@ void psp_for_active(void)
     RoundSlotProperty_t* pRS = _slot_property_update();
 
     INFO("SLOT---------------------------------------- %d",MAC_GetRoundSlot());
-    INFO("mode:%d",CALC_MODE_NUM(CS_GetCurMode()));
+    //INFO("mode:%d",CALC_MODE_NUM(CS_GetCurMode()));
     //INFO("agreed:%d",PV_GetCounter(AGREED_SLOTS_COUNTER));
     //INFO("failed:%d",PV_GetCounter(FAILED_SLOTS_COUNTER));
     //INFO("cluster start:%u",_G_ClusterCycleStartTime);

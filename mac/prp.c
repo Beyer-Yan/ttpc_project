@@ -28,9 +28,9 @@
 
 /**
  * This function sets the channel activity.
- * When no frames are received, the function will set CHANNEL_DUMMY flag, meaning that
- * there is not sender sending frame in the current slot. If an invalid activity was 
- * observed only one channel, and silence on the other channel, transient noise is 
+ * When no frames are received, the function will set communication CB flag, meaning 
+ * that there is not sender sending frame in the current slot. If an invalid activity 
+ * was observed only one channel, and silence on the other channel, transient noise is 
  * assumed. 
  *
  * If transmission activity was observed on both channels, the node's first successor is 
@@ -85,7 +85,7 @@ static void data_print_for_test(void)
     _byte_copy((uint8_t*)&data5,addr5,2);
     _byte_copy((uint8_t*)&data6,addr6,2);
     
-    INFO("value:%u,%u,%u,%u,%u,%u",data1,data3,data3,data3,data5,data6);  
+    INFO("value:%u,%u,%u,%u,%u,%u",data1,data2,data3,data4,data5,data6);  
 }
 
 
@@ -400,7 +400,7 @@ void prp_for_passive(void)
 
     MAC_SetSlotStatus(slot_status);
 
-    INFO("slot_status:%s",_slot_status_name[slot_status]);
+    //INFO("slot_status:%s",_slot_status_name[slot_status]);
     //INFO("mode:%d",CALC_MODE_NUM(CS_GetCurMode()));
     //INFO("agreed:%d",PV_GetCounter(AGREED_SLOTS_COUNTER));
     //INFO("failed:%d",PV_GetCounter(FAILED_SLOTS_COUNTER)); 
@@ -653,7 +653,7 @@ void prp_for_active(void)
     }
     MAC_SetSlotStatus(slot_status);
     
-    INFO("slot_status:%s",_slot_status_name[slot_status]);
+    //INFO("slot_status:%s",_slot_status_name[slot_status]);
     //INFO("mode:%d",CALC_MODE_NUM(CS_GetCurMode()));
     //INFO("agreed:%d",PV_GetCounter(AGREED_SLOTS_COUNTER));
     //INFO("failed:%d",PV_GetCounter(FAILED_SLOTS_COUNTER));     
@@ -756,7 +756,7 @@ void prp_for_coldstart(void)
 
     MAC_SetSlotStatus(slot_status);
     
-    INFO("slot_status:%s",_slot_status_name[slot_status]);
+    //INFO("slot_status:%s",_slot_status_name[slot_status]);
     //INFO("mode:%d",CALC_MODE_NUM(CS_GetCurMode()));
     //INFO("agreed:%d",PV_GetCounter(AGREED_SLOTS_COUNTER));
     //INFO("failed:%d",PV_GetCounter(FAILED_SLOTS_COUNTER)); 
