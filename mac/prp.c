@@ -51,6 +51,7 @@ static const char* _slot_status_name[6] =
     "FRAME_INVALID"
 };
 
+static int16_t diff = 0;
 
 /**
  * byte copy for inner use.
@@ -85,7 +86,7 @@ static void data_print_for_test(void)
     _byte_copy((uint8_t*)&data5,addr5,2);
     _byte_copy((uint8_t*)&data6,addr6,2);
     
-    INFO("value:%u,%u,%u,%u,%u,%u",data1,data2,data3,data4,data5,data6);  
+    INFO("%u,%u,%u,%u,%u,%d",data2,data3,data4,data5,data6,diff);  
 }
 
 
@@ -150,9 +151,9 @@ static uint32_t _frame_crc32_check(TTP_ChannelFrameDesc* pDesc, uint32_t type)
         _byte_copy((uint8_t*)&c_state, pDesc->pFrame->x.cstate, sizeof(c_state));
 
         if (!CS_IsSame(&c_state)){
-            INFO("explicit cstate disagreement");
-            INFO("local:%x,%x,%x,%x,%x,%x",(uint16_t)C_STATE_GT,(uint16_t)C_STATE_CP,(uint16_t)C_STATE_MV0,(uint16_t)C_STATE_MV1,(uint16_t)C_STATE_MV2,(uint16_t)C_STATE_MV3);
-            INFO("frame:%x,%x,%x,%x,%x,%x",c_state.GlobalTime,c_state.ClusterPosition,c_state.Membership[0],c_state.Membership[1],c_state.Membership[2],c_state.Membership[3]);
+            //INFO("explicit cstate disagreement");
+            //INFO("local:%x,%x,%x,%x,%x,%x",(uint16_t)C_STATE_GT,(uint16_t)C_STATE_CP,(uint16_t)C_STATE_MV0,(uint16_t)C_STATE_MV1,(uint16_t)C_STATE_MV2,(uint16_t)C_STATE_MV3);
+            //INFO("frame:%x,%x,%x,%x,%x,%x",c_state.GlobalTime,c_state.ClusterPosition,c_state.Membership[0],c_state.Membership[1],c_state.Membership[2],c_state.Membership[3]);
             return 0;
         }
         else
@@ -181,12 +182,15 @@ static uint32_t _judge_time_window(uint32_t mid_axis, uint32_t value)
 {
     //uint32_t mai = MAC_GetMacrotickParameter();
     uint32_t ratio = MAC_GetRatio();
-
+    
     uint32_t win_left = mid_axis -  ratio;
     uint32_t win_right = mid_axis + ratio;
 
     uint32_t res = 0;
 
+    #warning "just for testing"
+    diff = value - mid_axis;
+    
     if (win_left > win_right) {
         if ((value > win_left) || (value < win_right)) {
             res = 1;
@@ -223,13 +227,13 @@ static uint32_t _judge_valid(uint32_t* pframe_status, uint32_t channel)
 
     if(pDesc->status==TTP_ERX_LTH || pDesc->status==TTP_ERX_COL){
         *pframe_status = FRAME_INVALID;
-        INFO("received a frame, but frame corrupted on ch:%d",channel);
+        //INFO("received a frame, but frame corrupted on ch:%d",channel);
         return _FRAME_INVALID_;
     }
 
     if (!_judge_time_window(mid_axis, pDesc->rcv_timestamp)){
         *pframe_status = FRAME_INVALID;
-        INFO("received a frame, but timing err. ch:%u, mid:%u, tsmp:%u",channel,mid_axis,pDesc->rcv_timestamp);
+        //INFO("received a frame, but timing err. ch:%u, mid:%u, tsmp:%u",channel,mid_axis,pDesc->rcv_timestamp);
         return _FRAME_INVALID_;
     }
 
@@ -251,7 +255,7 @@ static uint32_t _judge_valid(uint32_t* pframe_status, uint32_t channel)
 
     if (actual_frame_size != pDesc->length) {
         *pframe_status = FRAME_INVALID;
-        INFO("received a frame, but size error on ch:%d",channel);
+        //INFO("received a frame, but size error on ch:%d",channel);
         return _FRAME_INVALID_;
     }
 
@@ -259,7 +263,7 @@ static uint32_t _judge_valid(uint32_t* pframe_status, uint32_t channel)
 
     if ((header & 1) != (pRS->SlotFlags & SlotFlags_FrameTypeExplicit)) {
         *pframe_status = FRAME_INCORRECT;
-        INFO("received a frame, but type error on ch:%d",channel);
+        //INFO("received a frame, but type error on ch:%d",channel);
         return _FRAME_INVALID_;
     }
     //INFO("received a valid frame on ch:%d",channel);
@@ -322,7 +326,7 @@ void prp_for_passive(void)
 
     uint32_t slot_status;
 
-    INFO("RRR PASSIVE   -- TIME:%u",CLOCK_GetCurMacrotick());
+    //INFO("RRR PASSIVE   -- TIME:%u",CLOCK_GetCurMacrotick());
 
     TTP_FrameDesc* pDesc = NULL;
     RoundSlotProperty_t* pRS = MAC_GetRoundSlotProperties();
@@ -362,7 +366,7 @@ void prp_for_passive(void)
         
         if(frame_mcr){
             _process_mcr(frame_mcr);
-            INFO("frame mcr requested");
+            //INFO("frame mcr requested");
         }
         /** for maintaining the integration counter */
         uint32_t integration_cnt = PV_GetCounter(INTEGRATION_COUNTER);
@@ -535,7 +539,7 @@ void prp_for_active(void)
 
     //ScheduleParameter_t* pSP = MAC_GetScheduleParameter();
     //NodeProperty_t* pNP = MAC_GetNodeProperties();
-    INFO("RRR ACTIVE    -- TIME:%u",CLOCK_GetCurMacrotick());
+    //INFO("RRR ACTIVE    -- TIME:%u",CLOCK_GetCurMacrotick());
     
     if (slot_acq == SENDING_FRAME) {
         PV_SetAckState(WAIT_FIRST_SUCCESSOR);
@@ -597,7 +601,7 @@ void prp_for_active(void)
                     FSM_TransitIntoState(FSM_FREEZE);
                     return;
                 }else{
-                    INFO("membership failed");              
+                    //INFO("membership failed");              
                     CNI_SetISRBit(ISR_ML);
                     FSM_TransitIntoState(FSM_PASSIVE);
                 }
@@ -620,7 +624,7 @@ void prp_for_active(void)
 
         if(frame_mcr){
             _process_mcr(frame_mcr);
-            INFO("frame mcr requested");
+            //INFO("frame mcr requested");
         }
 
         /** for syncronization operation */
@@ -689,7 +693,7 @@ void prp_for_coldstart(void)
     uint32_t slot_status;
     TTP_FrameDesc* pDesc = NULL;
 
-    INFO("RRR COLDSTART -- TIME:%u",CLOCK_GetCurMacrotick());
+    //INFO("RRR COLDSTART -- TIME:%u",CLOCK_GetCurMacrotick());
     
     if (slot_acq == SENDING_FRAME) {
         goto __check_sync;
@@ -727,7 +731,7 @@ void prp_for_coldstart(void)
 
         if(frame_mcr){
             _process_mcr(frame_mcr);
-            INFO("frame mcr requested");
+            //INFO("frame mcr requested");
         }
 
         /** for syncronization operation */

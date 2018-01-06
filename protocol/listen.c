@@ -240,9 +240,9 @@ void FSM_doListen(void)
         
         c_state_t cstate;
         _byte_copy((uint8_t*)&cstate,pDesc->pCH0->pFrame->x.cstate,sizeof(c_state_t));
-        INFO("%u,%u,%u,%u",actual_ma,actual_mi,t4-t3,exe_time_from_start);
-        INFO("headr:%x",pDesc->pCH0->pFrame->hdr[0]);
-        INFO("local:%u,%x,%x,%x,%x,%x",cstate.GlobalTime,cstate.ClusterPosition,cstate.Membership[0],cstate.Membership[1],cstate.Membership[2],cstate.Membership[3]);
+        //INFO("%u,%u,%u,%u",actual_ma,actual_mi,t4-t3,exe_time_from_start);
+        //INFO("headr:%x",pDesc->pCH0->pFrame->hdr[0]);
+        //INFO("local:%u,%x,%x,%x,%x,%x",cstate.GlobalTime,cstate.ClusterPosition,cstate.Membership[0],cstate.Membership[1],cstate.Membership[2],cstate.Membership[3]);
         
         MAC_StartPhaseCirculation(); /**< start synchronization mode */
 

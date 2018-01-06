@@ -233,9 +233,9 @@ void psp_for_passive(void)
 {
     RoundSlotProperty_t* pRS = _slot_property_update();
     
-    INFO("SLOT----------------------------------------%d",MAC_GetRoundSlot());
+    //INFO("SLOT----------------------------------------%d",MAC_GetRoundSlot());
     
-    INFO("SSS PASSIVE   -- TIME:%u",_G_SlotStartMacrotickTime);
+    //INFO("SSS PASSIVE   -- TIME:%u",_G_SlotStartMacrotickTime);
     //INFO("mode:%d",CALC_MODE_NUM(CS_GetCurMode()));
     /** check MEDL configuration */
     #warning "periodic checking for MEDL has not been implemented"
@@ -296,7 +296,7 @@ void psp_for_active(void)
 {
     RoundSlotProperty_t* pRS = _slot_property_update();
 
-    INFO("SLOT---------------------------------------- %d",MAC_GetRoundSlot());
+    //INFO("SLOT---------------------------------------- %d",MAC_GetRoundSlot());
     //INFO("mode:%d",CALC_MODE_NUM(CS_GetCurMode()));
     //INFO("agreed:%d",PV_GetCounter(AGREED_SLOTS_COUNTER));
     //INFO("failed:%d",PV_GetCounter(FAILED_SLOTS_COUNTER));
@@ -305,7 +305,7 @@ void psp_for_active(void)
     //INFO("slot start   :%u",_G_SlotStartMacrotickTime);
     //INFO("at time      :%u",pRS->AtTime);
     
-    INFO("SSS ACTIVE    -- TIME:%u",_G_SlotStartMacrotickTime);
+    //INFO("SSS ACTIVE    -- TIME:%u",_G_SlotStartMacrotickTime);
 
     if (MAC_IsOwnNodeSlot()) {
         //clique detection
@@ -374,21 +374,21 @@ void psp_for_coldstart(void)
 {
     RoundSlotProperty_t* pRS = _slot_property_update();
     
-    INFO("SLOT----------------------------------------%d",MAC_GetRoundSlot());
+    //INFO("SLOT----------------------------------------%d",MAC_GetRoundSlot());
     //INFO("mode:%d",CALC_MODE_NUM(CS_GetCurMode()));
     //INFO("agreed:%d",PV_GetCounter(AGREED_SLOTS_COUNTER));
     //INFO("failed:%d",PV_GetCounter(FAILED_SLOTS_COUNTER));
     
-    INFO("SSS COLDSTART -- TIME:%u",_G_SlotStartMacrotickTime);
+    //INFO("SSS COLDSTART -- TIME:%u",_G_SlotStartMacrotickTime);
        
     if (MAC_IsOwnNodeSlot()) {
         uint32_t clique_res = SVC_CliqueDetect();
         if(clique_res == CLIQUE_MINORITY){
-            INFO("CLIQUE_MINORITY");
+            //INFO("CLIQUE_MINORITY");
             FSM_TransitIntoState(FSM_LISTEN);
             return;
         }else if(clique_res == CLIQUE_NO_ACTIVITY){
-            INFO("CLIQUE_NO_ACTIVITY");
+            //INFO("CLIQUE_NO_ACTIVITY");
             FSM_TransitIntoState(FSM_SUB_CS);
             return;
         }else{
