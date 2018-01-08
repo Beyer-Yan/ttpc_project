@@ -128,14 +128,17 @@ uint32_t SVC_GetAlignedEstimateArivalTimeInterval(uint32_t Channel)
 	return Channel==CH0 ? _G_aligned_estimate_time_interval_ch0 : _G_aligned_estimate_time_interval_ch1;
 }
 
-void SVC_SyncCalcOffset(uint32_t FrameTsmpOfCH0, uint32_t FrameTsmpOfCH1, uint32_t ValidityOfCH0, uint32_t ValidityOfCH1)
+void SVC_SyncCalcOffset(uint32_t FrameTsmpOfCH0, uint32_t FrameTsmpOfCH1, uint32_t ValidityOfCH0, uint32_t ValidityOfCH1, uint32_t SendFlag)
 {
     uint32_t at_microtick = MAC_GetATMicroticks();
 	uint32_t estimate_frame_tsmp_ch0 = at_microtick + _G_aligned_estimate_time_interval_ch0;
 	uint32_t estimate_frame_tsmp_ch1 = at_microtick + _G_aligned_estimate_time_interval_ch1;
 
 	int32_t  offset = 0;
-	if(ValidityOfCH0 && ValidityOfCH1)
+    
+    if(SendFlag)
+        offset = 0;
+	else if(ValidityOfCH0 && ValidityOfCH1)
 		offset = (int32_t)(FrameTsmpOfCH0-estimate_frame_tsmp_ch0)/2 + (int32_t)(FrameTsmpOfCH1-estimate_frame_tsmp_ch1)/2;
 	else if(ValidityOfCH0)
 		offset = (int32_t)(FrameTsmpOfCH0-estimate_frame_tsmp_ch0);

@@ -237,6 +237,8 @@ void psp_for_passive(void)
     
     //INFO("SSS PASSIVE   -- TIME:%u",_G_SlotStartMacrotickTime);
     //INFO("mode:%d",CALC_MODE_NUM(CS_GetCurMode()));
+    //INFO("agreed:%d",PV_GetCounter(AGREED_SLOTS_COUNTER));
+    //INFO("failed:%d",PV_GetCounter(FAILED_SLOTS_COUNTER));
     /** check MEDL configuration */
     #warning "periodic checking for MEDL has not been implemented"
 

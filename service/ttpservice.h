@@ -125,9 +125,10 @@ uint32_t SVC_Integration(void*param);
  * @param  FrameTsmp the arival timestamp of the frame, in unit of microtick, respectively for
  *                   channel 0 and channel 1
  * @param  Legality  the validity of the timestamp of the corresponding channel, 0 invalid, 1 valid
+ * @param  SendFlag  mark whether the slot is a sending slot, 1 for yes, 0 for no
  * @return           non
  */
-void SVC_SyncCalcOffset(uint32_t FrameTsmpOfCH0, uint32_t FrameTsmpOfCH1, uint32_t ValidityOfCH0, uint32_t ValidityOfCH1);
+void SVC_SyncCalcOffset(uint32_t FrameTsmpOfCH0, uint32_t FrameTsmpOfCH1, uint32_t ValidityOfCH0, uint32_t ValidityOfCH1, uint32_t SendFlag);
 
 /**
  * This function sets the estimate time duration of a frame between the start point of 

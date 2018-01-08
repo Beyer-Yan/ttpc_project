@@ -22,8 +22,8 @@
  * @defgroup Exported_Constants
  */
 /**@{*/
-
-#define TTP_NODE0
+#define TTP_SLOT_1_MS
+#define TTP_NODE5
 
 /**@}*/// end of the group Exported_Constants
 

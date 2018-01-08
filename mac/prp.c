@@ -51,7 +51,7 @@ static const char* _slot_status_name[6] =
     "FRAME_INVALID"
 };
 
-static int16_t diff = 0;
+static int16_t _G_diff = 0;
 
 /**
  * byte copy for inner use.
@@ -86,7 +86,7 @@ static void data_print_for_test(void)
     _byte_copy((uint8_t*)&data5,addr5,2);
     _byte_copy((uint8_t*)&data6,addr6,2);
     
-    INFO("%u,%u,%u,%u,%u,%d",data2,data3,data4,data5,data6,diff);  
+    INFO("%u,%u,%u,%u,%u,%d",data2,data3,data4,data5,data6,_G_diff);  
 }
 
 
@@ -189,7 +189,7 @@ static uint32_t _judge_time_window(uint32_t mid_axis, uint32_t value)
     uint32_t res = 0;
 
     #warning "just for testing"
-    diff = value - mid_axis;
+    _G_diff = value - mid_axis;
     
     if (win_left > win_right) {
         if ((value > win_left) || (value < win_right)) {
@@ -392,7 +392,7 @@ void prp_for_passive(void)
                 tsmp_frame_ch1 = pDesc->pCH1->rcv_timestamp;
             }
             
-            SVC_SyncCalcOffset(tsmp_frame_ch0,tsmp_frame_ch1,validity_ch0,validity_ch1);
+            SVC_SyncCalcOffset(tsmp_frame_ch0,tsmp_frame_ch1,validity_ch0,validity_ch1, 0);
         }
         #warning "Should the data carried by frame be pulled into CNI in PASSIVE state ?? "
         if(_is_data_frame())
@@ -544,7 +544,14 @@ void prp_for_active(void)
     if (slot_acq == SENDING_FRAME) {
         PV_SetAckState(WAIT_FIRST_SUCCESSOR);
         SVC_AckInit();
-
+        
+        #warning "Shall the sending node calculate the time difference ?"
+        if (pRS->SlotFlags & SlotFlags_SynchronizationFrame) {
+            //no frame timestamp should be caculated
+            SVC_SyncCalcOffset(0,0,0,0,1);
+            _G_diff = 0;
+        }
+        
         if(_is_data_frame()){
             MSG_SetStatus(pRS->CNIAddressOffset,FRAME_CORRECT);
         }
@@ -644,7 +651,7 @@ void prp_for_active(void)
                 tsmp_frame_ch1 = pDesc->pCH1->rcv_timestamp;
             }
             
-            SVC_SyncCalcOffset(tsmp_frame_ch0,tsmp_frame_ch1,validity_ch0,validity_ch1);
+            SVC_SyncCalcOffset(tsmp_frame_ch0,tsmp_frame_ch1,validity_ch0,validity_ch1, 0);
         }
         /** the data carried by frame will not be pulled into CNI in passive state */
         //MSG_SetStatus(pRS->CNIAddressOffset, FRAME_CORRECT);
@@ -670,8 +677,6 @@ void prp_for_active(void)
     /** for the assumption that channel 0 and channel 1 are the same */
     if(_is_data_frame()) { MSG_SetStatus(pRS->CNIAddressOffset, slot_status); }
 
-    data_print_for_test();
-    
     __check_sync:
     if(pRS->SlotFlags & SlotFlags_ClockSynchronization){
         if(!SVC_ExecSyncSchema(0)){
@@ -680,6 +685,7 @@ void prp_for_active(void)
             FSM_TransitIntoState(FSM_FREEZE);
         }
     }
+    //data_print_for_test();
 }
 
 void prp_for_coldstart(void)
@@ -696,6 +702,10 @@ void prp_for_coldstart(void)
     //INFO("RRR COLDSTART -- TIME:%u",CLOCK_GetCurMacrotick());
     
     if (slot_acq == SENDING_FRAME) {
+        #warning "Shall the sending node calculate the time difference ?"
+        if (pRS->SlotFlags & SlotFlags_SynchronizationFrame) {
+            SVC_SyncCalcOffset(0,0,0,0,1);
+        }
         goto __check_sync;
     }
     
@@ -751,7 +761,7 @@ void prp_for_coldstart(void)
                 tsmp_frame_ch1 = pDesc->pCH1->rcv_timestamp;
             }
             
-            SVC_SyncCalcOffset(tsmp_frame_ch0,tsmp_frame_ch1,validity_ch0,validity_ch1);
+            SVC_SyncCalcOffset(tsmp_frame_ch0,tsmp_frame_ch1,validity_ch0,validity_ch1, 0);
         }
         /**No data will be carried in cold start mode */
     } else {
