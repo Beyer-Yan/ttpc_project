@@ -89,12 +89,6 @@ static uint32_t __assemble_ttp_frame(void)
     CRC_ResetData();
     uint32_t id = MEDL_GetSchedID();
     CRC_PushData((uint8_t*)&id,CSID_SIZE);
-
-    // /**
-    //  * @brief If no mode change was requested the mode change field 
-    //  * shall be set to the value of "MCR_MODE_CLR" according to 
-    //  * AS6003 8.6.1, page 38/56
-    //  */ 
     
     header = ((mcr)>>2)|((pSlot->SlotFlags & SlotFlags_FrameTypeExplicit)?1:0);
 

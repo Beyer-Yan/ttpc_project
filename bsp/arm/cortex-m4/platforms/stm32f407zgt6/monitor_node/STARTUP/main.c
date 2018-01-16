@@ -30,7 +30,7 @@ static inline void __board_init(void)
 
 void _hook_debug(uint32_t ps_num)
 {
-    INFO("transite into state %s",_ps[ps_num]);
+    //INFO("transite into state %s",_ps[ps_num]);
 }
 
 int main(void)
@@ -38,7 +38,7 @@ int main(void)
     int i = 10000;
     __board_init();
     
-    PRINT("protocol start");
+    //PRINT("protocol start");
     while(i--);
     
     FSM_Reset();

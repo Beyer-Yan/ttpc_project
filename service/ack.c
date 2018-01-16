@@ -23,17 +23,13 @@
 #include "ttpservice.h"
 #include "protocol.h"
 #include "msg.h"
+#include "crc.h"
 
-#define TYPE_DECISION    1
-#define TYPE_TENTATIVE   2
-#define TYPE_BACKTRACE   3
-#define TYPE_POSITIVE    4
-#define TYPE_NEGATIVE    5
+#define _ACK_DECISION    0xfe
+#define END              0xff
 
-
-
-#define END              100 
-
+#define ACK_CHECK_T  0
+#define ACK_CHECK_F  1
 
 /**
  * byte copy for inner use.
@@ -41,114 +37,114 @@
  * @param src  the source address
  * @param size the size the the data, which shall be large then or equal to 0. 
  */
-// static inline void _byte_copy(uint8_t *dst, uint8_t *src, int size)
-// {
-//     while(size--)
-//     {
-//         *dst++ = *src++;
-//     }
-// }
+ static inline void _byte_copy(uint8_t *dst, uint8_t *src, int size)
+ {
+    while(size--)
+    {
+        *dst++ = *src++;
+    }
+ }
 
 /**
  * The function check the crc32 of the frame received according the parameters.
  * @param  pdata   the byte pointer to the ttp frame
  * @param  size    the size of the valid data of the frame received
- * @param  type    the frame type, FRAME_TYPE_IMPLICIT or FRAME_TYPE_EXPLICIT
+ * @param  type    the frame type,  SlotFlags_FrameTypeExplicit for I_CS or X frame
  * @return         the crc32 calculated
- * @attention      4-byte alignment is needed while calculating the crc32. So, if a
- *                 pdata with no 4-byte-alignment is passed into the function, it will
- *                 be casted into a 4-byte-alignment pointer by introducing an extra
- *                 temperory 4-byte-alignment variable, which will reduce system
- *                 performance.
  */
-// static uint32_t _frame_crc32_calc(uint8_t *pdata, int size, uint32_t type)
-// {
+static uint32_t _frame_crc32_calc(uint8_t* pdata, int size, uint32_t type)
+{
+    uint32_t ScheduleID = MAC_GetClusterScheduleID();
 
-//     int remain   = 0;
-//     int quotient = 0;
+    CRC_ResetData();
 
-//     //for 32-bit architecture
-//     quotient = size%4;
-//     remain   = size/4;
+    CRC_PushData((uint8_t*)&ScheduleID,4);
+    CRC_PushData(pdata,size);
 
-//     //case of the 4-byte-alignment access
-//     uint32_t tmp;
-//     int i = 0;
-
-//     uint32_t crc32;
-//     uint32_t crc32_mask[3] = {0xff,0xffff,0xffffff};
-
-//     uint32_t ScheduleID = MAC_GetClusterScheduleID();
-
-//     CRC_ResetData();
-//     CRC_Calc(ScheduleID);
-
-//     for(i=0;i<quotient;i++)
-//     {
-//         _byte_copy(&tmp,pdata+i*4,4);
-//         CRC_Calc(tmp);
-//     }
-//     if(remain!=0)
-//     {
-//         _byte_copy(&tmp, pdata+quotient*4, remain);
-//         CRC_Calc(tmp&crc32_mask[remain-1]);
-//     }
-
-//     /**
-//      * check the frame type, if impicit frame is assembled, the implicit crc check
-//      * shall be performed.
-//      */
-//     if(type==FRAME_TYPE_IMPLICIT)
-//     {
-//         c_state_t c_state;
-//         MAC_GetCState(&c_state);
-//         CRC_CalcBlock(&c_state,sizeof(c_state);
-//     }
-//     return CRC_GetCRC();
-// }
+    /**
+     * check the frame type, if implicit frame is assembled, the implicit crc check
+     * shall be performed.
+     */
+    if (type == SlotFlags_FrameTypeExplicit) {
+        c_state_t c_state;
+        CS_GetCState(&c_state);
+        CRC_PushData((uint8_t*)&c_state,sizeof(c_state));
+    }
+    return CRC_GetResult();
+}
 
 /**
  * This function checks the crc of the given frame descriptor.
  * @param  pDesc the frame descriptor
- * @param  type  the frame type, FRAME_TYPE_IMPLICIT or FRAME_TYPE_EXPPLICIT
+ * @param  type  the frame type, FRAME_TYPE_IMPLICIT or FRAME_TYPE_EXPLICIT
  * @return       0 if the crc check is not passed
  *               1 if the crc check is passed
  */
-// static uint32_t _frame_crc32_check(ttpc_frame_desc_t* pDesc, uint32_t type)
-// {
-//     uint32_t frame_crc32;
-//     uint32_t checked_crc32;
-//     c_atate_t c_state;
-//     RoundSlotProperty_t* pRS;
+static uint32_t _frame_crc32_check(TTP_ChannelFrameDesc* pDesc, uint32_t type)
+{
+    uint32_t frame_crc32;
+    uint32_t checked_crc32;
+    c_state_t c_state;
 
+    uint8_t* crc_pos;
 
-//     uint8_t  *crc_pos;
+    TTP_ASSERT(pDesc!=NULL);
 
-//     crc_pos = (uint8_t*)(pDesc->pFrame) + pDesc->length - sizeof(frame_crc32);
-//     pRS     = MAC_GetRoundSlotProperties();
+    if (type == SlotFlags_FrameTypeExplicit) {
+        /**
+         * The cstate in the x frame has the same position as the cstate in the i_cs frame. The following
+         * expression is also correct:
+         *     _byte_copy(&c_state,pDesc->pFrame->i_cs->cstate,sizeof(c_state));
+         *
+         * If the frame has an explicit c-state, the c-states between the sender and the receiver have to
+         * be explicitly compared. If these two c-states differ, then the same case distinction as with a 
+         * c-state error of an error of an implicit c-state has to be made.
+         */
+        _byte_copy((uint8_t*)&c_state, pDesc->pFrame->x.cstate, sizeof(c_state));
+        uint32_t res = CS_IsSame(&c_state) ? 1 : 0;
+        //if(res==0){
+            //INFO("explicit cstate disagreement");
+            //INFO("local:%x,%x,%x,%x,%x,%x",(uint16_t)C_STATE_GT,(uint16_t)C_STATE_CP,(uint16_t)C_STATE_MV0,(uint16_t)C_STATE_MV1,(uint16_t)C_STATE_MV2,(uint16_t)C_STATE_MV3);
+            //INFO("frame:%x,%x,%x,%x,%x,%x",c_state.GlobalTime,c_state.ClusterPosition,c_state.Membership[0],c_state.Membership[1],c_state.Membership[2],c_state.Membership[3]);
+        //}
+        return res;
+    }
 
-//     _byte_copy(&frame_crc32,crc_pos,sizeof(frame_crc32));
+    crc_pos = (uint8_t*)(pDesc->pFrame) + pDesc->length - sizeof(frame_crc32);
+    _byte_copy((uint8_t*)&frame_crc32, crc_pos, sizeof(frame_crc32));
 
-//     checked_crc32 = _frame_crc32_calc(pDesc->pFrame,pDesc->length - sizeof(frame_crc32),type);
-//     if(checked_crc32!=frame_crc32) return F ;
-
-//     if(type==FRAME_TYPE_EXPLICIT)
-//     {
+    checked_crc32 = _frame_crc32_calc((uint8_t*)pDesc->pFrame, pDesc->length - sizeof(frame_crc32), type);
     
-//         /**
-//          * The cstate in the x frame has the same position as the cstate in the i_cs frame. The following
-//          * expression is also correct:
-//          *     _byte_copy(&c_state,pDesc->pFrame->i_cs->cstate,sizeof(c_state));
-//          *
-//          * If the frame has an explicit c-state, the c-states between the sender and the receiver have to
-//          * be explicitly compared. If these two c-states differ, then the same case distinction as with a 
-//          * c-state error of an error of an implicit c-state has to be made.
-//          */
-//         _byte_copy(&c_state,pDesc->pFrame->x->cstate,sizeof(c_state));
-//         if(!CS_IsSame(&c_state)) return F;
-//     }
-//     return T;
-// }
+    return (checked_crc32 == frame_crc32) ? 1 : 0;
+}
+
+static inline uint32_t _check_1a(uint32_t NodePos, TTP_ChannelFrameDesc* pDesc, uint32_t Type)
+{  
+    CS_SetMemberBit(NodePos);
+    return  _frame_crc32_check(pDesc, Type)==1 ? ACK_CHECK_T : ACK_CHECK_F;
+}
+
+static inline uint32_t  _check_1b(uint32_t NodePos, TTP_ChannelFrameDesc* pDesc, uint32_t Type)
+{
+    CS_ClearMemberBit(NodePos);
+    return  _frame_crc32_check(pDesc, Type)==1 ? ACK_CHECK_T : ACK_CHECK_F;
+}
+
+static inline uint32_t  _check_2a(uint32_t NodePos, uint32_t SuccessorPos, TTP_ChannelFrameDesc* pDesc, uint32_t Type)
+{
+    CS_SetMemberBit(NodePos);
+    CS_ClearMemberBit(SuccessorPos);
+    return _frame_crc32_check(pDesc, Type)==1 ? ACK_CHECK_T : ACK_CHECK_F;
+}
+
+static inline uint32_t  _check_2b(uint32_t NodePos, uint32_t SuccessorPos, TTP_ChannelFrameDesc* pDesc, uint32_t Type)
+{
+    CS_ClearMemberBit(NodePos);
+    CS_SetMemberBit(SuccessorPos);
+    return _frame_crc32_check(pDesc, Type)==1 ? ACK_CHECK_T : ACK_CHECK_F;
+}
+
+
 /*******************************************************************************/
 
 /**
@@ -210,12 +206,10 @@ static void _process_T(void)
  */
 static void _process_FF(void)
 {
-    NodeProperty_t*      pNP = MAC_GetNodeProperties();
+    //NodeProperty_t*      pNP = MAC_GetNodeProperties();
     RoundSlotProperty_t* pRS = MAC_GetRoundSlotProperties();
 
-    //MAC_CheckChannelActivity() ? PV_IncCounter(FAILTED_SLOTS_COUNTER) : (void)0;
-
-    CS_SetMemberBit(pNP->FlagPosition);
+    //CS_SetMemberBit(pNP->FlagPosition);
     CS_ClearMemberBit(pRS->FlagPosition);
 }
 
@@ -241,9 +235,7 @@ static void _process_FTT(void)
     //PV_IncCounter(AGREED_SLOTS_COUNTER);
     //PV_IncCounter(FAILTED_SLOTS_COUNTER);
     PV_ClrCounter(MEMBERSHIP_FAILED_COUNTER);
-
     MSG_SetStatus(first_successor_addr,FRAME_INCORRECT);
-
     PV_SetAckState(ACK_FINISHED);
 }
 
@@ -272,11 +264,7 @@ static void _process_FTFT(void)
     CS_SetMemberBit(pRS->FlagPosition);   
 
     MSG_SetStatus(first_successor_addr,FRAME_CORRECT);
-
-    //PV_IncCounter(AGREED_SLOTS_COUNTER);
-    //PV_IncCounter(FALTED_SLOTS_COUNTER);
     PV_IncCounter(MEMBERSHIP_FAILED_COUNTER); 
-
     PV_SetAckState(ACK_FINISHED);
 }
 
@@ -287,21 +275,10 @@ static void _process_FTFT(void)
  */
 static void _process_FTFF(void)
 {
-    NodeProperty_t*      pNP = MAC_GetNodeProperties();
     RoundSlotProperty_t* pRS = MAC_GetRoundSlotProperties();
 
-    uint32_t first_successor_addr = PV_GetFSAddr();
-    uint32_t first_successor_pos  = PV_GetFirstSuccessorMemPos();
-
-    CS_SetMemberBit(pNP->FlagPosition);
-    CS_ClearMemberBit(first_successor_pos);
     CS_ClearMemberBit(pRS->FlagPosition);
-
-    //PV_ClrCounter(AGREED_SLOTS_COUNTER);
-
-    //MAC_CheckChannelActivity() ? PV_IncCounter(FALTED_SLOTS_COUNTER) : (void)0;
 }
-
 
 static void (*process[7])(void) __SECTION("PV_SECTION") = 
 {
@@ -324,15 +301,15 @@ struct dnode
 /** decision node definition */
 static const struct dnode dtree[9] __SECTION("PV_SECTION") = 
 {
-    {TYPE_DECISION,  0, { 1, 2}},    /*0*/
-    {TYPE_POSITIVE,  2, {END,END}},  /*1*/
-    {TYPE_DECISION,  0, { 3, 4}},    /*2*/
-    {TYPE_TENTATIVE, 1, { 5, 6}},    /*3*/
-    {TYPE_BACKTRACE, 3, { 0, 0}},    /*4*/
-    {TYPE_POSITIVE,  4, {END,END}},  /*5*/
-    {TYPE_DECISION,  0, { 7, 8}},    /*6*/
-    {TYPE_NEGATIVE,  5, {END,END}},  /*7*/
-    {TYPE_BACKTRACE, 6, { 3, 3}}     /*8*/
+    {_ACK_DECISION,  0, { 1, 2}},    /*0*/
+    {ACK_POSITIVE ,  2, {END,END}},  /*1*/
+    {_ACK_DECISION,  0, { 3, 4}},    /*2*/
+    {ACK_TENTATIVE,  1, { 5, 6}},    /*3*/
+    {ACK_WAITING  ,  3, { 0, 0}},    /*4*/
+    {ACK_POSITIVE ,  4, {END,END}},  /*5*/
+    {_ACK_DECISION,  0, { 7, 8}},    /*6*/
+    {ACK_NEGATIVE ,  5, {END,END}},  /*7*/
+    {ACK_WAITING  ,  6, { 3, 3}}     /*8*/
 };
 
 struct ack_db
@@ -369,43 +346,38 @@ static struct ack_db adb[2] __SECTION("PV_SECTION") =
  * @param  pFunc  the pointer to the corresponding decision processor. If the ack
  *                is not finished, it will point to NULL.
  * @return        
- *                @arg 0 ,ack not finished, waiting for the next successor.
- *                @arg 1 ,ack finished, negtive.
- *                @arg 2 ,ack not finished, tentative.
- *                @arg 3 ,ack finished, positive.
- *                @arg 4 ,ack not finished, waiting for the next check.
+ *                @arg _ACK_BACKTRACE ,ack not finished, waiting for the next successor.
+ *                @arg ACK_NEGATIVE   ,ack finished, negative.
+ *                @arg ACK_TENTATIVE  ,ack not finished, tentative.
+ *                @arg ACK_POSITIVE   ,ack finished, positive.
+ *                @arg _ACK_DECISION  ,ack not finished, waiting for the next check.
  */
 static uint32_t _dtree_search(uint32_t branch, uint32_t adb_ch, AckFunc *pFunc)
 {
     struct ack_db* p = &adb[adb_ch];
     const struct dnode * pn;
-    uint32_t res = 4;
+    uint32_t res;
 
     p->cur_pos = p->tree[p->cur_pos].check[branch];
     pn = &p->tree[p->cur_pos];
 
-    switch(pn->type)
+    res = pn->type;
+    switch(res)
     {
-        case TYPE_DECISION:
-            res = 4;
-            break;
-        case TYPE_TENTATIVE:
-            res = 2;
+        case ACK_TENTATIVE:
             p->cur_state = WAIT_SECOND_SUCCESSOR;
             break;
-        case TYPE_BACKTRACE:
-            res = 0;
+        case ACK_WAITING:
             p->cur_pos = pn->check[0]; /**< for backtracing */
             break;
-        case TYPE_POSITIVE:
-            res = 3;
+        case ACK_POSITIVE:
             p->cur_state = ACK_FINISHED;
             break;
-        case TYPE_NEGATIVE:
-            res = 1;
+        case ACK_NEGATIVE:
             p->cur_state = ACK_FINISHED;
             break;
-        default:break;
+        default:
+            break;
     }
 
     *pFunc = process[pn->process_num];
@@ -428,60 +400,34 @@ void SVC_AckMerge(uint32_t ch)
     adb[1-ch] = adb[ch];
 }
 
-uint32_t SVC_Acknowledgment(uint32_t check_a, uint32_t check_b, uint32_t ch, AckFunc *pFunc )
+uint32_t SVC_Acknowledgment(TTP_ChannelFrameDesc* pDesc, uint32_t ch, uint32_t Type, AckFunc *pFunc)
 {
-    uint32_t res;
+    uint32_t dtree_res;
 
-    res = _dtree_search(check_a,ch,pFunc);
-    if(res==4)
-        res = _dtree_search(check_b,ch,pFunc);
+    uint32_t check_a;
+    uint32_t check_b;
 
-    return res; 
+    uint32_t node_pos      = MAC_GetNodeProperties()->FlagPosition;
+    uint32_t ack_state     = PV_GetAckState();
+
+    TTP_ASSERT(ack_state!=ACK_FINISHED);
+
+    if(ack_state==WAIT_FIRST_SUCCESSOR){
+        check_a = _check_1a(node_pos,pDesc,Type);
+        check_b = _check_1b(node_pos,pDesc,Type);
+    }else{
+        uint32_t first_successor_pos = PV_GetFirstSuccessorMemPos();
+        check_a = _check_2a(node_pos,first_successor_pos,pDesc,Type);
+        check_b = _check_2b(node_pos,first_successor_pos,pDesc,Type);
+    }
+
+    dtree_res = _dtree_search(check_a,ch,pFunc);
+    if(dtree_res==_ACK_DECISION){
+        //can not make decision by check_a, check_b needs considerating
+        dtree_res = _dtree_search(check_b,ch,pFunc);
+    }  
+    TTP_ASSERT(dtree_res!=_ACK_DECISION);
+
+    return dtree_res; 
 }
 
-// uint32_t SVC_Acknowledgment(uint32_t check_a, uint32_t check_b, uint32_t ch, AckFunc *pFunc )
-// {
-//     RoundSlotProperty_t* pRS = MAC_GetRoundSlotProperties();
-//     NodeProperty_t*      pNP = MAC_GetNodeProperties();
-
-//     uint32_t search_res;
-//     uint32_t ack_state;
-
-//     ack_state = PV_GetAckState();
-
-//     if(pRS->FrameType==FRAME_TYPE_EXPLICIT)
-//     {
-//         /**
-//          * The reception of a correct frame frrom a sending node requires that the receiver sets
-//          * the membership flag of the sender to TRUE before checking the frame CRC.
-//          */
-//         CS_SetMemberBit(pRS->FlagPosition);
-
-//         crc_res = _frame_crc32_check(pDesc,FRAME_TYPE_EXPLICIT);
-//         search_res = _dtree_search(crc_res,ch,pFunc);
-
-//         if(search_res == 4) // search not finished
-//             return _dtree_search(crc_res,ch,pFunc);
-//     }
-//     else // FRAME_TYPE_IMPLICIT
-//     {
-//         //check ia or iia
-//         CS_SetMemberBit(pNP->FlagPosition); 
-//         ack_state == WAIT_FIRST_SUCCESSOR ? CS_SetMemberBit(pRS->FlagPosition) : CS_ClearMemberBit(pRS->FlagPosition);
-        
-//         crc_res = _frame_crc32_check(pDesc,FRAME_TYPE_IMPLICIT);
-//         search_res = _dtree_search(crc_res,ch,pFunc);
-
-//         if(search_res == 4)
-//         {
-//             //check ib or iib
-//             CS_ClearMemberBit(pNP->FlagPosition); 
-//             CS_SetMemberBit(pRS->FlagPosition);
-
-//             crc_res = _frame_crc32_check(pDesc,FRAME_TYPE_IMPLICIT);
-//             return _dtree_search(crc_res,ch,pFunc);
-//         }
-//     }
-
-//     return search_res;
-// }

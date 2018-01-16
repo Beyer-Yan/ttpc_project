@@ -57,7 +57,7 @@ typedef enum {FALSE=0,TRUE} 		bool_t;
 	#include <stddef.h>
 #endif
 /** compiler related definitions*/
-#ifdef __CC_ARM
+#if defined (__CC_ARM)
 	#include <stdarg.h>
 	#define __SECTION(x)		__attribute__((section(x)))
 	#define __UNUSED			__attribute__((unused))
@@ -72,6 +72,8 @@ typedef enum {FALSE=0,TRUE} 		bool_t;
 	#define __WEAK				__weak
 	#define inline				__attribute((always_inline))
 	#define __ASM				__asm
+#elif defined (__clang__)
+
 #else
 	#error "not supported tool chain"
 #endif

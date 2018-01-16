@@ -334,9 +334,9 @@ void psp_for_active(void)
             //host life updated during active state
             //freeshot state
             PV_DisableFreeShot();
-        } else {
-            FSM_TransitIntoState(FSM_PASSIVE);
+        } else {            
             CS_ClearMemberBit(pRS->FlagPosition);
+            FSM_TransitIntoState(FSM_PASSIVE);
             goto _end;
         }
 
@@ -361,6 +361,7 @@ void psp_for_active(void)
                 CNI_SetSRBit(SR_NR);
                 #warning "Should the controller transite into PASSIVE state ??"
                 CS_ClearMemberBit(pRS->FlagPosition);
+                FSM_TransitIntoState(FSM_PASSIVE);
                 goto _end;             
             }
         }

@@ -55,7 +55,7 @@ uint16_t LSENSE_GetVal(void)
         temp_val=4000;
     
 	//return (uint8_t)(100-(temp_val/40));
-    return 4000 - temp_val;
+    return 1000 - temp_val/4;
 }
 
 

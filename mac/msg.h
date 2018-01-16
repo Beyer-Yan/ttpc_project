@@ -15,10 +15,10 @@
   ******************************************************************************
   */
 #ifndef __MSG_H__
-#define __NSG_H__
+#define __MSG_H__
 
 #include "ttpdef.h"
-#include "ttpmac.h"
+//#include "ttpmac.h"
 
 
 #define MAX_FRAME_LENGTH		240
@@ -38,7 +38,6 @@
 #define FRAME_INCORRECT 		(uint32_t)0x00000003
 #define FRAME_NULL				(uint32_t)0x00000004
 #define FRAME_INVALID			(uint32_t)0x00000005
-
 
 typedef uint32_t crc32_t;
 typedef crc32_t  crc_t;
@@ -217,9 +216,6 @@ uint32_t  MSG_GetFrameTimestamp(uint32_t channel);
  * This function eliminates the error code mismatch between hardware
  * level and mac level.
  * @return  the error code of mac level
- *          @arg MAC_EOK
- *          @arg MAC_EPHY
- *          @arg MAC_EOTHER
  */
 uint32_t  MSG_GetTransmittedFlags(void);
 

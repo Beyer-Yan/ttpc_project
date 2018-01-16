@@ -36,7 +36,7 @@
 #define __TTPSERVICE_H__
 
 #include "ttpdef.h"
-
+#include "msg.h"
 /** memory align */
 
 /**
@@ -161,8 +161,10 @@ uint32_t SVC_ExecSyncSchema(uint32_t Steps);
 
 /************************************************************************************/
 
-#define ACK_CHECK_T  0
-#define ACK_CHECK_F  1
+#define ACK_WAITING         0   /*! ACK not finished, wating for next successor */
+#define ACK_NEGATIVE        1   /*! ACK finished, the node is rejected by other nodes */
+#define ACK_TENTATIVE       2   /*! ACK tentative, can not make decision */
+#define ACK_POSITIVE        3   /*! ACK finished, the node is agreed by other nodes */
 
 void     SVC_AckInit(void);
 
@@ -178,21 +180,21 @@ typedef void (*AckFunc)(void);
 
 /**
  * Acknowledgement of the receipt of a frame by the successor of the sender.
- * @param  check_a  check_ia or check_iia, see the ack-stage definition
- * @param  check_b  check_ib or check_iib, see the ack-stage definiton
+ * @param  pDesc    the pointer pointing to the frame decriptor of the channel ch.
  * @param  ch       the channel number, CH0 or CH1
+ * @param  Type     the frame type, SlotFlags_FrameTypeExplicit, or !SlotFlags_FrameTypeExplicit
  * @param  pFunc    the function pointer to the acknowledgement processor. This parameter
  *                  will point to the processor of the corresponding ack-phase, i.e, if
  *                  the FT ack-pattern is detected during ack-stage one, then it will
  *                  point the function for processing the FT pattern processor.
  * @return          ack status of the passed frame of channel ch.
  * 
- *                  @arg 0 ack not finished, waiting for the next successor.
- *                  @arg 1 negative acknowledgement.
- *                  @arg 2 tentative acknowledgement, ack not finished.
- *                  @arg 3 positive acknowledgement
+ *                  @arg ACK_WAITING   ack not finished, waiting for the next successor.
+ *                  @arg ACK_NEGATIVE  negative acknowledgement.
+ *                  @arg ACK_TENTATIVE tentative acknowledgement, ack not finished.
+ *                  @arg ACK_POSITIVE  positive acknowledgement
  */
-uint32_t SVC_Acknowledgment(uint32_t check_a, uint32_t check_b, uint32_t ch, AckFunc *pFunc );
+uint32_t SVC_Acknowledgment(TTP_ChannelFrameDesc* pDesc, uint32_t ch, uint32_t Type, AckFunc *pFunc);
 
 /************************************************************************************/
 

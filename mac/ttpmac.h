@@ -48,7 +48,7 @@ typedef struct mac_slot
 	uint8_t  FlagPosition;          /**< flag position in membership vector of e current sending node*/
 	uint8_t  SlotFlags;
 	uint16_t AtTime;               /* the time for action in unit of macrotick relative to the start of round slot*/
-} __PACK RoundSlotProperty_t;
+}RoundSlotProperty_t;
 
 
 #define SlotFlags_FrameTypeExplicit      ((uint8_t)0x01)
@@ -92,7 +92,7 @@ typedef struct mac_node
 	uint8_t NodeFlags;
 	uint8_t FlagPosition;
 	uint16_t SendDelay;
-} __PACK NodeProperty_t;
+}NodeProperty_t;
 
 #define NodeFlags_PermanentPassive        ((uint8_t)0x01)
 #define NodeFlags_MultiplexedMembership   ((uint8_t)0x02)
@@ -123,7 +123,7 @@ typedef struct mac_schedule
 	uint32_t StartupTimeout;     // in unit of macrotick
 	uint32_t ListenTimeout;      // in unit of macrotick
 	uint32_t ColdStartTimeout;   // in unit of macrotick
-} __PACK ScheduleParameter_t;
+}ScheduleParameter_t;
 
 #define ScheduleFlags_ColdStartAllowed             ((uint8_t)0x01)
 #define ScheduleFlags_ColdStartIntegrationAllowed  ((uint8_t)0x02)

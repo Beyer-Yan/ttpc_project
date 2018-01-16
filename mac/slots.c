@@ -161,11 +161,11 @@ void MAC_SetSlotStatus(uint32_t SlotStatus)
     switch (SlotStatus) {
     case FRAME_CORRECT:
         PV_IncCounter(AGREED_SLOTS_COUNTER);
-        if(tentative) { PV_IncCounter(FAILED_SLOTS_COUNTER); tentative = 0; }
         break;
 
     case FRAME_TENTATIVE:
-        tentative = 1;
+        //There must be one node failed
+        PV_IncCounter(FAILED_SLOTS_COUNTER);
         break;
 
     case FRAME_MODE_VIOLATION:
