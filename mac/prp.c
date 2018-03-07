@@ -169,7 +169,7 @@ static uint32_t _judge_valid(uint32_t channel)
     case FRAME_N:
         actual_frame_size = 1 + 0 + 4 + pRS->AppDataLength;
         break;
-    /** 1 byte header + 16 bytes c-state + 4 bytes crc1 + application data size + 4 bytes crc2 */
+    /** 1 byte header + 12 bytes c-state + 4 bytes crc1 + application data size + 4 bytes crc2 */
     case FRAME_X:
         actual_frame_size = 1 + 12 + 4 + pRS->AppDataLength + 4;
         break;

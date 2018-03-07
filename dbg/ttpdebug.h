@@ -32,10 +32,10 @@
 /**@{*/
 
 
-#define DBG_EMERG				1
-#define DBG_ALERT				2
-#define DBG_CRIT				3
-#define DBG_ERR					4
+#define DBG_ERR				    1
+#define DBG_EMERG				2
+#define DBG_ALERT				3
+#define DBG_CRIT					4
 #define DBG_WARNING				5
 #define DBG_NOTICE				6
 #define DBG_INFO				7
